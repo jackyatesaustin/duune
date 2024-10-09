@@ -277,19 +277,16 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     waveHeightPlot.style.display = 'none';  // Hide the graph until loading is complete
     loadingGif.src = randomGif;  // Set the random GIF source
 
-    // Update the label with the selected spot and date
     const selectedSpotDateLabel = document.getElementById('selectedSpotDateLabel');
     const spotDateAboveGraph = document.getElementById('spotDateAboveGraph');
     
     if (selectedSpotDateLabel && spotDateAboveGraph) {
-        const formattedDate = new Date(date).toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
+        // Instead of creating a new Date object, just format the string passed in 'YYYY-MM-DD'
+        const formattedDate = new Date(date).toISOString().split('T')[0]; // ensures the correct date string format
         selectedSpotDateLabel.textContent = `Selected Spot: ${spot} | Date: ${formattedDate}`;
-        
-        // Update the label above the graph with "Details & Graphs for"
-        spotDateAboveGraph.textContent = `Graphs & Deets | ${spot} | ${formattedDate}`;  
+        spotDateAboveGraph.textContent = `Details & Graphs | ${spot} | ${formattedDate}`;  // Label above the graph
     }
+    
 
 
     const spotId = await getSpotId(spot);
