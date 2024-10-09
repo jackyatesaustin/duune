@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surf Report & Best Times to Go</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/surf_spots_config.js"></script>
+    <script src="/static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="/static/script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Site Title / Logo -->
+        <div class="title">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height: 80px;">
+        </div>
+
+        <!-- 5-Day Surf Overview -->
+        <div class="surf-forecast-container">
+            <h2 style="font-size: 28px;">LA's 5-Day Surf Forecast</h2>
+            <div class="forecast-day" id="day1">
+                <strong>Saturday:</strong> <span id="forecast1">Southwest swell turns down a bit, but still fun out there. You have to catch the rising, high and low tide (sunrise to 10:30) - outside of that window will likely not be great! Wave height - Thigh to Waist, with Chest high sets. Best Spot to Go - County still! Best Spot to Go for Beginners- Santa Monica Bay St</span>
+            </div>
+            <div class="forecast-day" id="day2">
+                <strong>Sunday:</strong> <span id="forecast2">Go get out there in the morning! Swell dies down in the afternoon, but the morning is solid. Wind gets nasty after lunch.</span>
+            </div>
+            <div class="forecast-day" id="day3">
+                <strong>Monday:</strong> <span id="forecast3">Waves come down a lot from Sunday morning. Waves are shin to thigh high. There’s a NW out there, but will likely not hit till Tues</span>
+            </div>
+            <div class="forecast-day" id="day4">
+                <strong>Tuesday:</strong> <span id="forecast4">Northwest starts filling in. Super small and will miss most LA spots!</span>
+            </div>
+            <div class="forecast-day" id="day5">
+                <strong>Wednesday:</strong> <span id="forecast5">Waves build a little bit. Should be fun every once in a while, but still waiting for more later in the week.</span>
+            </div>
+        </div>    
+        
+        <!-- Main Content Box -->
+        <div class="main-content-box">
+
+
+
+<!-- Extended Forecast Section -->
+<div class="extended-forecast-container">
+    <div class="extended-forecast-box">
+        <h2 style="font-size: 28px;">Pick a Spot & Date </h2>
+        
+        <p id="selectedSpotDateLabel"></p>
+
+        <div>
+        <!-- Surf Spot Selector and Date Selector (Now inside the Extended Forecast Box) -->
+        <div class="selection-container">
+            <div class="spot-selector">     
+                <select id="spotSelect" onchange="getData()">
+                    <option value="Redondo Breakwater">Redondo Breakwater</option>
+                    <option value="Hermosa Pier">Hermosa Pier</option>
+                    <option value="Manhattan Beach">Manhattan Beach</option>
+                    <option value="Manhattan Beach Pier South">Manhattan Beach Pier South</option>
+                    <option value="Manhattan Beach Pier North">Manhattan Beach Pier North</option>
+                    <option value="Bruces Beach">Bruces Beach</option>
+                    <option value="El Porto">El Porto</option>
+                    <option value="Dockweiler">Dockweiler</option>
+                    <option value="Venice Pier South">Venice Pier South</option>
+                    <option value="Venice Pier North">Venice Pier North</option>
+                    <option value="Venice Bay">Venice Bay</option>
+                    <option value="Venice Breakwater">Venice Breakwater</option>
+                    <option value="Santa Monica Bay St">Santa Monica Bay St</option>
+                    <option value="Will Rogers">Will Rogers</option>
+                    <option value="Sunset">Sunset</option>
+                    <option value="Topanga">Topanga</option>
+                    <option value="Malibu First Point">Malibu First Point</option>
+                    <option value="Malibu Second Point">Malibu Second Point</option>
+                    <option value="Malibu Third Point">Malibu Third Point</option>
+                    <option value="Zuma">Zuma</option> <!-- Added option for Zuma -->
+                    <option value="Leo Carrillo">Leo Carrillo</option>
+                    <option value="County Line">County Line</option>
+                </select>
+            </div>
+            <div class="date-selector">
+                <label for="dateInput"></label>
+                <input type="date" id="dateInput" onchange="getData()"> <!-- Automatically triggers getData on change -->
+            </div>  
+        </div>
+
+        
+        <div class="upcoming-days-wrapper">
+            <!-- Biggest Upcoming Days for the selected spot -->
+            
+                <div class="info-box full-width">
+                    <h4>Biggest Upcoming Days for <span id="surfSpotName">this spot</span></h4>
+                    <div class="biggest-days-container">
+                        <div class="biggest-day" id="biggestDayLeft">..loading..</div>
+                        <div class="biggest-day" id="biggestDayCenter">..loading..</div>
+                        <div class="biggest-day" id="biggestDayRight">..loading..</div>
+                    </div>
+                </div>
+            
+        
+            <!-- Biggest Upcoming Days in LA -->
+            
+                <div class="info-box full-width">
+                    <h4>Biggest Upcoming Days in LA</h4>
+                    <div class="biggest-la-days-container">
+                        <div class="la-day" id="laDayLeft">..loading..</div>
+                        <div class="la-day" id="laDayCenter">..loading..</div>
+                        <div class="la-day" id="laDayRight">..loading..</div>
+                    </div>
+                </div>
+        </div>
+        
+        
+        
+        
+
+ 
+            </div>
+                <div class="forecast-scroll-container" id="extendedForecast"> 
+                <!-- Forecast buttons will be dynamically generated here -->
+            </div>
+
+    </div>
+</div>
+<!--HERE! </div> --> 
+
+
+<div class="spotcontentandgraphs">
+    
+    <p id="spotDateAboveGraph" style="font-size: 28px; font-weight: bold; text-align: center; margin: 20px 0;"></p>
+
+
+    <!-- GIF Placeholder (Hidden by default) -->
+    <div id="waveLoading" style="text-align: center;">
+        <img id="loadingGif" src="" alt="Loading..." style="height: 200px;" />
+        <p id="loadingMessage" style="font-size: 18px;">One sec, the wave height graph is loading...</p>
+    </div>
+    <div id="waveHeightPlot" style="height: 300px;"></div>
+                <!-- Best and Good Times Section -->
+                <div class="best-good-times-container">
+                    
+                    <div class="section" id="bestTimesContainer">
+                        <h2>Best Times to Go</h2>
+                        <ul id="bestTimesList">
+                            <li>..loading..</li>
+                        </ul>
+                    </div>
+                    <div class="section" id="bestTimesContainer">
+                        <h2>Good Times to Go</h2>
+                        <ul id="goodTimesList">
+                            <li>..loading..</li>
+                        </ul>
+                    </div>
+                    
+                </div>        
+
+                <!-- Additional Info Section -->
+                <div class="additional-info-container">
+                    <div class="info-box">
+                        <h3>Water Temp & What to Wear</h3>
+                        <p id="waterTemp">..loading..</p>
+                        <p id="wearRecommendation"></p>
+                    </div>
+                    <div class="info-box">
+                        <h3>Sunrise & Sunset</h3>
+                        <p id="sunTimes">..loading..</p>
+                    </div>
+                    <div class="info-box">
+                        <h3>What Board to Bring</h3>
+                        <p id="boardRecommendation">..loading..</p> <!-- Added ID here -->
+                    </div>
+                </div>
+                <!-- Graphs Section -->
+                <div id="bestTimesPlot" class="graph-container" style="height: 120px;"></div>
+                <div class="legend" id="bestTimesLegend"></div>
+
+                <div id="windPlot" class="graph-container" style="height: 240px;"></div>
+                <div class="legend" id="windLegend"></div>
+
+                <div id="tidePlot" class="graph-container" style="height: 240px;"></div>
+                <div class="legend" id="tideLegend"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer>
+        Powered by Spitcast, OpenWeather & NOAA APIs | Surf Report for Los Angeles, CA
+    </footer>
+    
+</body>
+</html>

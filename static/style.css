@@ -1,0 +1,778 @@
+/* Global Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #fefefe; /* Primary color */
+    margin: 0;
+    padding: 0;
+    color: #2d4579; /* Secondary color for text */
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fefefe; /* Primary color */
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);  /* Slight shadow for depth */
+}
+
+/* Title */
+.title {
+    text-align: center;
+    font-size: 2.8em;
+    font-weight: bold;
+    color: #2d4579;
+    margin-bottom: 50px; /* Increase margin for better spacing */
+}
+
+
+
+
+/* Surf Forecast Section */
+
+
+.surf-forecast-container {
+    background-color: #fefefe;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Deep shadow for modern effect */
+    transition: transform 0.2s ease;
+    margin-bottom: 30px;
+}
+
+.surf-forecast-container h2 {
+    font-size: 1.8em;
+    color: #e12c2c;  /* Secondary color */
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+
+.forecast-day {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.forecast-day strong {
+    color: #e12c2c;  /* Accent color for day titles */
+}
+
+
+/* Selection Section: Surf Spot and Date */
+.selection-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px; /* Increase margin for more spacing */
+    margin-bottom: 30px; /* Increase margin for more spacing */
+    gap: 50px; /* Increase the gap for more spacing between Surf Spot and Date */
+}
+
+.selection-container select,
+.selection-container input {
+    padding: 12px 15px;
+    font-size: 1.1em;
+    border-radius: 8px;
+    border: 2px solid #2d4579; /* Secondary color */
+    width: 100%;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);  /* Light shadow */
+    transition: border-color 0.3s ease;
+}
+
+.selection-container select:focus,
+.selection-container input:focus {
+    border-color: #e12c2c;  /* Accent color on focus */
+    outline: none;
+}
+
+/* Date Buttons - Outlined */
+.date-buttons-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px; /* Increase gap for more spacing between buttons */
+    margin-top: 20px; /* Increase margin to create more space above the buttons */
+    padding-top: 20px;
+}
+
+
+
+.date-button.today {
+    border-color: #2d4579; /* Secondary color outline for Today button */
+    color: #2d4579; /* Secondary color for text */
+}
+
+.date-button:hover {
+    background-color: #e12c2c;
+    color: #fefefe;
+}
+
+.date-button:active {
+    transform: translateY(0);  /* Remove lift effect on click */
+}
+
+/* Best and Good Times Section */
+.section-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 130px;
+    margin-top: 30px;
+    margin-bottom: 40px;
+}
+
+.section {
+    flex: 1;
+    padding: 20px;
+    background-color: #fefefe;  /* Primary color for section background */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);  /* Soft shadow for depth */
+    text-align: center;
+}
+
+.section h2 {
+    font-size: 1.6em;
+    color: #2d4579; /* Secondary color */
+    margin-bottom: 15px;
+}
+
+.section ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.section ul li {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    color: #2d4579; /* Secondary color */
+}
+
+/* Graphs Section */
+
+.graph-container {
+    width: 100%; /* Ensures the graph takes the full width of its container */
+    height: auto; /* Adjust the height based on the content */
+    position: relative; /* Necessary for responsive resizing */
+    margin-bottom: 20px;
+}
+
+.legend {
+    text-align: center;
+    margin-top: -10px;
+    padding-bottom: 10px;
+    font-size: 1em;
+    font-weight: bold;
+    color: #2d4579; /* Secondary color */
+}
+
+.legend-item {
+    display: inline-block;
+    margin: 0 15px;
+}
+
+.legend-item span {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+
+.legend-item.green span { background-color: limegreen; }
+.legend-item.yellow span { background-color: yellow; }
+.legend-item.red span { background-color: red; }
+.legend-item.lightcoral span { background-color: lightcoral; }
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #2d4579; /* Secondary color for footer background */
+    color: #fefefe; /* Primary color for footer text */
+    font-size: 0.9em;
+    margin-top: 40px;
+}
+
+/* Media Query for Responsiveness */
+@media (max-width: 768px) {
+    .selection-container {
+        flex-direction: column;
+        gap: 25px; /* Increase gap for better spacing on smaller screens */
+        margin-top: 25px;
+        margin-bottom: 25px;
+    }
+
+    .section-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .date-buttons-container {
+        flex-direction: column;
+        gap: 15px; /* Add more space between buttons on mobile */
+        margin-top: 15px;
+    }
+
+    .spot-selector,
+    .date-selector {
+        width: 100%;
+    }
+}
+
+
+/* Date Buttons */
+.date-button {
+    padding: 12px 20px;
+    font-size: 1.1em;
+    border-radius: 12px;
+    background-color: #fefefe;
+    color: #2d4579;
+    border: 3px solid #2d4579;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-width: 160px;
+    min-height: 70px;
+}
+
+
+.date-button:focus {
+    outline: none;
+}
+
+/* Container for Best and Good Times to Go */
+.best-good-times-container {
+    display: flex;
+    justify-content: space-between; /* Space evenly between the two sections */
+    gap: 30px; /* Space between the two sections */
+    margin-bottom: 20px; /* Add space between this and the Additional Info section */
+    margin-top: 20px; /* Add space between this and the Additional Info section */
+       
+}
+
+/* Section styling for Best and Good Times */
+.section {
+    flex: 1; /* Make both sections equal width */
+    padding: 25px;
+    background-color: #fefefe;  /* Primary color for section background */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);  /* Soft shadow for depth */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.section h2 {
+    font-size: 1.6em;
+    color: #2d4579; /* Secondary color */
+    margin-bottom: 15px;
+}
+
+.section ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.section ul li {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    color: #2d4579; /* Secondary color */
+}
+
+/* Additional Information Container */
+.additional-info-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap; /* Allows boxes to wrap if there are too many */
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: #2d4579;
+    
+}
+
+/* Info Box Styling */
+.info-box {
+    flex: 1; /* Make all boxes equal width */
+    padding: 20px;
+    background-color: #fefefe; /* Primary background color */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    text-align: center;
+    min-width: 200px; /* Minimum width for each box */
+    max-width: 300px; /* Maximum width to control stretching */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-box h3 {
+    font-size: 1.6em;
+    color: #2d4579; /* Accent color */
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+.info-box p {
+    color: #2d4579; /* Secondary brand color for text */
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+
+/* Media Query for Responsive Design */
+@media (max-width: 768px) {
+    .best-good-times-container {
+        flex-direction: column; /* Stack vertically on smaller screens */
+    }
+
+    .additional-info-container {
+        flex-direction: column; /* Stack boxes vertically on smaller screens */
+    }
+}
+
+/* Extended Forecast Container */
+.extended-forecast-container {
+    margin-bottom: 30px;
+}
+
+.extended-forecast-box {
+    padding: 20px;
+    background-color: #fefefe; /* Primary background color */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    text-align: center;
+    overflow: hidden; /* Hide overflow outside of the container */
+}
+
+.extended-forecast-box h3 {
+    font-size: 1.4em;
+    color: #2d4579; /* Secondary color for text */
+    margin-bottom: 10px;
+}
+
+/* Scrolling Forecast */
+.forecast-scroll-container {
+    display: flex;
+    overflow-x: auto; /* Enable horizontal scroll */
+    gap: 20px;
+    padding-bottom: 10px;
+    white-space: nowrap; /* Prevent line breaks in the forecast buttons */
+}
+
+.forecast-box {
+    flex: 0 0 auto;
+    width: 100px;
+    height: 80px;
+    background-color: transparent;
+    color: #2d4579;
+    border: 2px solid #2d4579;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.forecast-box .day-name {
+    font-size: 1em;
+    margin-bottom: 4px;
+}
+
+.forecast-box .day-date {
+    font-size: 0.85em;
+}
+
+.forecast-box:hover {
+    background-color: #e12c2c;
+    color: #fefefe;
+}
+
+/* Selector Container */
+.selector-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #fefefe;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Individual Selector Boxes */
+.selector-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.selector-box label {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    color: #2d4579;
+}
+
+.selector-box select,
+.selector-box input {
+    padding: 10px 15px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: 2px solid #2d4579;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+
+/* Adjust selection-container inside the extended forecast */
+.extended-forecast-container .selection-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Add some space below the selectors */
+}
+
+/* Adjust selector inputs to fit inside the extended forecast */
+.extended-forecast-container .spot-selector,
+.extended-forecast-container .date-selector {
+    flex: 1; /* Let the selectors take up equal space */
+    margin-right: 15px; /* Add spacing between the two selectors */
+}
+
+.extended-forecast-container .spot-selector select,
+.extended-forecast-container .date-selector input {
+    width: 70%;
+    padding: 12px 15px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: 2px solid #2d4579;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05); /* Light shadow */
+}
+
+.extended-forecast-container .spot-selector select:focus,
+.extended-forecast-container .date-selector input:focus {
+    border-color: #e12c2c;  /* Accent color on focus */
+    outline: none;
+}
+
+/* Additional padding for the extended forecast box to fit the selectors */
+.extended-forecast-box {
+    padding: 30px 20px;
+}
+
+.graph-container {
+    width: 100%;
+    height: 240px;
+    position: relative;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional shadow */
+    text-align: center;
+}
+
+#waveHeightPlot {
+    width: 100%;
+    overflow-x: hidden;
+    background-color: #fefefe; /* Optional background color */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional shadow */
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+#bestTimesContainer {
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.plotly-graph-div {
+    overflow: hidden;  /* To prevent scrollbars */
+}
+
+.top-selector-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.selector-item {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+}
+
+.upcoming-days-container .info-box {
+    width: 50%; /* Increase the width to make it wider */
+    max-width: 1200px; /* Optional: set a maximum width to avoid it becoming too wide on large screens */
+    padding: 40px; /* Optional padding */
+    margin: 0 auto 30px auto; /* Add some margin to the bottom to create space between the box and the buttons */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+    background-color: #fefefe; /* Optional background color */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Optional shadow */
+    text-align: center;
+}
+
+.upcoming-days-container {
+    width: 100%;
+    margin-bottom: 30px; /* Add margin below the container to prevent spilling into the buttons */
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #f7f9fc;
+}
+
+/* Title Section */
+.title {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+
+
+.forecast-day {
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.forecast-day strong {
+    color: #2d4579;
+}
+
+/* Main Content Box */
+.main-content-box {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Extended Forecast Section */
+.extended-forecast-box {
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    color: #e12c2c;
+}
+
+/* Selection Container */
+.selection-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.spot-selector select, .date-selector input {
+    padding: 10px;
+    border: 1px solid #2d4579;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 16px;
+}
+
+
+
+
+
+/* Update for the layout of upcoming days boxes */
+/* Container for the upcoming days */
+.upcoming-days-wrapper {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px; /* Space between the two containers */
+    margin-top: 20px;
+    flex-wrap: wrap; /* Ensure the containers wrap if screen size is small */
+}
+
+/* Style for both containers */
+.info-box {
+    flex: 1;
+    background-color: #f8f8f8;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    box-sizing: border-box;
+    max-width: 48%; /* Set maximum width to 48% to make both containers fit side by side */
+    min-width: 300px; /* Minimum width to ensure readability on smaller screens */
+    margin-bottom: 20px;
+}
+
+/* Style for the day boxes */
+.biggest-day, .la-day {
+    background-color: #ffffff;
+    padding: 15px;
+    border: 2px solid #007BFF;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    transition: background-color 0.3s ease;
+    margin-bottom: 10px; /* Space between the day boxes */
+}
+
+/* Hover effect */
+.biggest-day:hover, .la-day:hover {
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+
+/* Stack the individual day elements vertically */
+.biggest-days-container, .biggest-la-days-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between the day boxes */
+}
+
+/* Ensure boxes fit side by side on smaller screens */
+@media (max-width: 768px) {
+    .upcoming-days-wrapper {
+        flex-direction: column; /* Stack boxes on top of each other on smaller screens */
+    }
+
+    .info-box {
+        max-width: 100%; /* Ensure containers take full width on small screens */
+    }
+}
+
+
+#waveLoading {
+    display: none; /* Hide by default until the graph is loading */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#loadingGif {
+    width: 250px;
+    height: auto;
+}
+
+#loadingMessage {
+    font-size: 1.2em;
+    color: #2d4579; /* Secondary color */
+    margin-top: 10px;
+}
+
+
+/* Date Buttons */
+.date-button:hover {
+    background-color: #e12c2c;
+    color: #fefefe;
+}
+
+.date-button:focus {
+    outline: none;
+}
+
+#selectedSpotDateLabel {
+    font-size: .8em;
+    color: #2d4579; /* Accent color for emphasis */
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#spotDateAboveGraph {
+    color:#e12c2c;
+}
+
+/* Ensure .info-box in .additional-info-container uses correct background */
+.additional-info-container .info-box {
+    background-color: #fefefe; /* Primary color for background */
+    border: 2px solid #ddd; /* Light border for subtle contrast */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    text-align: center;
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Ensure headers are using the secondary color */
+.additional-info-container .info-box h3 {
+    color: #2d4579; /* Secondary color for headers */
+    font-size: 1.4em;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+/* Ensure paragraphs in .info-boxes are styled correctly */
+.additional-info-container .info-box p {
+    color: #2d4579; /* Secondary color for text */
+    font-size: 1.1em;
+    
+}
+
+
+/* Styling for the .section elements */
+.section {
+    background-color: #fefefe; /* Primary color for background */
+    border: 2px solid #ddd; /* Light border for subtle contrast */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    text-align: center;
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 20px; /* Add some margin at the bottom */
+}
+
+/* Styling the headings inside .section */
+.section h2 {
+    color: #2d4579; /* Secondary color for headers */
+    font-size: 1.6em;
+    margin-bottom: 15px;
+}
+
+/* Styling the list items inside .section */
+.section ul {
+    list-style-type: none; /* Remove default bullets */
+    padding: 0;
+    margin: 0;
+}
+
+.section ul li {
+    color: #2d4579; /* Secondary color for text */
+    font-size: 1.1em;
+    margin: 10px 0; /* Add some spacing between list items */
+}
+
+/* Add hover effect for some interactivity */
+.section:hover {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15); /* Elevate shadow on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+
+.spotcontentandgraphs {
+    padding: 20px;
+    background-color: #fefefe; /* Primary background color */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    margin-bottom: 30px; /* Space at the bottom of the container */
+    overflow: hidden;
+}
+
+/* Optional: Add spacing around the content inside the container */
+.spotcontentandgraphs p, .spotcontentandgraphs h2, .spotcontentandgraphs ul {
+    margin-bottom: 15px;
+}
+
+/* Adjust the margin for the graph containers */
+.graph-container {
+    margin-bottom: 20px; /* Space between graphs */
+}
