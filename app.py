@@ -7,6 +7,14 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 import ndbc_api as ndbc
 import pandas as pd
+from flask_caching import Cache
+
+
+
+app = Flask(__name__)
+# Set up caching for the Flask app
+cache = Cache(config={'CACHE_TYPE': 'simple'})  # You can switch to Redis if needed
+cache.init_app(app)
 
 
 
@@ -221,8 +229,9 @@ def fetch_stdmet_data(station_id, start_date, end_date):
         return None
 
 
-
+@cache.cached(timeout=600, key_prefix="water_temp")
 def fetch_water_temp_by_station(station_id, start_date, end_date):
+    print(f"Fetching water temperature for station: {station_id}, date: {start_date} to {end_date}")  # Print when 
     # Fetch standard meteorological data
     data = fetch_stdmet_data(station_id, start_date, end_date)
     if data is not None and 'WTMP' in data.columns and not data['WTMP'].empty:
@@ -238,7 +247,6 @@ def fetch_water_temp_by_station(station_id, start_date, end_date):
 ################################################################
 
 
-app = Flask(__name__)
 
 @app.route('/get_water_temp', methods=['GET'])
 def get_water_temp():
@@ -318,7 +326,9 @@ def get_wave_forecast():
 
 
 # Fetch wind data
+@cache.cached(timeout=600, key_prefix=lambda: f"wind_data_{request.args.get('date', '')}")
 def fetch_wind_data(date):
+    print(f"Fetching wind data for date: {date}")
     WIND_API_URL = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": 34.0522,
@@ -345,7 +355,12 @@ def fetch_wind_data(date):
     
     return filtered_times, filtered_speeds, filtered_directions
 
+
+
+
 # Fetch tide data
+# Fetch tide data
+@cache.cached(timeout=600, query_string=True, key_prefix="tide_data")
 def fetch_tide_data(date):
     NOAA_API_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
     station_id = "9410660"
@@ -367,7 +382,12 @@ def fetch_tide_data(date):
     la_tz = pytz.timezone('America/Los_Angeles')
     tide_times = [la_tz.localize(datetime.strptime(item['t'], '%Y-%m-%d %H:%M')) for item in data['predictions']]
     tide_heights = [float(item['v']) for item in data['predictions']]
+
+    # Ensure that only the expected two values (times and heights) are returned
     return tide_times, tide_heights
+
+
+
 
 # Fetch sunrise and sunset times
 def fetch_sun_times(date):
@@ -433,14 +453,9 @@ def index():
 def get_data():
     date = request.args.get('date', default=datetime.now().strftime('%Y-%m-%d'))
     spot = request.args.get('spot', default='Hermosa Pier')
-    
+
     # Get the configuration for the selected spot, or fallback to default
     spot_config = surf_spots_config.get(spot, surf_spots_config['default'])
-
-    # Get the buoy ID from the spot configuration
-    # buoy_id = spot_config.get('buoyId')
-    # if not buoy_id:
-    #    return jsonify({'error': 'Buoy ID not found'}), 400
 
      # Fetch lat/lon based on the surf spot
     location = surf_spot_locations.get(spot, surf_spot_locations['Hermosa Pier'])

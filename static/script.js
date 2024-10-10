@@ -1,6 +1,6 @@
 // Updated window.onload function THAT LOADS THE BUTTONS 
-//working
-
+//working original 
+/*
 window.onload = async function () {
     console.log("Page loaded, attempting to initialize...");
 
@@ -12,7 +12,8 @@ window.onload = async function () {
         return;
     }
 
-    console.log("Elements found. Setting default values.");
+   // console.log("Elements found. Setting default values.");
+
 
     const today = new Date(); 
     const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000); 
@@ -43,7 +44,7 @@ window.onload = async function () {
     for (let i = 0; i < 17; i++) {
         const dateToFetch = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
         if (!cachedWaveData[dateToFetch]) {
-            console.log(`Fetching wave data for ${dateToFetch} at spot ID: ${currentSpotId}`);
+           // console.log(`Fetching wave data for ${dateToFetch} at spot ID: ${currentSpotId}`);
             await getSpotForecast(currentSpotId, dateToFetch);  // Fetch wave data for each day
         }
     }
@@ -55,7 +56,7 @@ window.onload = async function () {
     await updateTopUpcomingDays(currentSpot);  // Load the top upcoming days for the selected spot
 
     // Fetch and display the biggest upcoming days for LA-wide spots
-    console.log("Fetching biggest upcoming days for LA...");
+  //  console.log("Fetching biggest upcoming days for LA...");
     await updateBiggestUpcomingLADays();  // This function will load LA-wide data only once on initial load
 
     // Event listener for surf spot change
@@ -102,6 +103,150 @@ window.onload = async function () {
         await getData(false);  // Pass `false` to avoid refreshing the upcoming days
     });
 };
+*/
+//working new
+/*
+window.onload = async function () {
+    console.log("Page loaded, attempting to initialize...");
+
+    const dateInput = document.getElementById('dateInput');
+    const spotSelect = document.getElementById('spotSelect');
+    const today = new Date(); 
+    const todayISO = today.toISOString().split('T')[0];
+
+    // Set initial values for date input and other settings
+    dateInput.value = todayISO;
+
+    // Initial data for today's date and current spot
+    let currentSpot = spotSelect.value;
+    let currentSpotId = await getSpotId(currentSpot);
+
+    if (!currentSpotId) {
+        console.error("Failed to resolve initial spot ID.");
+        return;
+    }
+
+    // Fetch only today's wave data on initial load
+    await getSpotForecast(currentSpotId, todayISO);
+    await generateDateButtons(currentSpotId);  // This will generate date buttons with today's data
+
+    await getData();  // Fetch initial data and update the graphs
+
+    // Lazy load wave data for the next 16 days after the page has loaded
+    setTimeout(async () => {
+        console.log("Lazy loading wave data for the next 16 days...");
+        for (let i = 1; i < 17; i++) {
+            const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
+            if (!cachedWaveData[futureDate]) {
+                await getSpotForecast(currentSpotId, futureDate);
+            }
+        }
+
+        // Update biggest upcoming days after fetching full data
+        console.log("Updating biggest upcoming days...");
+        await updateTopUpcomingDays(currentSpot);  // For the selected spot
+        await updateBiggestUpcomingLADays();  // For LA-wide spots
+    }, 5000);  // Delay by 5 seconds to avoid blocking the initial load
+
+    // Event listeners for changes in surf spot and date
+    document.getElementById('spotSelect').addEventListener('change', async function () {
+        currentSpot = spotSelect.value;
+        currentSpotId = await getSpotId(currentSpot);
+        cachedWaveData = {};  // Clear cache for new spot
+        await getData();
+    });
+
+    document.getElementById('dateInput').addEventListener('change', async function () {
+        await getData();
+    });
+};
+*/
+
+window.onload = async function () {
+    console.log("Page loaded, attempting to initialize...");
+
+    const dateInput = document.getElementById('dateInput');
+    const spotSelect = document.getElementById('spotSelect');
+    const today = new Date(); 
+    const todayISO = today.toISOString().split('T')[0];
+
+    // Set initial values for date input and other settings
+    dateInput.value = todayISO;
+
+    // Initial data for today's date and current spot
+    let currentSpot = spotSelect.value;
+    let currentSpotId = await getSpotId(currentSpot);
+    let currentDate = todayISO;
+
+    if (!currentSpotId) {
+        console.error("Failed to resolve initial spot ID.");
+        return;
+    }
+
+    console.log(`Initial spot: ${currentSpot}, Initial date: ${currentDate}`);
+
+    // Fetch only today's wave data on initial load
+    await getSpotForecast(currentSpotId);
+    await generateDateButtons(currentSpotId);  // This will generate date buttons with today's data
+
+    await getData();  // Fetch initial data and update the graphs
+
+    // Lazy load wave data for the next 16 days after the page has loaded
+    setTimeout(async () => {
+        console.log("Lazy loading wave data for the next 16 days...");
+        for (let i = 1; i < 17; i++) {
+            const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
+            if (!cachedWaveData[futureDate]) {
+                await getSpotForecast(currentSpotId, futureDate);
+            }
+        }
+
+        // Update biggest upcoming days after fetching full data
+        console.log("Updating biggest upcoming days...");
+        await updateTopUpcomingDays(currentSpot);  // For the selected spot
+        await updateBiggestUpcomingLADays();  // For LA-wide spots
+    }, 5000);  // Delay by 5 seconds to avoid blocking the initial load
+
+    // Event listener for surf spot change
+    spotSelect.addEventListener('change', async function () {
+        currentSpot = spotSelect.value;
+        currentSpotId = await getSpotId(currentSpot);
+        cachedWaveData = {};  // Clear cache for new spot
+        await getData();
+    });
+
+    // Event listener for date change
+    dateInput.addEventListener('change', async function () {
+        const newDate = dateInput.value;
+        console.log(`Date change detected. New date: ${newDate}, Current date: ${currentDate}`);
+
+        // Only update the data if the date changes, without reloading the buttons
+        if (newDate !== currentDate) {
+            console.log("Date changed! Updating data without reloading buttons...");
+            currentDate = newDate;
+
+            // Check if the wave data is already cached for the new date
+            if (!cachedWaveData || !cachedWaveData[newDate]) {
+                console.log(`No cached data found for ${newDate}. Fetching wave data for the new date...`);
+                const spotId = await getSpotId(currentSpot);
+                if (!spotId) {
+                    console.error("Error fetching Spot ID. Spot ID is undefined.");
+                    return;
+                }
+                await getSpotForecast(spotId, newDate);  // Fetch the wave forecast for the new date
+            } else {
+                console.log(`Cached wave data found for ${newDate}. No need to fetch again.`);
+            }
+
+            // Fetch and update data for the selected spot and date
+            await getData();  // This should update the graphs and information
+        } else {
+            console.log("No change in date detected. No data update needed.");
+        }
+    });
+};
+
+
 
 
 
@@ -109,7 +254,8 @@ window.onload = async function () {
 
 let cachedWaveData = {}; // To store wave data keyed by date
 
-//testing
+//working
+
 async function getSpotForecast(spotId) {
     try {
         const localToday = new Date();
@@ -158,6 +304,7 @@ async function getSpotForecast(spotId) {
         console.error("Error fetching wave forecast:", error);
     }
 }
+
 
 
 
@@ -244,7 +391,7 @@ function updateWaveGraph(date, sunrise, sunset) {
 //working
 
 let dataFetched = false;  // A flag to track if data was fetched already
-
+/*
 async function getData(shouldGenerateButtons = false, updateUpcomingDays = false) {    
 
 
@@ -259,6 +406,14 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const dateInput = document.getElementById('dateInput');
     const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0]; // Default to today if no date input
     const spot = document.getElementById('spotSelect').value;
+
+        // Immediately update the surf spot title and show loading indicators
+        document.getElementById('surfSpotName').textContent = spot;
+
+        // Set loading state for the biggest-day elements
+        document.getElementById('biggestDayLeft').textContent = '..loading..';
+        document.getElementById('biggestDayCenter').textContent = '..loading..';
+        document.getElementById('biggestDayRight').textContent = '..loading..';
 
     // Array of GIF URLs
     const gifArray = [
@@ -295,13 +450,13 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         return;
     }
 
-    console.log(`Selected Spot: ${spot}, Spot ID: ${spotId}`); // Log the selected spot and SpotId
+  //  console.log(`Selected Spot: ${spot}, Spot ID: ${spotId}`); // Log the selected spot and SpotId
 
     if (!cachedWaveData || !cachedWaveData[date]) {
    //     console.log("No cached data for date. Fetching forecast.");
         await getSpotForecast(spotId); // Fetch wave data for the spot and date
     } else {
-        console.log("");
+        console.log("error in cachedwavedata");
     }
 
     if (!date) {
@@ -309,7 +464,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0]; // Default to today if no date input
     }
 
-    console.log(`Fetching data for Spot ID: ${spotId}, Date: ${date}`);
+ //   console.log(`Fetching data for Spot ID: ${spotId}, Date: ${date}`);
 
 
     // Log the wave heights for each hour
@@ -321,7 +476,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         });
     } else {
         //console.log(`No wave data available for ${spot} on ${date}`);
-        console.log("");
+        console.log("error in wavedatafordate");
     }
 
     
@@ -375,7 +530,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
      //   console.log("Peak wave height for the day:", peakWaveHeight);
     } else {
         //console.log("No wave data available for the selected date.");
-        console.log("");
+        console.log("error in wavedatafordate");
     }
 
 
@@ -787,6 +942,520 @@ Plotly.newPlot('bestTimesPlot', bestTimesTraces, {
         updateWaveGraph(date, sunriseTime, sunsetTime);  // Update the graph
     }, 2000);  // Simulate a delay or adjust based on the actual graph load time
 }
+*/
+
+async function getData(shouldGenerateButtons = false, updateUpcomingDays = false) {
+
+    if (dataFetched) {
+        return;
+    }
+
+    dataFetched = true;
+
+    const dateInput = document.getElementById('dateInput');
+    const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0]; // Default to today if no date input
+    const spot = document.getElementById('spotSelect').value;
+    const surfSpotNameElement = document.getElementById('surfSpotName');
+
+    // Store previous spot
+    const previousSpot = surfSpotNameElement.getAttribute('data-previous-spot') || '';
+
+    // Immediately update the surf spot title
+    surfSpotNameElement.textContent = spot;
+
+    // Check if the selected spot is different from the previous spot
+    if (previousSpot !== spot) {
+        console.log(`Spot has changed to: ${spot}`);
+        surfSpotNameElement.setAttribute('data-previous-spot', spot);
+
+        // Update the biggest day box while loading
+        document.getElementById('biggestDayLeft').textContent = '..loading..';
+        document.getElementById('biggestDayCenter').textContent = '..loading..';
+        document.getElementById('biggestDayRight').textContent = '..loading..';
+
+        updateUpcomingDays = true;  // Force update of upcoming days
+    }
+
+    const spotId = await getSpotId(spot);
+    if (!spotId) {
+        console.error("Spot ID not found");
+        dataFetched = false;
+        return;
+    }
+
+    if (!cachedWaveData || !cachedWaveData[date]) {
+        await getSpotForecast(spotId); // Fetch wave data for the spot and date
+    }
+
+    const waveDataForDate = cachedWaveData[date];
+
+    // Fetch sunrise and sunset times for the selected spot and date
+    const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${date}&formatted=0`;
+    let sunriseTime, sunsetTime;
+
+
+    try {
+        const sunResponse = await fetch(sunApiUrl);
+        const sunData = await sunResponse.json();
+
+        if (sunData.status === "OK") {
+            sunriseTime = new Date(sunData.results.sunrise);
+            sunsetTime = new Date(sunData.results.sunset);
+        } else {
+            console.error("Error fetching sun times for", date);
+            return;
+        }
+    } catch (error) {
+        console.error("Error fetching sun times:", error);
+        return;
+    }
+
+    const selectedDate = document.getElementById('dateInput').value;
+    updateWaveGraph(selectedDate, sunriseTime, sunsetTime);  // Update graph based on selected date, sunrise, and sunset times
+
+    const response = await fetch(`/get_data?date=${date}&spot=${spot}`);
+    if (!response.ok) {
+        console.error('Error fetching data from backend:', response.statusText);
+        dataFetched = false; // Ensure the flag is reset in case of failure
+        return;
+    }
+    const data = await response.json();
+
+    // Log the data received from the backend
+  //  console.log('Data received from backend:', data);
+
+    // Update elements with data
+    const waterTemp = data.water_temp !== "Unavailable" ? `${data.water_temp} °F` : "Water temperature unavailable";
+    document.getElementById('waterTemp').textContent = waterTemp;
+    const wearRecommendation = data.wear || "Recommendation unavailable";
+    document.getElementById('wearRecommendation').textContent = wearRecommendation;
+    document.getElementById('sunTimes').textContent = `${new Date(data.sun.sunrise).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} & ${new Date(data.sun.sunset).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    
+
+    // Get the peak wave height from cached data
+    let peakWaveHeight = 0;
+
+    if (waveDataForDate && waveDataForDate.length > 0) {
+        peakWaveHeight = Math.max(...waveDataForDate.map(item => item.height));
+     //   console.log("Peak wave height for the day:", peakWaveHeight);
+    } else {
+        //console.log("No wave data available for the selected date.");
+        console.log("error in wavedatafordate");
+    }
+
+
+    // Determine the board recommendation based on the peak wave height
+    let boardRecommendation = "Board recommendation unavailable"; // Default fallback
+
+    if (peakWaveHeight <= 2.2) {
+        boardRecommendation = "Longboard";
+    } else if (peakWaveHeight <= 3) {
+        boardRecommendation = "Fish, Groveler, or Longboard";
+    } else if (peakWaveHeight <= 3.6) {
+        boardRecommendation = "Fish, Groveler, or Shortboard";
+    } else if (peakWaveHeight <= 5.5) {
+        boardRecommendation = "Shortboard";
+    } else if (peakWaveHeight <= 7) {
+        boardRecommendation = "Shortboard or Step-Up";
+    } else {
+        boardRecommendation = "Guns Out!";
+    }
+
+    // Update the board recommendation element
+    document.getElementById('boardRecommendation').textContent = boardRecommendation;
+    
+    // Additional logging if necessary
+   // console.log('Board Recommendation:', boardRecommendation);
+    
+    // Sync the graphs and other information based on the data
+    // Only update the top upcoming days if explicitly requested (when the spot changes)
+    // Call `updateTopUpcomingDays` if a new spot is selected or the data is updated
+    if (updateUpcomingDays) {
+        const spotName = document.getElementById('spotSelect').value;
+        console.log(`Updating top upcoming days for spot: ${spotName}`);
+        await updateTopUpcomingDays(spotName);
+    }
+    dataFetched = false; // Reset flag after fetching data is complete
+
+
+    
+
+    // Only regenerate date buttons if explicitly requested (i.e., when the surf spot changes)
+    if (shouldGenerateButtons) {
+        await generateDateButtons();
+    }
+
+
+
+    const minutePoints = data.minute_points.map(t => new Date(t));
+    const interpolatedSpeeds = data.interpolated_speeds;
+    const interpolatedHeights = data.interpolated_heights;
+
+     // Check if spot exists in the config; if not, fallback to default
+    const config = surfSpotsConfig[spot] || surfSpotsConfig['default'];
+
+    // Ensure spot configuration exists or default to current data
+    const spotConfig = surfSpotsConfig[spot] || surfSpotsConfig.default;
+    const tideConfig = spotConfig.tide;
+    const windConfig = spotConfig.wind;
+
+   // generateDateButtons(); // Generate the date buttons as before
+
+    // Populate Best and Good times
+    document.getElementById('bestTimesList').innerHTML = '';
+    document.getElementById('goodTimesList').innerHTML = '';
+
+    data.best_times.forEach(period => {
+        const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const listItem = document.createElement('li');
+        listItem.textContent = `${startTime} - ${endTime}`;
+        document.getElementById('bestTimesList').appendChild(listItem);
+    });
+
+    data.good_times.forEach(period => {
+        const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const listItem = document.createElement('li');
+        listItem.textContent = `${startTime} - ${endTime}`;
+        document.getElementById('goodTimesList').appendChild(listItem);
+    });
+
+    const minTime = minutePoints[0];
+    const maxTime = minutePoints[minutePoints.length - 1];
+
+
+    // Wind graph calculations using the config
+    const glassySegments = getConditionSegments(interpolatedSpeeds, speed => speed <= config.wind.glassy);
+    const mildWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.glassy && speed <= config.wind.mild);
+    const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.mild);
+
+    const windTraces = [];
+    let showLegendGlassy = true, showLegendMild = true, showLegendBad = true;
+
+    glassySegments.forEach(segment => {
+        windTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedSpeeds[i]),
+            mode: 'lines',
+            name: `Glassy (<= ${windConfig.glassy} km/h)`,
+            line: { color: 'limegreen', width: 6 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 255, 0, 0.2)',
+            showlegend: showLegendGlassy,
+            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>'
+        });
+        showLegendGlassy = false;
+    });
+
+    mildWindSegments.forEach(segment => {
+        windTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedSpeeds[i]),
+            mode: 'lines',
+            name: `Mild Wind (${windConfig.glassy}-${windConfig.mild} km/h)`,
+            line: { color: 'yellow', width: 6 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 255, 0, 0.2)',
+            showlegend: showLegendMild,
+            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>'
+        });
+        showLegendMild = false;
+    });
+
+    badWindSegments.forEach(segment => {
+        windTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedSpeeds[i]),
+            mode: 'lines',
+            name: `Bad Wind (> ${windConfig.mild} km/h)`,
+            line: { color: 'red', width: 3 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 0, 0, 0.2)',
+            showlegend: showLegendBad,
+            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>'
+        });
+        showLegendBad = false;
+    });
+
+    // Tide graph calculations using the config
+    const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < config.tide.low);
+    const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= config.tide.low && height <= config.tide.moderate);
+    const highTideSegments = getConditionSegments(interpolatedHeights, height => height > config.tide.moderate && height <= config.tide.high);
+    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > config.tide.high);
+
+    // Clear Best and Good times list
+    const bestTimesList = document.getElementById('bestTimesList');
+    const goodTimesList = document.getElementById('goodTimesList');
+    bestTimesList.innerHTML = '';
+    goodTimesList.innerHTML = '';
+
+    // Populate Best Times list
+    if (data.best_times.length > 0) {
+        data.best_times.forEach(period => {
+            const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const listItem = document.createElement('li');
+            listItem.textContent = `${startTime} - ${endTime}`;
+            bestTimesList.appendChild(listItem);
+        });
+    } else {
+        // If Best Times is empty, show a reason
+        let reason = '';
+        if (badWindSegments.length > 0) {
+            reason = 'It’s pretty windy!';
+        } else if (veryHighTideSegments.length > 0 || lowTideSegments.length > 0) {
+            reason = 'The tide is too high or too low.';
+        } else {
+            reason = 'Conditions are not optimal.';
+        }
+        const noBestTimeMessage = document.createElement('p');
+        noBestTimeMessage.style.fontStyle = 'italic';
+        noBestTimeMessage.textContent = reason;
+        bestTimesList.appendChild(noBestTimeMessage);
+    }
+
+    // Populate Good Times list
+    if (data.good_times.length > 0) {
+        data.good_times.forEach(period => {
+            const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const listItem = document.createElement('li');
+            listItem.textContent = `${startTime} - ${endTime}`;
+            goodTimesList.appendChild(listItem);
+        });
+    } else {
+        // If Good Times is empty, show a reason
+        let reason = '';
+        if (badWindSegments.length > 0) {
+            reason = 'It’s pretty windy!';
+        } else if (veryHighTideSegments.length > 0 || lowTideSegments.length > 0) {
+            reason = 'The tides are too high or too low.';
+        } else {
+            reason = 'Conditions are not ideal.';
+        }
+        const noGoodTimeMessage = document.createElement('p');
+        noGoodTimeMessage.style.fontStyle = 'italic';
+        noGoodTimeMessage.textContent = reason;
+        goodTimesList.appendChild(noGoodTimeMessage);
+    }
+
+
+
+    const tideTraces = [];
+    let showLegendLow = true, showLegendModerate = true, showLegendHigh = true, showLegendVeryHigh = true;
+
+    lowTideSegments.forEach(segment => {
+        tideTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedHeights[i]),
+            mode: 'lines',
+            name: `Low Tide (< ${tideConfig.moderate} ft)`,
+            line: { color: 'lightcoral', width: 3 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 192, 192, 0.2)',
+            showlegend: showLegendLow,
+            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+        });
+        showLegendLow = false;
+    });
+
+    moderateTideSegments.forEach(segment => {
+        tideTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedHeights[i]),
+            mode: 'lines',
+            name: `Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)`,
+            line: { color: 'limegreen', width: 6 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 255, 0, 0.2)',
+            showlegend: showLegendModerate,
+            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+        });
+        showLegendModerate = false;
+    });
+
+    highTideSegments.forEach(segment => {
+        tideTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedHeights[i]),
+            mode: 'lines',
+            name: `High Tide (${tideConfig.high}-${tideConfig.veryHigh} ft)`,
+            line: { color: 'yellow', width: 6 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 255, 0, 0.2)',
+            showlegend: showLegendHigh,
+            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+        });
+        showLegendHigh = false;
+    });
+
+    veryHighTideSegments.forEach(segment => {
+        tideTraces.push({
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedHeights[i]),
+            mode: 'lines',
+            name: `Very High Tide (> ${tideConfig.veryHigh} ft)`,
+            line: { color: 'red', width: 3 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 0, 0, 0.2)',
+            showlegend: showLegendVeryHigh,
+            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+        });
+        showLegendVeryHigh = false;
+    });
+
+ // Existing layout for the graphs
+const layout = {
+    xaxis: {
+        range: [minTime, maxTime],
+        tickformat: '%-I %p', // Adjust time format to 12-hour with AM/PM
+        dtick: 3600000, // Tick every hour (in milliseconds)
+        title: '',
+        fixedrange: true // Disable scrolling on the x-axis for consistency
+    },
+    yaxis: { 
+        title: '', 
+        fixedrange: true // Disable scrolling on the y-axis
+    },
+    height: 240,
+    margin: { l: 50, r: 50, t: 40, b: 40 },
+    hovermode: 'x unified',
+    showlegend: false
+};
+
+// Wind graph layout
+const windLayout = {
+    ...layout,  // Inherit from the common layout
+    yaxis: {
+        title: 'Wind Speed (km/h)',
+        fixedrange: true,  // Disable scrolling
+    },
+};
+
+// Render wind graph
+console.log(`Updating wind graph for spot: ${spot} with ${windTraces.length} trace(s) on ${date}.`);
+Plotly.newPlot('windPlot', windTraces, windLayout, { responsive: true });
+
+// Tide graph layout
+console.log(`Updating tide graph for spot: ${spot} with ${tideTraces.length} trace(s) on ${date}.`);
+const tideLayout = {
+    ...layout,  // Inherit from the common layout
+    yaxis: {
+        title: 'Tide Height (ft)',
+        fixedrange: true,  // Disable scrolling
+    },
+};
+
+// Render tide graph
+Plotly.newPlot('tidePlot', tideTraces, tideLayout, { responsive: true });
+
+// Best Times Graph
+let bestTimesTraces = [];
+data.best_times.forEach(period => {
+    const startTime = new Date(period.start);
+    const endTime = new Date(period.end);
+    bestTimesTraces.push({
+        x: [startTime, endTime],
+        y: [0.5, 0.5],
+        mode: 'lines',
+        line: { color: 'limegreen', width: period.thickness },
+        hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>',
+        showlegend: true
+    });
+});
+
+data.good_times.forEach(period => {
+    const startTime = new Date(period.start);
+    const endTime = new Date(period.end);
+    bestTimesTraces.push({
+        x: [startTime, endTime],
+        y: [0.5, 0.5],
+        mode: 'lines',
+        line: { color: 'yellow', width: period.thickness },
+        hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>',
+        showlegend: true
+    });
+});
+
+// Render Best Times Graph with synchronized layout
+Plotly.newPlot('bestTimesPlot', bestTimesTraces, {
+    ...layout,  // Use the same layout as wind and tide graphs to ensure alignment
+    height: 120,
+    yaxis: { visible: false }, // Hide y-axis for best times
+    xaxis: { 
+        ...layout.xaxis,
+        fixedrange: true  // Ensure scrolling is disabled on x-axis for Best Times
+    },
+    responsive: true 
+});
+
+
+    // Sync Hover for vertical lines
+    const drawVerticalLine = (xValue) => {
+        const update = {
+            shapes: [{
+                type: 'line',
+                x0: xValue,
+                x1: xValue,
+                y0: 0,
+                y1: 1,
+                xref: 'x',
+                yref: 'paper',
+                line: {
+                    color: 'grey',
+                    width: 1,
+                    dash: 'dot'
+                }
+            }]
+        };
+        Plotly.relayout('windPlot', update);
+        Plotly.relayout('tidePlot', update);
+        Plotly.relayout('bestTimesPlot', update);
+    };
+
+    const clearVerticalLine = () => {
+        const clearUpdate = { shapes: [] };
+        Plotly.relayout('windPlot', clearUpdate);
+        Plotly.relayout('tidePlot', clearUpdate);
+        Plotly.relayout('bestTimesPlot', clearUpdate);
+    };
+
+    document.getElementById('windPlot').on('plotly_hover', event => drawVerticalLine(event.points[0].x));
+    document.getElementById('tidePlot').on('plotly_hover', event => drawVerticalLine(event.points[0].x));
+    document.getElementById('bestTimesPlot').on('plotly_hover', event => drawVerticalLine(event.points[0].x));
+
+    document.getElementById('windPlot').on('plotly_unhover', clearVerticalLine);
+    document.getElementById('tidePlot').on('plotly_unhover', clearVerticalLine);
+    document.getElementById('bestTimesPlot').on('plotly_unhover', clearVerticalLine);
+
+    // Populate Legends
+    document.getElementById('windLegend').innerHTML = `
+        <div class="legend-item green"><span></span> Glassy (<= ${windConfig.glassy} km/h)</div>
+        <div class="legend-item yellow"><span></span> Mild Wind (${windConfig.glassy}-${windConfig.mild} km/h)</div>
+        <div class="legend-item red"><span></span> Bad Wind (> ${windConfig.mild} km/h)</div>
+    `;
+    document.getElementById('tideLegend').innerHTML = `
+        <div class="legend-item lightcoral"><span></span> Low Tide (< ${tideConfig.moderate} ft)</div>
+        <div class="legend-item green"><span></span> Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)</div>
+        <div class="legend-item yellow"><span></span> High Tide (${tideConfig.high}-${tideConfig.veryHigh} ft)</div>
+        <div class="legend-item red"><span></span> Very High Tide (> ${tideConfig.veryHigh} ft)</div>
+    `;
+    document.getElementById('bestTimesLegend').innerHTML = `
+        <div class="legend-item green"><span></span> Best Time</div>
+        <div class="legend-item yellow"><span></span> Good Time</div>
+    `;
+
+    // Simulate the loading process for the graph (or after your data fetch is done)
+    setTimeout(() => {
+        // After the data is fetched and the graph is ready, hide the loading GIF and message, show the graph
+        waveLoading.style.display = 'none';  // Hide the loading GIF and message
+        waveHeightPlot.style.display = 'block';  // Show the wave height plot
+        updateWaveGraph(date, sunriseTime, sunsetTime);  // Update the graph
+    }, 2000);  // Simulate a delay or adjust based on the actual graph load time
+
+}
+
 
 
 
@@ -945,26 +1614,24 @@ function filterTimesAndHeightsForDay(waveTimes, waveHeights, startHour = 5, endH
     return { filteredTimes, filteredHeights };
 }
 
-
 async function updateTopUpcomingDays(spotName) {
-    // Ensure the surf spot name is displayed
+    // Immediately update the surf spot name in the title
     document.getElementById('surfSpotName').textContent = spotName;
 
-    // Clear the loading message in the biggest-day elements
-    document.getElementById('biggestDayLeft').textContent = '';
-    document.getElementById('biggestDayCenter').textContent = '';
-    document.getElementById('biggestDayRight').textContent = '';
+    // Immediately set loading indicators for the biggest-day elements
+    document.getElementById('biggestDayLeft').textContent = '..loading..';
+    document.getElementById('biggestDayCenter').textContent = '..loading..';
+    document.getElementById('biggestDayRight').textContent = '..loading..';
 
     const daysWithWaveData = [];
     const date = new Date(); 
     const timezoneOffset = date.getTimezoneOffset() * 60000; // Adjust for timezone
 
-    // Reuse the cached data, ensuring the dates are correct (use local time)
+    // Fetch cached wave data and sunrise/sunset times (keeping the existing logic)
     for (const dateKey of Object.keys(cachedWaveData)) {
         const waveDataForDate = cachedWaveData[dateKey];
         const correctDate = new Date(new Date(dateKey).getTime() - timezoneOffset); // Fix date shift issue
 
-        // Fetch sunrise and sunset times for this date
         const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dateKey}&formatted=0`;
         let sunriseTime, sunsetTime;
 
@@ -985,7 +1652,6 @@ async function updateTopUpcomingDays(spotName) {
         }
 
         if (waveDataForDate && waveDataForDate.length > 0) {
-            // Filter wave data between sunrise and sunset
             const filteredWaveData = waveDataForDate.filter(item => item.time >= sunriseTime && item.time <= sunsetTime);
 
             if (filteredWaveData.length > 0) {
@@ -1001,21 +1667,19 @@ async function updateTopUpcomingDays(spotName) {
         }
     }
 
-    // Sort by highest peak wave heights first
+    // Sort and display the biggest upcoming days (keeping the existing logic)
     daysWithWaveData.sort((a, b) => b.maxWaveHeight - a.maxWaveHeight);
 
-    // Display the top 3 biggest upcoming days
     if (daysWithWaveData.length > 0) {
         const topDays = daysWithWaveData.slice(0, 3);
 
-        // Add onclick to update the date input and get data
         const updateDateAndGraph = (date) => {
             const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
             document.getElementById('dateInput').value = localDate;
             getData(); // Update data and graph based on the new date
         };
 
-        // Update the buttons with the top upcoming days
+        // Update the biggest days with the top upcoming days
         document.getElementById('biggestDayLeft').textContent = `${topDays[0].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[0].waveRange}`;
         document.getElementById('biggestDayLeft').onclick = () => updateDateAndGraph(topDays[0].date);
 
@@ -1030,8 +1694,11 @@ async function updateTopUpcomingDays(spotName) {
         }
     } else {
         document.getElementById('biggestDayLeft').textContent = 'No wave data available for upcoming days';
+        document.getElementById('biggestDayCenter').textContent = '';
+        document.getElementById('biggestDayRight').textContent = '';
     }
 }
+
 
 
 async function updateBiggestUpcomingLADays() {
@@ -1041,7 +1708,7 @@ async function updateBiggestUpcomingLADays() {
     document.getElementById('laDayRight').textContent = '..loading..';
 
     const spots = await fetch('/get_spot_id').then(res => res.json());
-    console.log("Fetched spots:", spots); // Log fetched spots to check their existence
+   // console.log("Fetched spots:", spots); // Log fetched spots to check their existence
     const today = new Date();
     let laSpotsWaveData = [];
 
@@ -1075,7 +1742,7 @@ async function updateBiggestUpcomingLADays() {
     const topUpcomingLADays = laSpotsWaveData.slice(0, 3);
     if (topUpcomingLADays.length > 0) {
         const updateSpotAndData = async (spotName, date) => {
-            console.log(`Updating for spot: ${spotName} and date: ${date}`);
+         //   console.log(`Updating for spot: ${spotName} and date: ${date}`);
 
             const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
             document.getElementById('dateInput').value = localDate;

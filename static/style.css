@@ -1,3 +1,12 @@
+.logo {
+    width: 15%; /* Adjust this percentage as needed to control size */
+    height: auto; /* Ensures aspect ratio is maintained */
+    max-width: 200px; /* Set a maximum size if you don't want it to grow too large */
+    min-width: 100px; /* Set a minimum size to prevent it from getting too small */
+    display: block;
+    margin: 0 auto; /* Centers the logo */
+}
+
 /* Global Styles */
 body {
     font-family: 'Arial', sans-serif;
