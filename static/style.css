@@ -709,6 +709,8 @@ h2 {
 
 #spotDateAboveGraph {
     color:#e12c2c;
+    display: block !important;
+    visibility: visible !important;
 }
 
 /* Ensure .info-box in .additional-info-container uses correct background */

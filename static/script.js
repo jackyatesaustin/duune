@@ -20,6 +20,9 @@ window.onload = async function () {
         console.error("%c[App Init] Error: Failed to resolve initial spot ID.", "color: red; font-weight: bold;");
         return;
     }
+
+    //update label above waveheight graph      
+    updateSpotDateLabel(currentSpot, currentDate);
     
     console.log("%c[App Init] Fetching wave forecast for initial spot...", "color: blue; font-weight: bold;");
     // Fetch only today's wave data on initial load
@@ -29,6 +32,7 @@ window.onload = async function () {
     console.log("%c[App Init] Fetching initial data and updating graphs...", "color: blue; font-weight: bold;");
 
     await getData();  // Fetch initial data and update the graphs
+    
 
     // Lazy load wave data for the next 16 days after the page has loaded
     setTimeout(async () => {
@@ -46,9 +50,12 @@ window.onload = async function () {
         await updateBiggestUpcomingLADays();  // For LA-wide spots
     }, 5000);  // Delay by 5 seconds to avoid blocking the initial load
 
+
+    //when a new spot is selected
     spotSelect.addEventListener('change', async function () {
         const newSpot = spotSelect.value;
         console.log(`%c[Spot Change] Detected spot change: New spot: ${newSpot}, Current spot: ${currentSpot}`, "color: purple; font-weight: bold;");
+        
         // If the spot has changed, regenerate date buttons
         if (newSpot !== currentSpot) {
             console.log("%c[Spot Change] Spot changed! Regenerating date buttons and fetching new data...", "color: purple; font-weight: bold;");
@@ -60,15 +67,18 @@ window.onload = async function () {
                 console.error("%c[Spot Change] Error: Spot ID not found for the new spot.", "color: red; font-weight: bold;");
                 return;
             }
+
+
+
+        // Fetch the wave forecast for the new spot
+        await getSpotForecast(currentSpotId);
     
-            // Fetch the wave forecast for the new spot
-            await getSpotForecast(currentSpotId);
+        // Generate date buttons for the new spot
+        await generateDateButtons(currentSpotId);  // Ensure this is called after the forecast is fetched
     
-            // Generate date buttons for the new spot
-            await generateDateButtons(currentSpotId);  // Ensure this is called after the forecast is fetched
-    
-            // Fetch and update data for the new spot
-            await getData();
+        // Fetch and update data for the new spot
+        await getData();
+
         } else {
             console.log("%c[Spot Change] No spot change detected. Skipping date button regeneration.", "color: purple;");
         }
@@ -79,6 +89,8 @@ window.onload = async function () {
     dateInput.addEventListener('change', async function () {
         const newDate = dateInput.value;
         console.log(`%c[Date Change] Detected date change: New date: ${newDate}, Current date: ${currentDate}`, "color: orange; font-weight: bold;");
+        
+
         // Only update the data if the date changes, without reloading the buttons
         if (newDate !== currentDate) {
             console.log("%c[Date Change] Date changed! Updating data without reloading buttons...", "color: orange; font-weight: bold;");
@@ -95,6 +107,8 @@ window.onload = async function () {
             } else {
                 console.log(`%c[Date Change] Cached wave data found for ${newDate}. Skipping fetch...`, "color: orange;");
             }
+
+
 
             // Fetch and update data for the selected spot and date
             await getData();  // This should update the graphs and information
@@ -307,6 +321,10 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const spot = document.getElementById('spotSelect').value;
     const surfSpotNameElement = document.getElementById('surfSpotName');
 
+
+    //update label above waveheight graph      
+    updateSpotDateLabel(spot, date);
+
     console.log(`%c[getData] Selected Spot: ${spot}, Date: ${date}`, "color: navy;");
 
 
@@ -336,13 +354,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         return;
     }
 
-    //update during verbose logging changes
-    /*
-    if (!cachedWaveData || !cachedWaveData[date]) {
-        console.log(`%c[getData] Fetching wave forecast for Spot ID: ${spotId}, Date: ${date}`, "color: navy;");
-        await getSpotForecast(spotId); // Fetch wave data for the spot and date
-    }
-    */
+
     if (!cachedWaveData || !cachedWaveData[date]) {
         console.log(`%c[getData] Fetching wave forecast for Spot ID: ${spotId}, Date: ${date}`, "color: navy;");
         await getSpotForecast(spotId); // Fetch wave data for the spot and date
@@ -1209,6 +1221,58 @@ async function updateBiggestUpcomingLADays() {
         document.getElementById('laDayRight').textContent = '';
     }
 }
+
+
+// Function to format the date in "Saturday, Oct 12th 2024" format using selectedDate
+function formatDate(selectedDate) {
+    // Manually parse the selectedDate string to ensure correct local date
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // JavaScript months are zero-indexed
+
+    const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+    
+    // Format the date to "Saturday, Oct 12 2024"
+    const formattedDate = date.toLocaleDateString('en-US', options);
+
+    // Add ordinal suffix to the day
+    let suffix = 'th';
+    if (day % 10 === 1 && day !== 11) {
+        suffix = 'st';
+    } else if (day % 10 === 2 && day !== 12) {
+        suffix = 'nd';
+    } else if (day % 10 === 3 && day !== 13) {
+        suffix = 'rd';
+    }
+
+    // Inject the day with the suffix into the formatted date
+    return formattedDate.replace(day, day + suffix);
+}
+
+// Function to update the label above the wave height graph
+function updateSpotDateLabel(selectedSpot, selectedDate) {
+    console.log("%c[Update Label] Starting to update spot and date label...", "color: blue; font-weight: bold;");
+    
+    const spotDateElement = document.getElementById('spotDateAboveGraph');
+    
+    if (!spotDateElement) {
+        console.error("%c[Update Label Error] spotDateElement is not defined.", "color: red; font-weight: bold;");
+        return;
+    }
+
+    console.log(`%c[Update Label] Selected spot: ${selectedSpot}`, "color: green;");
+    console.log(`%c[Update Label] Selected date: ${selectedDate}`, "color: green;");
+    
+    if (!selectedSpot || !selectedDate) {
+        console.error("%c[Update Label Error] Spot or date is missing.", "color: red; font-weight: bold;");
+        return;
+    }
+
+    // Format the selected date before updating the label
+    const formattedDate = formatDate(selectedDate);
+    spotDateElement.textContent = `${selectedSpot} | ${formattedDate}`;
+    console.log("%c[Update Label] Label updated successfully.", "color: blue; font-weight: bold;");
+}
+
 
 
 window.addEventListener('resize', function() {
