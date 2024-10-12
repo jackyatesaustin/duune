@@ -1,17 +1,17 @@
 .logo {
-    width: 25%; /* Increased width percentage for larger screens */
+    width: 50%; /* Increased width percentage for larger screens */
     height: auto; /* Keeps the aspect ratio intact */
-    max-width: 300px; /* Bigger maximum width */
-    min-width: 150px; /* Ensures it doesn't shrink too small */
+    max-width: 400px; /* Bigger maximum width */
+    min-width: 250px; /* Ensures it doesn't shrink too small */
     display: block;
     margin: 0 auto; /* Centers the logo */
 }
 
 /* You can add a media query for mobile devices */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
     .logo {
-        width: 40%; /* Adjusts for smaller screens */
-        max-width: 200px; /* Sets a maximum width for smaller devices */
+        width: 50; /* Adjusts for smaller screens */
+        max-width: 400px; /* Sets a maximum width for smaller devices */
     }
 }
 
