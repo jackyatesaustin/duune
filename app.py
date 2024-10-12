@@ -263,9 +263,6 @@ def get_water_temp():
     return jsonify({'water_temp': water_temp})
 
 
-
-
-
 @app.route('/get_spot_id', methods=['GET'])
 def get_spot_id():
     # Example static mapping of surf spots to their IDs
@@ -327,12 +324,12 @@ def get_wave_forecast():
 
 # Fetch wind data
 @cache.cached(timeout=600, key_prefix=lambda: f"wind_data_{request.args.get('date', '')}")
-def fetch_wind_data(date):
+def fetch_wind_data(date, lat, lon):
     print(f"Fetching wind data for date: {date}")
     WIND_API_URL = "https://api.open-meteo.com/v1/forecast"
     params = {
-        "latitude": 34.0522,
-        "longitude": -118.2437,
+        "latitude": lat,
+        "longitude": lon,
         "hourly": ["windspeed_10m", "winddirection_10m"],
         "timezone": "America/Los_Angeles",
         "start_date": date,
@@ -461,6 +458,9 @@ def get_data():
     location = surf_spot_locations.get(spot, surf_spot_locations['Hermosa Pier'])
 
     lat, lon = location['lat'], location['lon']
+
+    # Fetch wind data using the specific lat/lon for the surf spot
+    wind_times, wind_speeds, wind_directions = fetch_wind_data(date, lat, lon)
 
     # Find nearest station based on lat/lon
     station_id = find_nearest_station(lat, lon) or default_station_id
