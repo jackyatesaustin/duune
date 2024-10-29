@@ -210,7 +210,6 @@ def find_nearest_station(lat, lon):
         return None
     
 
-
 # Fetch standard meteorological data including WTMP (water temperature)
 def fetch_stdmet_data(station_id, start_date, end_date):
     try:
@@ -241,9 +240,6 @@ def fetch_water_temp_by_station(station_id, start_date, end_date):
     else:
         return "Water temperature unavailable"
     
-
-
-
 ################################################################
 
 
@@ -537,5 +533,14 @@ def get_data():
         'interpolated_heights': interpolated_heights.tolist()
     })
 
+
+
+
+
+
+# Guard against double execution
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+

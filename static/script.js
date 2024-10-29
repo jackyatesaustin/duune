@@ -1,3 +1,8 @@
+// At the top of the file with other global variables
+let isInitialLoad = true;
+let isUpdatingBiggestDays = false;
+
+
 // Updated window.onload function THAT LOADS THE BUTTONS 
 window.onload = async function () {
     console.log("%c[App Init] Page loaded. Initializing application...", "color: blue; font-weight: bold;");
@@ -6,15 +11,12 @@ window.onload = async function () {
     const spotSelect = document.getElementById('spotSelect');
     const today = new Date(); 
     const todayISO = today.toISOString().split('T')[0];
-    // Set initial values for date input and other settings
     dateInput.value = todayISO;
-    console.log(`%c[App Init] Set initial date: ${todayISO}`, "color: blue; font-weight: bold;");
-
+    
     // Initial data for today's date and current spot
     let currentSpot = spotSelect.value;
     let currentSpotId = await getSpotId(currentSpot);
     let currentDate = todayISO;
-    console.log(`%c[App Init] Initial spot: ${currentSpot}, Initial date: ${currentDate}`, "color: blue; font-weight: bold;");
 
     if (!currentSpotId) {
         console.error("%c[App Init] Error: Failed to resolve initial spot ID.", "color: red; font-weight: bold;");
@@ -24,31 +26,30 @@ window.onload = async function () {
     //update label above waveheight graph      
     updateSpotDateLabel(currentSpot, currentDate);
     
-    console.log("%c[App Init] Fetching wave forecast for initial spot...", "color: blue; font-weight: bold;");
-    // Fetch only today's wave data on initial load
+    // Fetch wave forecast and generate date buttons before initial getData call
     await getSpotForecast(currentSpotId);
-    console.log("%c[App Init] Generating date buttons for initial spot...", "color: blue; font-weight: bold;");
-    await generateDateButtons(currentSpotId);  // Generate date buttons with today's data
-    console.log("%c[App Init] Fetching initial data and updating graphs...", "color: blue; font-weight: bold;");
+    await generateDateButtons(currentSpotId);
 
-    await getData();  // Fetch initial data and update the graphs
-    
+    // Single getData call that will trigger the initial update
+    await getData();  
 
     // Lazy load wave data for the next 16 days after the page has loaded
     setTimeout(async () => {
         console.log("%c[Lazy Load] Lazy loading wave data for the next 16 days...", "color: green; font-weight: bold;");
-        for (let i = 1; i < 17; i++) {
-            const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
-            if (!cachedWaveData[futureDate]) {
-                console.log(`%c[Lazy Load] Fetching wave data for future date: ${futureDate}`, "color: green;");
-                await getSpotForecast(currentSpotId, futureDate);
+        try {
+            for (let i = 1; i < 17; i++) {
+                const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
+                if (!cachedWaveData[futureDate]) {
+                    await getSpotForecast(currentSpotId, futureDate);
+                }
             }
+            // Single update after all data is loaded
+            await updateTopUpcomingDays(currentSpot);
+            await updateBiggestUpcomingLADays();
+        } catch (error) {
+            console.error("Error during lazy load:", error);
         }
-        // Update biggest upcoming days after fetching full data
-        console.log("%c[Lazy Load] Updating biggest upcoming days...", "color: green; font-weight: bold;");
-        await updateTopUpcomingDays(currentSpot);  // For the selected spot
-        await updateBiggestUpcomingLADays();  // For LA-wide spots
-    }, 5000);  // Delay by 5 seconds to avoid blocking the initial load
+    }, 5000);
 
 
     //when a new spot is selected
@@ -117,6 +118,9 @@ window.onload = async function () {
         }
     });
 };
+
+
+
 
 
 let cachedWaveData = {}; // To store wave data keyed by date
@@ -976,10 +980,6 @@ async function generateDateButtons(spotId) {
 
 
 
-
-
-
-
 async function getSpotId(spotName) {
     console.log(`%c[getSpotId] Fetching Spot ID for: ${spotName}`, "color: blue; font-weight: bold;");
     try {
@@ -1037,6 +1037,7 @@ function filterTimesAndHeightsForDay(waveTimes, waveHeights, startHour = 5, endH
     return { filteredTimes, filteredHeights };
 }
 
+/*
 async function updateTopUpcomingDays(spotName) {
     console.log(`%c[updateTopUpcomingDays] Updating top upcoming days for spot: ${spotName}`, "color: darkblue; font-weight: bold;");
 
@@ -1049,16 +1050,15 @@ async function updateTopUpcomingDays(spotName) {
     document.getElementById('biggestDayRight').textContent = '..loading..';
 
     const daysWithWaveData = [];
-    const date = new Date(); 
-    const timezoneOffset = date.getTimezoneOffset() * 60000; // Adjust for timezone
-
     console.log(`%c[updateTopUpcomingDays] Fetching cached wave data...`, "color: darkblue;");
 
-    // Fetch cached wave data and sunrise/sunset times (keeping the existing logic)
+    // Fetch cached wave data and sunrise/sunset times
     for (const dateKey of Object.keys(cachedWaveData)) {
         console.log(`%c[updateTopUpcomingDays] Processing wave data for date: ${dateKey}`, "color: darkblue;");
         const waveDataForDate = cachedWaveData[dateKey];
-        const correctDate = new Date(new Date(dateKey).getTime() - timezoneOffset); // Fix date shift issue
+
+        // Adjust the date to local time to fix the UTC issue
+        const correctDate = new Date(Date.parse(dateKey + 'T00:00:00'));
 
         const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dateKey}&formatted=0`;
         let sunriseTime, sunsetTime;
@@ -1083,6 +1083,7 @@ async function updateTopUpcomingDays(spotName) {
         }
 
         if (waveDataForDate && waveDataForDate.length > 0) {
+            // Filter the wave data to include only data points between sunrise and sunset
             const filteredWaveData = waveDataForDate.filter(item => item.time >= sunriseTime && item.time <= sunsetTime);
             console.log(`%c[updateTopUpcomingDays] Filtered wave data length for ${dateKey}: ${filteredWaveData.length}`, "color: darkblue;");
             if (filteredWaveData.length > 0) {
@@ -1099,7 +1100,7 @@ async function updateTopUpcomingDays(spotName) {
     }
 
     console.log(`%c[updateTopUpcomingDays] Sorting days by wave height...`, "color: darkblue;");
-    // Sort and display the biggest upcoming days (keeping the existing logic)
+    // Sort and display the biggest upcoming days
     daysWithWaveData.sort((a, b) => b.maxWaveHeight - a.maxWaveHeight);
 
     if (daysWithWaveData.length > 0) {
@@ -1107,7 +1108,7 @@ async function updateTopUpcomingDays(spotName) {
         console.log(`%c[updateTopUpcomingDays] Top days:`, "color: darkblue;", topDays);
 
         const updateDateAndGraph = (date) => {
-            const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            const localDate = date.toISOString().split('T')[0]; // Correct local date format
             document.getElementById('dateInput').value = localDate;
             console.log(`%c[updateTopUpcomingDays] Updating data and graph for date: ${localDate}`, "color: darkblue;");
             getData(); // Update data and graph based on the new date
@@ -1132,9 +1133,141 @@ async function updateTopUpcomingDays(spotName) {
         document.getElementById('biggestDayRight').textContent = '';
     }
 }
+*/
+
+async function updateTopUpcomingDays(spotName) {
+    if (isUpdatingBiggestDays) {
+        console.log(`%c[updateTopUpcomingDays] Update already in progress, skipping...`, "color: darkblue;");
+        return;
+    }
+    
+    isUpdatingBiggestDays = true;
+    console.log(`%c[updateTopUpcomingDays] Updating top upcoming days for spot: ${spotName}`, "color: darkblue; font-weight: bold;");
+
+    // Immediately update the surf spot name in the title
+    document.getElementById('surfSpotName').textContent = spotName;
+
+    // Only show loading state if this is the first load
+    if (isInitialLoad) {
+        document.getElementById('biggestDayLeft').textContent = '..loading..';
+        document.getElementById('biggestDayCenter').textContent = '..loading..';
+        document.getElementById('biggestDayRight').textContent = '..loading..';
+    }
+
+    try {
+        // Rest of your existing updateTopUpcomingDays code...
+        console.log(`%c[updateTopUpcomingDays] Updating top upcoming days for spot: ${spotName}`, "color: darkblue; font-weight: bold;");
+
+        // Immediately update the surf spot name in the title
+        document.getElementById('surfSpotName').textContent = spotName;
+    
+        // Immediately set loading indicators for the biggest-day elements
+        document.getElementById('biggestDayLeft').textContent = '..loading..';
+        document.getElementById('biggestDayCenter').textContent = '..loading..';
+        document.getElementById('biggestDayRight').textContent = '..loading..';
+    
+        const daysWithWaveData = [];
+        console.log(`%c[updateTopUpcomingDays] Fetching cached wave data...`, "color: darkblue;");
+    
+        // Fetch cached wave data and sunrise/sunset times
+        for (const dateKey of Object.keys(cachedWaveData)) {
+            console.log(`%c[updateTopUpcomingDays] Processing wave data for date: ${dateKey}`, "color: darkblue;");
+            const waveDataForDate = cachedWaveData[dateKey];
+    
+            // Adjust the date to local time to fix the UTC issue
+            const correctDate = new Date(Date.parse(dateKey + 'T00:00:00'));
+    
+            const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dateKey}&formatted=0`;
+            let sunriseTime, sunsetTime;
+    
+            console.log(`%c[updateTopUpcomingDays] Fetching sunrise/sunset data for ${dateKey}...`, "color: darkblue;");
+    
+            try {
+                const sunResponse = await fetch(sunApiUrl);
+                const sunData = await sunResponse.json();
+    
+                if (sunData.status === "OK") {
+                    sunriseTime = new Date(sunData.results.sunrise);
+                    sunsetTime = new Date(sunData.results.sunset);
+                    console.log(`%c[updateTopUpcomingDays] Sunrise: ${sunriseTime}, Sunset: ${sunsetTime} for ${dateKey}`, "color: darkblue;");
+                } else {
+                    console.error(`Error fetching sun times for ${dateKey}`);
+                    continue;
+                }
+            } catch (error) {
+                console.error("Error fetching sun times:", error);
+                continue;
+            }
+    
+            if (waveDataForDate && waveDataForDate.length > 0) {
+                // Filter the wave data to include only data points between sunrise and sunset
+                const filteredWaveData = waveDataForDate.filter(item => item.time >= sunriseTime && item.time <= sunsetTime);
+                console.log(`%c[updateTopUpcomingDays] Filtered wave data length for ${dateKey}: ${filteredWaveData.length}`, "color: darkblue;");
+                if (filteredWaveData.length > 0) {
+                    const maxWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
+                    const minWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
+    
+                    daysWithWaveData.push({
+                        date: correctDate,
+                        waveRange: `${maxWaveHeight.toFixed(1)} - ${minWaveHeight.toFixed(1)} ft`,
+                        maxWaveHeight
+                    });
+                }
+            }
+        }
+    
+        console.log(`%c[updateTopUpcomingDays] Sorting days by wave height...`, "color: darkblue;");
+        // Sort and display the biggest upcoming days
+        daysWithWaveData.sort((a, b) => b.maxWaveHeight - a.maxWaveHeight);
+    
+        if (daysWithWaveData.length > 0) {
+            const topDays = daysWithWaveData.slice(0, 3);
+            console.log(`%c[updateTopUpcomingDays] Top days:`, "color: darkblue;", topDays);
+    
+            const updateDateAndGraph = (date) => {
+                const localDate = date.toISOString().split('T')[0]; // Correct local date format
+                document.getElementById('dateInput').value = localDate;
+                console.log(`%c[updateTopUpcomingDays] Updating data and graph for date: ${localDate}`, "color: darkblue;");
+                getData(); // Update data and graph based on the new date
+            };
+    
+            // Update the biggest days with the top upcoming days
+            document.getElementById('biggestDayLeft').textContent = `${topDays[0].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[0].waveRange}`;
+            document.getElementById('biggestDayLeft').onclick = () => updateDateAndGraph(topDays[0].date);
+    
+            if (topDays[1]) {
+                document.getElementById('biggestDayCenter').textContent = `${topDays[1].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[1].waveRange}`;
+                document.getElementById('biggestDayCenter').onclick = () => updateDateAndGraph(topDays[1].date);
+            }
+    
+            if (topDays[2]) {
+                document.getElementById('biggestDayRight').textContent = `${topDays[2].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[2].waveRange}`;
+                document.getElementById('biggestDayRight').onclick = () => updateDateAndGraph(topDays[2].date);
+            }
+        } else {
+            document.getElementById('biggestDayLeft').textContent = 'No wave data available for upcoming days';
+            document.getElementById('biggestDayCenter').textContent = '';
+            document.getElementById('biggestDayRight').textContent = '';
+        }
+    } finally {
+        isUpdatingBiggestDays = false;
+        isInitialLoad = false;
+    }
+}
+
+
+
+
+function adjustToLocalDate(utcDateString) {
+    const utcDate = new Date(utcDateString);
+    const timezoneOffset = utcDate.getTimezoneOffset() * 60000; // Offset in milliseconds
+    const localDate = new Date(utcDate.getTime() - timezoneOffset);
+    return localDate;
+}
 
 
 //working but slow
+
 async function updateBiggestUpcomingLADays() {
     console.log(`%c[updateBiggestUpcomingLADays] Starting LA-wide update for biggest upcoming days`, "color: darkgreen; font-weight: bold;");
 
@@ -1146,21 +1279,25 @@ async function updateBiggestUpcomingLADays() {
     const spots = await fetch('/get_spot_id').then(res => res.json());
     console.log(`%c[updateBiggestUpcomingLADays] Fetched spots:`, "color: darkgreen;", spots);
 
+    // Create today's date in local time
     const today = new Date();
+    const todayLocal = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
     let laSpotsWaveData = [];
 
     for (const spot of spots) {
         const spotId = spot.spot_id;
         console.log(`%c[updateBiggestUpcomingLADays] Processing spot: ${spot.spot_name} (ID: ${spotId})`, "color: darkgreen;");
 
-
         for (let i = 0; i < 17; i++) {
-            const dateToFetch = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
+            // Calculate the date in local time
+            const dateToCheck = new Date(todayLocal.getTime() + i * 86400000);
+            const dateToFetch = dateToCheck.toISOString().split('T')[0];
+            
             console.log(`%c[updateBiggestUpcomingLADays] Fetching wave data for date: ${dateToFetch}`, "color: darkgreen;");
 
             if (!cachedWaveData[dateToFetch]) {
                 console.log(`%c[updateBiggestUpcomingLADays] No cached data found for ${dateToFetch}. Fetching forecast for Spot ID: ${spotId}`, "color: darkgreen;");
-                await getSpotForecast(spotId, dateToFetch);  // Fetch wave data for each day
+                await getSpotForecast(spotId, dateToFetch);
             }
 
             const waveDataForDate = cachedWaveData[dateToFetch];
@@ -1170,7 +1307,7 @@ async function updateBiggestUpcomingLADays() {
 
                 laSpotsWaveData.push({
                     spotName: spot.spot_name,
-                    date: new Date(dateToFetch),
+                    date: dateToCheck, // Use the local date object
                     waveRange: `${maxWaveHeight.toFixed(1)} - ${minWaveHeight.toFixed(1)} ft`,
                     maxWaveHeight
                 });
@@ -1221,6 +1358,9 @@ async function updateBiggestUpcomingLADays() {
         document.getElementById('laDayRight').textContent = '';
     }
 }
+
+
+
 
 
 // Function to format the date in "Saturday, Oct 12th 2024" format using selectedDate
@@ -1281,3 +1421,5 @@ window.addEventListener('resize', function() {
     Plotly.Plots.resize(document.getElementById('windPlot'));
     Plotly.Plots.resize(document.getElementById('tidePlot'));
 });
+
+
