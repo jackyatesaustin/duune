@@ -36,19 +36,15 @@ window.onload = async function () {
     // Lazy load wave data for the next 16 days after the page has loaded
     setTimeout(async () => {
         console.log("%c[Lazy Load] Lazy loading wave data for the next 16 days...", "color: green; font-weight: bold;");
-        try {
-            for (let i = 1; i < 17; i++) {
-                const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
-                if (!cachedWaveData[futureDate]) {
-                    await getSpotForecast(currentSpotId, futureDate);
-                }
+        for (let i = 1; i < 17; i++) {
+            const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
+            if (!cachedWaveData[futureDate]) {
+                await getSpotForecast(currentSpotId, futureDate);
             }
-            // Single update after all data is loaded
-            await updateTopUpcomingDays(currentSpot);
-            await updateBiggestUpcomingLADays();
-        } catch (error) {
-            console.error("Error during lazy load:", error);
         }
+        // Update biggest upcoming days only once after all data is loaded
+        await updateTopUpcomingDays(currentSpot);
+        await updateBiggestUpcomingLADays();
     }, 5000);
 
 
@@ -1136,35 +1132,27 @@ async function updateTopUpcomingDays(spotName) {
 */
 
 async function updateTopUpcomingDays(spotName) {
+    console.log(`%c[updateTopUpcomingDays] Starting... Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue; font-weight: bold;");
+
     if (isUpdatingBiggestDays) {
         console.log(`%c[updateTopUpcomingDays] Update already in progress, skipping...`, "color: darkblue;");
         return;
     }
     
     isUpdatingBiggestDays = true;
-    console.log(`%c[updateTopUpcomingDays] Updating top upcoming days for spot: ${spotName}`, "color: darkblue; font-weight: bold;");
+    console.log(`%c[updateTopUpcomingDays] Setting loading state. Initial Load: ${isInitialLoad}`, "color: darkblue;");
 
-    // Immediately update the surf spot name in the title
-    document.getElementById('surfSpotName').textContent = spotName;
-
-    // Only show loading state if this is the first load
-    if (isInitialLoad) {
-        document.getElementById('biggestDayLeft').textContent = '..loading..';
-        document.getElementById('biggestDayCenter').textContent = '..loading..';
-        document.getElementById('biggestDayRight').textContent = '..loading..';
-    }
 
     try {
-        // Rest of your existing updateTopUpcomingDays code...
-        console.log(`%c[updateTopUpcomingDays] Updating top upcoming days for spot: ${spotName}`, "color: darkblue; font-weight: bold;");
-
         // Immediately update the surf spot name in the title
         document.getElementById('surfSpotName').textContent = spotName;
     
-        // Immediately set loading indicators for the biggest-day elements
-        document.getElementById('biggestDayLeft').textContent = '..loading..';
-        document.getElementById('biggestDayCenter').textContent = '..loading..';
-        document.getElementById('biggestDayRight').textContent = '..loading..';
+        // Only show loading state if this is the first load
+        if (isInitialLoad) {
+            document.getElementById('biggestDayLeft').textContent = '..loading..';
+            document.getElementById('biggestDayCenter').textContent = '..loading..';
+            document.getElementById('biggestDayRight').textContent = '..loading..';
+        }
     
         const daysWithWaveData = [];
         console.log(`%c[updateTopUpcomingDays] Fetching cached wave data...`, "color: darkblue;");
@@ -1252,6 +1240,7 @@ async function updateTopUpcomingDays(spotName) {
     } finally {
         isUpdatingBiggestDays = false;
         isInitialLoad = false;
+        console.log(`%c[updateTopUpcomingDays] Finished. Reset flags - Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue;");
     }
 }
 
