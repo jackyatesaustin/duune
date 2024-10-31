@@ -228,7 +228,7 @@ def fetch_stdmet_data(station_id, start_date, end_date):
         return None
 
 
-@cache.cached(timeout=600, key_prefix="water_temp")
+# @cache.cached(timeout=600, key_prefix="water_temp")
 def fetch_water_temp_by_station(station_id, start_date, end_date):
     print(f"Fetching water temperature for station: {station_id}, date: {start_date} to {end_date}")  # Print when 
     # Fetch standard meteorological data
@@ -319,7 +319,7 @@ def get_wave_forecast():
 
 
 # Fetch wind data
-@cache.cached(timeout=600, key_prefix=lambda: f"wind_data_{request.args.get('date', '')}")
+# @cache.memoize(timeout=600)
 def fetch_wind_data(date, lat, lon):
     print(f"Fetching wind data for date: {date}")
     WIND_API_URL = "https://api.open-meteo.com/v1/forecast"
@@ -333,6 +333,9 @@ def fetch_wind_data(date, lat, lon):
     }
     response = requests.get(WIND_API_URL, params=params)
     data = response.json()
+    
+    print(f"[Wind API] Response received for {lat}, {lon}")
+
     
     la_tz = pytz.timezone('America/Los_Angeles')
     wind_times = [la_tz.localize(datetime.fromisoformat(time)) for time in data['hourly']['time']]
@@ -353,7 +356,7 @@ def fetch_wind_data(date, lat, lon):
 
 # Fetch tide data
 # Fetch tide data
-@cache.cached(timeout=600, query_string=True, key_prefix="tide_data")
+# @cache.cached(timeout=600, query_string=True, key_prefix="tide_data")
 def fetch_tide_data(date):
     NOAA_API_URL = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
     station_id = "9410660"
@@ -442,6 +445,7 @@ def calculate_best_times(minute_points, interpolated_speeds, interpolated_direct
 def index():
     return render_template('index.html')
 
+
 @app.route('/get_data', methods=['GET'])
 def get_data():
     date = request.args.get('date', default=datetime.now().strftime('%Y-%m-%d'))
@@ -449,11 +453,24 @@ def get_data():
 
     # Get the configuration for the selected spot, or fallback to default
     spot_config = surf_spots_config.get(spot, surf_spots_config['default'])
+    spot_id = spot_config.get('spot_id')  # Get the spot ID from config
+
+        # Get the configuration for the selected spot
+    config = surf_spots_config.get(spot, surf_spots_config['default'])
+    
+    print(f"[get_data] Request for spot: {spot}, date: {date}")
+    print(f"[get_data] Using config: {config}")
+
+    lat = config['lat']
+    lon = config['lon']
+    
+    print(f"[get_data] Fetching data for spot: {spot}")
+    print(f"[get_data] Using coordinates: lat={lat}, lon={lon}")
 
      # Fetch lat/lon based on the surf spot
     location = surf_spot_locations.get(spot, surf_spot_locations['Hermosa Pier'])
 
-    lat, lon = location['lat'], location['lon']
+    # lat, lon = location['lat'], location['lon']
 
     # Fetch wind data using the specific lat/lon for the surf spot
     wind_times, wind_speeds, wind_directions = fetch_wind_data(date, lat, lon)
@@ -490,7 +507,7 @@ def get_data():
     else:
         wear = "Recommendation unavailable"
 
-    wind_times, wind_speeds, wind_directions = fetch_wind_data(date)
+    # wind_times, wind_speeds, wind_directions = fetch_wind_data(date)
     tide_times, tide_heights = fetch_tide_data(date)
     sunrise, sunset = fetch_sun_times(date)
 
@@ -530,7 +547,8 @@ def get_data():
         'good_times': good_times_to_go,
         'minute_points': minute_points,
         'interpolated_speeds': interpolated_speeds.tolist(),
-        'interpolated_heights': interpolated_heights.tolist()
+        'interpolated_heights': interpolated_heights.tolist(),
+        'spot_config': spot_config  # Include spot configuration directly here
     })
 
 

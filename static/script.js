@@ -49,38 +49,34 @@ window.onload = async function () {
 
 
     //when a new spot is selected
-    spotSelect.addEventListener('change', async function () {
-        const newSpot = spotSelect.value;
-        console.log(`%c[Spot Change] Detected spot change: New spot: ${newSpot}, Current spot: ${currentSpot}`, "color: purple; font-weight: bold;");
+    
+    spotSelect.addEventListener('change', async function (e) {
+        const newSpot = e.target.value;
+        const currentDate = document.getElementById('dateInput').value;
         
-        // If the spot has changed, regenerate date buttons
-        if (newSpot !== currentSpot) {
-            console.log("%c[Spot Change] Spot changed! Regenerating date buttons and fetching new data...", "color: purple; font-weight: bold;");
-            currentSpot = newSpot;
-            currentSpotId = await getSpotId(currentSpot);
-            cachedWaveData = {};  // Clear cache for new spot
-    
-            if (!currentSpotId) {
-                console.error("%c[Spot Change] Error: Spot ID not found for the new spot.", "color: red; font-weight: bold;");
-                return;
-            }
-
-
-
-        // Fetch the wave forecast for the new spot
-        await getSpotForecast(currentSpotId);
-    
-        // Generate date buttons for the new spot
-        await generateDateButtons(currentSpotId);  // Ensure this is called after the forecast is fetched
-    
-        // Fetch and update data for the new spot
-        await getData();
-
-        } else {
-            console.log("%c[Spot Change] No spot change detected. Skipping date button regeneration.", "color: purple;");
+        try {
+            // Clear existing data
+            cachedWaveData = {};
+            
+            // Update upcoming days for the new spot
+            await updateTopUpcomingDays(newSpot);
+            
+            // Get spot ID and regenerate date buttons
+            const spotId = await getSpotId(newSpot);
+            await generateDateButtons(spotId);
+            
+            // Get new data with the spot ID
+            await getData(newSpot, currentDate);
+            
+            console.log(`%c[Spot Change] Successfully updated to ${newSpot}`, "color: green; font-weight: bold;");
+        } catch (error) {
+            console.error('[Spot Change] Error updating spot:', error);
         }
     });
     
+
+
+
 
     // Event listener for date change
     dateInput.addEventListener('change', async function () {
@@ -307,19 +303,19 @@ function updateWaveGraph(date, sunrise, sunset) {
 //working
 let dataFetched = false;  // A flag to track if data was fetched already
 async function getData(shouldGenerateButtons = false, updateUpcomingDays = false) {
+    cachedWaveData = {}
     console.log(`%c[getData] Starting data fetch...`, "color: navy; font-weight: bold;");
+    //console.log('[getData] Function called with spot:', spot, 'date:', date);
 
-    if (dataFetched) {
-        console.log(`%c[getData] Data already fetched, skipping.`, "color: orange;");
-        return;
-    }
 
-    dataFetched = true;
+    dataFetched = false;
 
     const dateInput = document.getElementById('dateInput');
     const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0]; // Default to today if no date input
     const spot = document.getElementById('spotSelect').value;
     const surfSpotNameElement = document.getElementById('surfSpotName');
+
+    console.log('[getData] Function called with spot:', spot, 'date:', date);
 
 
     //update label above waveheight graph      
@@ -347,6 +343,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         updateUpcomingDays = true;  // Force update of upcoming days
     }
 
+
+
     const spotId = await getSpotId(spot);
     if (!spotId) {
         console.error(`%c[getData Error] Spot ID not found for ${spot}`, "color: red; font-weight: bold;");
@@ -362,7 +360,14 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         console.log(`%c[getData] Using cached wave data for Date: ${date}`, "color: green;");
     }
 
+
+    // Force clear any existing cached data
+    cachedWaveData[spot] = null;
     const waveDataForDate = cachedWaveData[date];
+    
+
+
+    
 
     // Fetch sunrise and sunset times for the selected spot and date
     const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${date}&formatted=0`;
@@ -389,17 +394,36 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const selectedDate = document.getElementById('dateInput').value;
     updateWaveGraph(selectedDate, sunriseTime, sunsetTime);  // Update graph based on selected date, sunrise, and sunset times
 
+
+    const url = `/get_data?date=${date}&spot=${encodeURIComponent(spot)}`;
+    console.log("[getData] API URL:", url);
+
     const response = await fetch(`/get_data?date=${date}&spot=${spot}`);
+    console.log(`[getData] Requesting data from: /get_data?date=${date}&spot=${spot}`);
+
     if (!response.ok) {
         console.error(`%c[getData Error] Error fetching data from backend: ${response.statusText}`, "color: red; font-weight: bold;");
         dataFetched = false; // Ensure the flag is reset in case of failure
         return;
     }
     const data = await response.json();
+
+    // Use the updated config and clear any cached items
+    cachedWaveData[spot] = data;
+
     console.log(`%c[getData] Backend data received:`, "color: navy;", data);
+    console.log(`%c[getData] backend Spot Config:`, "color: navy;", data.spot_config);
+    console.log(`%c[getData] backend Wind Config:`, "color: navy;", data.spot_config?.wind);
+    console.log(`%c[getData] backend Tide Config:`, "color: navy;", data.spot_config?.tide);
+
+
 
     // Log the data received from the backend
   //  console.log('Data received from backend:', data);
+
+    //const config = surfSpotsConfig[spot] || surfSpotsConfig['default'];
+    const config = data.spot_config;
+    console.log(`[getData] Updated config for ${spot}:`, config);
 
     // Update elements with data
     const waterTemp = data.water_temp !== "Unavailable" ? `${data.water_temp} °F` : "Water temperature unavailable";
@@ -465,12 +489,20 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const interpolatedHeights = data.interpolated_heights;
 
      // Check if spot exists in the config; if not, fallback to default
-    const config = surfSpotsConfig[spot] || surfSpotsConfig['default'];
+    //const config = surfSpotsConfig[spot] || surfSpotsConfig['default'];x
 
     // Ensure spot configuration exists or default to current data
-    const spotConfig = surfSpotsConfig[spot] || surfSpotsConfig.default;
-    const tideConfig = spotConfig.tide;
-    const windConfig = spotConfig.wind;
+    //const spotConfig = surfSpotsConfig[spot] || surfSpotsConfig.default;
+
+   // const tideConfig = spotConfig.tide;
+   // const windConfig = spotConfig.wind;
+   //const windConfig = config.wind;
+   //const tideConfig = config.tide;
+   const windConfig = data.spot_config.wind;
+   const tideConfig = data.spot_config.tide;
+
+    console.log(`%c[getData] Here is the config variable: `, "color: navy;", config);
+    console.log(`%c[getData] Wind and Tide Config for ${spot}:`, "color: navy;", windConfig, tideConfig);
 
    // generateDateButtons(); // Generate the date buttons as before
 
@@ -500,9 +532,18 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     console.log(`%c[getData] Wind and Tide Config for ${spot}:`, "color: navy;", windConfig, tideConfig);
 
     // Wind graph calculations using the config
+    
+    /*
     const glassySegments = getConditionSegments(interpolatedSpeeds, speed => speed <= config.wind.glassy);
     const mildWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.glassy && speed <= config.wind.mild);
     const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.mild);
+    */
+
+    const glassySegments = getConditionSegments(interpolatedSpeeds, speed => speed <= windConfig.glassy);
+    const mildWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > windConfig.glassy && speed <= windConfig.mild);
+    const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > windConfig.mild);
+
+
 
     const windTraces = [];
     let showLegendGlassy = true, showLegendMild = true, showLegendBad = true;
@@ -553,10 +594,18 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     });
 
     // Tide graph calculations using the config
+    /*
     const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < config.tide.low);
     const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= config.tide.low && height <= config.tide.moderate);
     const highTideSegments = getConditionSegments(interpolatedHeights, height => height > config.tide.moderate && height <= config.tide.high);
-    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > config.tide.high);
+    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > data.spot_config.tide.high);
+    */
+
+    const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < tideConfig.low);
+    const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= tideConfig.low && height <= tideConfig.moderate);
+    const highTideSegments = getConditionSegments(interpolatedHeights, height => height > tideConfig.moderate && height <= tideConfig.high);
+    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > tideConfig.high);
+    
 
     // Clear Best and Good times list
     const bestTimesList = document.getElementById('bestTimesList');
