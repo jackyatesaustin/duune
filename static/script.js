@@ -488,6 +488,12 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const interpolatedSpeeds = data.interpolated_speeds;
     const interpolatedHeights = data.interpolated_heights;
 
+    const interpolatedDirections = data.interpolated_directions;
+
+    console.log(`%c[getData] Wind Directions:`, "color: navy;", interpolatedDirections);
+
+
+
      // Check if spot exists in the config; if not, fallback to default
     //const config = surfSpotsConfig[spot] || surfSpotsConfig['default'];x
 
@@ -539,15 +545,94 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.mild);
     */
 
+
+
+    // Get segments by wind speed only - make them mutually exclusive
     const glassySegments = getConditionSegments(interpolatedSpeeds, speed => speed <= windConfig.glassy);
     const mildWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > windConfig.glassy && speed <= windConfig.mild);
     const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > windConfig.mild);
 
-
-
     const windTraces = [];
     let showLegendGlassy = true, showLegendMild = true, showLegendBad = true;
 
+    // Debug
+    console.log("Glassy segments:", glassySegments);
+    console.log("Mild segments:", mildWindSegments);
+    console.log("Bad segments:", badWindSegments);
+
+    // For each segment type, create a single trace with the appropriate color
+    glassySegments.forEach(segment => {
+        const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+                        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
+        
+        // Create a single trace for this segment
+        const trace = {
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedSpeeds[i]),
+            mode: 'lines',
+            name: `Glassy (<= ${windConfig.glassy} km/h)`,
+            line: { 
+                color: isOffshore ? 'darkgreen' : 'limegreen',
+                width: 6,
+                simplify: false  // Prevent line simplification
+            },
+            fill: 'tozeroy',
+            fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
+            showlegend: showLegendGlassy,
+            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+        };
+        windTraces.push(trace);
+        showLegendGlassy = false;
+    });
+
+    mildWindSegments.forEach(segment => {
+        const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+                        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
+        
+        const trace = {
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedSpeeds[i]),
+            mode: 'lines',
+            name: `Mild Wind (${windConfig.glassy}-${windConfig.mild} km/h)`,
+            line: { 
+                color: isOffshore ? 'darkgreen' : 'yellow',
+                width: 6,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
+            showlegend: showLegendMild,
+            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+        };
+        windTraces.push(trace);
+        showLegendMild = false;
+    });
+
+    badWindSegments.forEach(segment => {
+        const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+                        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
+        
+        const trace = {
+            x: segment.map(i => minutePoints[i]),
+            y: segment.map(i => interpolatedSpeeds[i]),
+            mode: 'lines',
+            name: `Bad Wind (> ${windConfig.mild} km/h)`,
+            line: { 
+                color: isOffshore ? 'darkgreen' : 'red',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
+            showlegend: showLegendBad,
+            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+        };
+        windTraces.push(trace);
+        showLegendBad = false;
+    });
+
+
+    /*
     glassySegments.forEach(segment => {
         windTraces.push({
             x: segment.map(i => minutePoints[i]),
@@ -562,6 +647,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         });
         showLegendGlassy = false;
     });
+    
 
     mildWindSegments.forEach(segment => {
         windTraces.push({
@@ -592,6 +678,9 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         });
         showLegendBad = false;
     });
+
+    */
+
 
     // Tide graph calculations using the config
     /*
@@ -868,11 +957,20 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     document.getElementById('bestTimesPlot').on('plotly_unhover', clearVerticalLine);
 
     // Populate Legends
+    /*
     document.getElementById('windLegend').innerHTML = `
         <div class="legend-item green"><span></span> Glassy (<= ${windConfig.glassy} km/h)</div>
         <div class="legend-item yellow"><span></span> Mild Wind (${windConfig.glassy}-${windConfig.mild} km/h)</div>
         <div class="legend-item red"><span></span> Bad Wind (> ${windConfig.mild} km/h)</div>
     `;
+    */
+    document.getElementById('windLegend').innerHTML = `
+    <div class="legend-item green"><span></span> Glassy</div>
+    <div class="legend-item yellow"><span></span> Mild Wind</div>
+    <div class="legend-item red"><span></span> Strong Wind</div>
+    <div class="legend-item darkgreen"><span></span> Offshore Wind</div>
+`;
+
     document.getElementById('tideLegend').innerHTML = `
         <div class="legend-item lightcoral"><span></span> Low Tide (< ${tideConfig.moderate} ft)</div>
         <div class="legend-item green"><span></span> Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)</div>
@@ -907,6 +1005,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
 
 
 // Utility function to get segments of conditions
+/*
 function getConditionSegments(data, conditionFn) {
     console.log(`%c[getConditionSegments] Starting to process data with length: ${data.length}`, "color: purple; font-weight: bold;");
     const segments = [];
@@ -921,6 +1020,42 @@ function getConditionSegments(data, conditionFn) {
     }
     if (segment.length) segments.push(segment);
     console.log(`%c[getConditionSegments] Finished processing. Total segments found: ${segments.length}`, "color: purple; font-weight: bold;");
+    return segments;
+}
+*/
+
+
+
+// Add this helper function to convert degrees to cardinal directions
+function degreesToCardinal(degrees) {
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
+                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+    const index = Math.round(((degrees % 360) / 22.5)) % 16;
+    return directions[index];
+}
+
+
+
+// Can you show me what getConditionSegments looks like? Let's add a debug version:
+function getConditionSegments(values, condition) {
+    console.log(`%c[getConditionSegments] Starting with ${values.length} values`, "color: orange");
+    const segments = [];
+    let currentSegment = [];
+    
+    for (let i = 0; i < values.length; i++) {
+        if (condition(values[i], i)) {
+            currentSegment.push(i);
+        } else if (currentSegment.length > 0) {
+            segments.push(currentSegment);
+            currentSegment = [];
+        }
+    }
+    
+    if (currentSegment.length > 0) {
+        segments.push(currentSegment);
+    }
+    
+    console.log(`%c[getConditionSegments] Found ${segments.length} segments`, "color: orange");
     return segments;
 }
 

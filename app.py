@@ -9,6 +9,7 @@ import ndbc_api as ndbc
 import pandas as pd
 from flask_caching import Cache
 
+from surf_spots_config import surf_spots_config
 
 
 app = Flask(__name__)
@@ -22,13 +23,15 @@ cache.init_app(app)
 # Set up default station as "ICAC1"
 default_station_id = "ICAC1"
 
-
+"""
 surf_spot_locations = {
     "Redondo Breakwater": {"lat": 33.863, "lon": -118.400, "station_id": default_station_id},
     "Hermosa Pier": {"lat": 33.862, "lon": -118.399, "station_id": default_station_id},
     "default": {"lat": 34.0522, "lon": -118.2437, "station_id": default_station_id}
 }
+"""
 
+"""
 surf_spots_config = {
     "Redondo Breakwater": {
         "lat": 33.863,
@@ -193,7 +196,7 @@ surf_spots_config = {
         }
     }
 }
-
+"""
 
 #################### getting water temp with ndbc-api ############################################
 
@@ -333,8 +336,13 @@ def fetch_wind_data(date, lat, lon):
     }
     response = requests.get(WIND_API_URL, params=params)
     data = response.json()
+
+    response = requests.get(WIND_API_URL, params=params)
+    data = response.json()
     
     print(f"[Wind API] Response received for {lat}, {lon}")
+    print(f"[Wind API] Raw response data:", data)
+    print(f"[Wind API] Available wind measurements:", data['hourly'].keys())
 
     
     la_tz = pytz.timezone('America/Los_Angeles')
@@ -468,7 +476,9 @@ def get_data():
     print(f"[get_data] Using coordinates: lat={lat}, lon={lon}")
 
      # Fetch lat/lon based on the surf spot
-    location = surf_spot_locations.get(spot, surf_spot_locations['Hermosa Pier'])
+    # location = surf_spot_locations.get(spot, surf_spot_locations['Hermosa Pier'])
+
+    location = surf_spots_config.get(spot, surf_spots_config['default'])
 
     # lat, lon = location['lat'], location['lon']
 
@@ -527,6 +537,9 @@ def get_data():
     tide_times = [time.isoformat() for time in tide_times]
     minute_points = [time.isoformat() for time in minute_points]
 
+    print(f"[DEBUG] Spot config for {spot}:", spot_config)
+    print(f"[DEBUG] Offshore wind range: {spot_config.get('offshore_wind', {}).get('min')} to {spot_config.get('offshore_wind', {}).get('max')}")
+
     return jsonify({
         'wind': {
             'times': wind_times,
@@ -548,6 +561,7 @@ def get_data():
         'minute_points': minute_points,
         'interpolated_speeds': interpolated_speeds.tolist(),
         'interpolated_heights': interpolated_heights.tolist(),
+        'interpolated_directions': interpolated_directions.tolist(),
         'spot_config': spot_config  # Include spot configuration directly here
     })
 
