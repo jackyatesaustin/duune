@@ -579,7 +579,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
             showlegend: showLegendGlassy,
-            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
         };
         windTraces.push(trace);
         showLegendGlassy = false;
@@ -602,7 +603,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
             showlegend: showLegendMild,
-            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
         };
         windTraces.push(trace);
         showLegendMild = false;
@@ -625,7 +627,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
             showlegend: showLegendBad,
-            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
         };
         windTraces.push(trace);
         showLegendBad = false;
@@ -767,7 +770,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: 'rgba(255, 192, 192, 0.2)',
             showlegend: showLegendLow,
-            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
         });
         showLegendLow = false;
     });
@@ -782,7 +786,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: 'rgba(0, 255, 0, 0.2)',
             showlegend: showLegendModerate,
-            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
         });
         showLegendModerate = false;
     });
@@ -797,7 +802,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: 'rgba(255, 255, 0, 0.2)',
             showlegend: showLegendHigh,
-            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
         });
         showLegendHigh = false;
     });
@@ -812,7 +818,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fill: 'tozeroy',
             fillcolor: 'rgba(255, 0, 0, 0.2)',
             showlegend: showLegendVeryHigh,
-            hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
+            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
         });
         showLegendVeryHigh = false;
     });
