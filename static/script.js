@@ -566,22 +566,37 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
                         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
         
         // Create a single trace for this segment
+        
         const trace = {
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedSpeeds[i]),
             mode: 'lines',
-            name: `Glassy (<= ${windConfig.glassy} km/h)`,
+            name: ``,
             line: { 
                 color: isOffshore ? 'darkgreen' : 'limegreen',
-                width: 6,
+                width: 3,
                 simplify: false  // Prevent line simplification
             },
             fill: 'tozeroy',
             fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
             showlegend: showLegendGlassy,
             //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Glassy<br>') +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 ' + degreesToArrow(interpolatedDirections[segment[0]]) + ' ' + 
+            degreesToCardinal(interpolatedDirections[segment[0]]) + ' ' +
+            `(${Math.round(interpolatedDirections[segment[0]])}°)` + '<extra></extra>',
+            hoverinfo: 'text',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         };
+        
         windTraces.push(trace);
         showLegendGlassy = false;
     });
@@ -594,17 +609,30 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedSpeeds[i]),
             mode: 'lines',
-            name: `Mild Wind (${windConfig.glassy}-${windConfig.mild} km/h)`,
+            name: ``,
             line: { 
                 color: isOffshore ? 'darkgreen' : 'yellow',
-                width: 6,
+                width: 3,
                 simplify: false
             },
             fill: 'tozeroy',
             fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
             showlegend: showLegendMild,
             //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            (isOffshore ? 'Offshore<br>' : 'Mild<br>') +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 ' + degreesToArrow(interpolatedDirections[segment[0]]) + ' ' + 
+            degreesToCardinal(interpolatedDirections[segment[0]]) + ' ' +
+            `(${Math.round(interpolatedDirections[segment[0]])}°)` + '<extra></extra>',
+            hoverinfo: 'text',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         };
         windTraces.push(trace);
         showLegendMild = false;
@@ -618,7 +646,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedSpeeds[i]),
             mode: 'lines',
-            name: `Bad Wind (> ${windConfig.mild} km/h)`,
+            name: ``,
             line: { 
                 color: isOffshore ? 'darkgreen' : 'red',
                 width: 3,
@@ -628,70 +656,28 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
             showlegend: showLegendBad,
             //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            (isOffshore ? 'Offshore<br>' : 'Bad<br>') +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 ' + degreesToArrow(interpolatedDirections[segment[0]]) + ' ' + 
+            degreesToCardinal(interpolatedDirections[segment[0]]) + ' ' +
+            `(${Math.round(interpolatedDirections[segment[0]])}°)` + '<extra></extra>',
+            hoverinfo: 'text',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         };
         windTraces.push(trace);
         showLegendBad = false;
     });
 
 
-    /*
-    glassySegments.forEach(segment => {
-        windTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedSpeeds[i]),
-            mode: 'lines',
-            name: `Glassy (<= ${windConfig.glassy} km/h)`,
-            line: { color: 'limegreen', width: 6 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(0, 255, 0, 0.2)',
-            showlegend: showLegendGlassy,
-            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>'
-        });
-        showLegendGlassy = false;
-    });
-    
-
-    mildWindSegments.forEach(segment => {
-        windTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedSpeeds[i]),
-            mode: 'lines',
-            name: `Mild Wind (${windConfig.glassy}-${windConfig.mild} km/h)`,
-            line: { color: 'yellow', width: 6 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(255, 255, 0, 0.2)',
-            showlegend: showLegendMild,
-            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>'
-        });
-        showLegendMild = false;
-    });
-
-    badWindSegments.forEach(segment => {
-        windTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedSpeeds[i]),
-            mode: 'lines',
-            name: `Bad Wind (> ${windConfig.mild} km/h)`,
-            line: { color: 'red', width: 3 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(255, 0, 0, 0.2)',
-            showlegend: showLegendBad,
-            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>'
-        });
-        showLegendBad = false;
-    });
-
-    */
 
 
-    // Tide graph calculations using the config
-    /*
-    const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < config.tide.low);
-    const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= config.tide.low && height <= config.tide.moderate);
-    const highTideSegments = getConditionSegments(interpolatedHeights, height => height > config.tide.moderate && height <= config.tide.high);
-    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > data.spot_config.tide.high);
-    */
 
     const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < tideConfig.low);
     const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= tideConfig.low && height <= tideConfig.moderate);
@@ -863,11 +849,21 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             title: 'Wind Speed (km/h)',
             fixedrange: true,  // Disable scrolling
         },
+        hoverlabel: {
+            namelength: 0  // Show full label length
+        },
+        hovermode: 'closest',
+        showlegend: false
     };
 
     // Render wind graph
     console.log(`Updating wind graph for spot: ${spot} with ${windTraces.length} trace(s) .`);
-    Plotly.newPlot('windPlot', windTraces, windLayout, { responsive: true });
+    //Plotly.newPlot('windPlot', windTraces, windLayout, { responsive: true });
+    Plotly.newPlot('windPlot', windTraces, windLayout, { 
+        responsive: true,
+        displayModeBar: false,  // Optional: removes the modebar
+        showTips: false  // Removes tooltips
+    });
 
     // Tide graph layout
     console.log(`Updating tide graph for spot: ${spot} with ${tideTraces.length} trace(s) on ${date}.`);
@@ -1040,6 +1036,17 @@ function degreesToCardinal(degrees) {
     const index = Math.round(((degrees % 360) / 22.5)) % 16;
     return directions[index];
 }
+
+function degreesToArrow(degrees) {
+    // Add 180 degrees to invert the direction (wind is coming FROM this direction)
+    degrees = (degrees + 180) % 360;
+    
+    // Map degrees to arrows (8 directions)
+    const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+    const index = Math.round(degrees / 45) % 8;
+    return arrows[index];
+}
+
 
 
 
