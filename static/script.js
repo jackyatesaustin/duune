@@ -757,7 +757,16 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fillcolor: 'rgba(255, 192, 192, 0.2)',
             showlegend: showLegendLow,
             //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            '🌊 Low<br>' +
+            '📏 %{y:.1f} ft<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         });
         showLegendLow = false;
     });
@@ -773,7 +782,16 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fillcolor: 'rgba(0, 255, 0, 0.2)',
             showlegend: showLegendModerate,
             //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            '🌊 Moderate<br>' +
+            '📏 %{y:.1f} ft<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         });
         showLegendModerate = false;
     });
@@ -789,7 +807,16 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fillcolor: 'rgba(255, 255, 0, 0.2)',
             showlegend: showLegendHigh,
             //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            '🌊 High<br>' +
+            '📏 %{y:.1f} ft<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         });
         showLegendHigh = false;
     });
@@ -805,7 +832,16 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             fillcolor: 'rgba(255, 0, 0, 0.2)',
             showlegend: showLegendVeryHigh,
             //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
+            hovertemplate: 
+            '🌊 Very High<br>' +
+            '📏 %{y:.1f} ft<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
         });
         showLegendVeryHigh = false;
     });
@@ -874,6 +910,11 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             title: 'Tide Height (ft)',
             fixedrange: true,  // Disable scrolling
         },
+        hoverlabel: {
+            namelength: 0  // Show full label length
+        },
+        hovermode: 'closest',
+        showlegend: false
     };
 
     // Render tide graph
