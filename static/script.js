@@ -873,7 +873,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         height: isMobile ? 200 : 240, // Adjust height for mobile screens
         margin: { l: isMobile ? 40 : 50, r: 40, t: 30, b: isMobile ? 30 : 40 }, // Adjust margins for mobile
         margin: { l: 50, r: 50, t: 40, b: 40 },
-        hovermode: 'x unified',
+        hovermode: 'closest',
         showlegend: false
     };
 
@@ -920,33 +920,117 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     // Render tide graph
     Plotly.newPlot('tidePlot', tideTraces, tideLayout, { responsive: true });
 
-    // Best Times Graph
-    let bestTimesTraces = [];
-    data.best_times.forEach(period => {
-        const startTime = new Date(period.start);
-        const endTime = new Date(period.end);
-        bestTimesTraces.push({
-            x: [startTime, endTime],
-            y: [0.5, 0.5],
-            mode: 'lines',
-            line: { color: 'limegreen', width: period.thickness },
-            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>',
-            showlegend: true
-        });
-    });
 
-    data.good_times.forEach(period => {
-        const startTime = new Date(period.start);
-        const endTime = new Date(period.end);
-        bestTimesTraces.push({
-            x: [startTime, endTime],
-            y: [0.5, 0.5],
-            mode: 'lines',
-            line: { color: 'yellow', width: period.thickness },
-            hovertemplate: '%{y:.1f} km/h<br>%{x}<extra></extra>',
-            showlegend: true
-        });
+    /*
+                    BEST TIMES GRAPH    
+    */
+
+    // Best Times Graph
+// Best Times Graph
+let bestTimesTraces = [];
+
+// Add unfavorable times FIRST (base layer)
+const unfavorablePoints = [];
+let currentTime = new Date(minTime);
+while (currentTime <= maxTime) {
+    // Check if this time falls within any best or good time period
+    const isInBestTime = data.best_times.some(period => 
+        currentTime >= new Date(period.start) && currentTime <= new Date(period.end)
+    );
+    const isInGoodTime = data.good_times.some(period => 
+        currentTime >= new Date(period.start) && currentTime <= new Date(period.end)
+    );
+
+    // Only add point if it's not in a best or good time period
+    if (!isInBestTime && !isInGoodTime) {
+        unfavorablePoints.push(new Date(currentTime));
+    }
+    currentTime.setMinutes(currentTime.getMinutes() + 5);
+}
+
+if (unfavorablePoints.length > 0) {
+    bestTimesTraces.push({
+        x: unfavorablePoints,
+        y: Array(unfavorablePoints.length).fill(0.5),
+        mode: 'lines',
+      //  fill: 'tozeroy',  // Add fill to make hover area larger
+        line: { color: 'red', width: 3 },
+        hoverinfo: 'all',
+        hovertemplate: 
+            '🚫 Unfavorable Time<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
     });
+}
+
+// Then add good times
+data.good_times.forEach(period => {
+    const startTime = new Date(period.start);
+    const endTime = new Date(period.end);
+    
+    // Create array of points every 5 minutes between start and end
+    const points = [];
+    let currentTime = new Date(startTime);
+    while (currentTime <= endTime) {
+        points.push(new Date(currentTime));
+        currentTime.setMinutes(currentTime.getMinutes() + 5);
+    }
+    
+    bestTimesTraces.push({
+        x: points,
+        y: Array(points.length).fill(0.5),
+        mode: 'lines',
+     //   fill: 'tozeroy',  // Add fill to make hover area larger
+        line: { color: 'yellow', width: period.thickness },
+        hoverinfo: 'all',
+        hovertemplate: 
+            '👍 Good Time<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    });
+});
+
+// Finally add best times on top
+data.best_times.forEach(period => {
+    const startTime = new Date(period.start);
+    const endTime = new Date(period.end);
+    
+    // Create array of points every 5 minutes between start and end
+    const points = [];
+    let currentTime = new Date(startTime);
+    while (currentTime <= endTime) {
+        points.push(new Date(currentTime));
+        currentTime.setMinutes(currentTime.getMinutes() + 5);
+    }
+    
+    bestTimesTraces.push({
+        x: points,
+        y: Array(points.length).fill(0.5),
+        mode: 'lines',
+     //   fill: 'tozeroy',  // Add fill to make hover area larger
+        line: { color: 'limegreen', width: period.thickness },
+        hoverinfo: 'all',
+        hovertemplate: 
+            '✨ Best Time<br>' +
+            '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    });
+});
+
+
+
 
     // Render Best Times Graph with synchronized layout
     Plotly.newPlot('bestTimesPlot', bestTimesTraces, {
@@ -958,8 +1042,18 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             ...layout.xaxis,
             fixedrange: true  // Ensure scrolling is disabled on x-axis for Best Times
         },
-        responsive: true 
-    });
+        responsive: true, 
+        hovermode: 'closest',  // Make sure this is set
+        showlegend: false,
+        hoverdistance: 50,  // Increase hover sensitivity
+        hoverlabel: {
+            namelength: -1  // Show full label length
+        }
+        }, {
+            displayModeBar: false,  // Optional: removes the modebar
+            responsive: true,
+            showTips: false  // Removes tooltips
+        });
 
 
     // Sync Hover for vertical lines

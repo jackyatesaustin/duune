@@ -8,6 +8,8 @@ from scipy.interpolate import CubicSpline
 import ndbc_api as ndbc
 import pandas as pd
 from flask_caching import Cache
+import logging
+from datetime import datetime, timedelta
 
 from surf_spots_config import surf_spots_config
 
@@ -337,8 +339,10 @@ def fetch_wind_data(date, lat, lon):
     response = requests.get(WIND_API_URL, params=params)
     data = response.json()
 
-    response = requests.get(WIND_API_URL, params=params)
-    data = response.json()
+    #response = requests.get(WIND_API_URL, params=params)
+    #data = response.json()
+    print(f"[Wind API] Raw response data:", data)  # Let's see the raw data
+    print(f"[Wind API] Units from API:", data['hourly_units'])  # Check wh
     
     print(f"[Wind API] Response received for {lat}, {lon}")
     print(f"[Wind API] Raw response data:", data)
@@ -351,11 +355,14 @@ def fetch_wind_data(date, lat, lon):
     wind_directions = [float(direction) for direction in data['hourly']['winddirection_10m']]
     
     filtered_times, filtered_speeds, filtered_directions = [], [], []
+    
     for time, speed, direction in zip(wind_times, wind_speeds, wind_directions):
         if 4 <= time.hour <= 21:
             filtered_times.append(time)
             filtered_speeds.append(speed)
             filtered_directions.append(direction)
+
+    #logger.debug(f"Wind data sample - Speed: {wind_speeds[0]} km/h, Direction: {wind_directions[0]}°")
     
     return filtered_times, filtered_speeds, filtered_directions
 
@@ -416,38 +423,57 @@ def interpolate_data(times, data, minute_points):
     interpolated_data = cs(minute_points_numeric)
     return np.maximum(interpolated_data, 0)  # Ensure no negative values for wind speeds
 
-def calculate_best_times(minute_points, interpolated_speeds, interpolated_directions, interpolated_heights):
+
+
+
+
+def calculate_best_times(minute_points, interpolated_speeds, interpolated_directions, interpolated_heights, spot_config):
     best_times_to_go = []
-    good_times_to_go = []
-    best_start = None
-    good_start = None
+    best_start = None  # Track the start of a "Best Time" period
 
-    for i in range(1, len(minute_points)):
-        is_glassy_or_offshore = (interpolated_speeds[i] <= 5) or (270 <= interpolated_directions[i] <= 360) or (0 <= interpolated_directions[i] <= 90)
-        is_moderate_tide = 2 <= interpolated_heights[i] <= 4.5
+    for i in range(len(minute_points)):
+        time = minute_points[i]
+        height = interpolated_heights[i]
+        speed = interpolated_speeds[i]
+        direction = interpolated_directions[i]
 
-        if is_moderate_tide and is_glassy_or_offshore:
-            if best_start is None:
-                best_start = i
-        elif best_start is not None:
-            start_time = minute_points[best_start].isoformat()
-            end_time = minute_points[i - 1].isoformat()
-            best_times_to_go.append({'start': start_time, 'end': end_time, 'color': 'green', 'thickness': 6})
-            best_start = None
+        # Check conditions for "Best Times"
+        is_moderate_tide = spot_config['tide']['low'] <= height <= spot_config['tide']['moderate']
+        is_offshore = spot_config['offshore_wind']['min'] <= direction <= spot_config['offshore_wind']['max']
+        is_glassy = speed <= spot_config['wind']['glassy']
 
-        is_good_tide = not (interpolated_heights[i] < 2 or interpolated_heights[i] > 5.1)
-        is_not_bad_wind = interpolated_speeds[i] <= 10
+        # If conditions are met, start or continue a "Best Time" period
+        if is_moderate_tide and (is_offshore or is_glassy):
+            if best_start is None:  # Start a new "Best Time" period
+                best_start = time
+        else:
+            # If conditions are no longer met, end the current "Best Time" period
+            if best_start is not None:
+                best_times_to_go.append({
+                    'start': best_start.isoformat(),
+                    'end': time.isoformat(),
+                    'color': 'green',
+                    'thickness': 6
+                })
+                best_start = None  # Reset for the next potential "Best Time" period
 
-        if is_good_tide and is_not_bad_wind and best_start is None:
-            if good_start is None:
-                good_start = i
-        elif good_start is not None:
-            start_time = minute_points[good_start].isoformat()
-            end_time = minute_points[i - 1].isoformat()
-            good_times_to_go.append({'start': start_time, 'end': end_time, 'color': 'yellow', 'thickness': 3})
-            good_start = None
+    # Handle case where "Best Time" period continues until the end
+    if best_start is not None:
+        best_times_to_go.append({
+            'start': best_start.isoformat(),
+            'end': minute_points[-1].isoformat(),
+            'color': 'green',
+            'thickness': 6
+        })
 
-    return best_times_to_go, good_times_to_go
+    return best_times_to_go, []
+
+
+
+
+
+
+
 
 @app.route('/')
 def index():
@@ -531,7 +557,15 @@ def get_data():
     interpolated_heights = interpolate_data(tide_times, tide_heights, minute_points)
 
     # Calculate best and good times to go
-    best_times_to_go, good_times_to_go = calculate_best_times(minute_points, interpolated_speeds, interpolated_directions, interpolated_heights)
+    # best_times_to_go, good_times_to_go = calculate_best_times(minute_points, interpolated_speeds, interpolated_directions, interpolated_heights)
+        # Pass spot_config to calculate_best_times
+    best_times_to_go, good_times_to_go = calculate_best_times(
+        minute_points, 
+        interpolated_speeds, 
+        interpolated_directions, 
+        interpolated_heights,
+        spot_config
+    )
 
     wind_times = [time.isoformat() for time in wind_times]
     tide_times = [time.isoformat() for time in tide_times]
