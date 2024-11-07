@@ -953,12 +953,24 @@ if (unfavorablePoints.length > 0) {
         x: unfavorablePoints,
         y: Array(unfavorablePoints.length).fill(0.5),
         mode: 'lines',
-      //  fill: 'tozeroy',  // Add fill to make hover area larger
         line: { color: 'red', width: 3 },
         hoverinfo: 'all',
         hovertemplate: 
             '🚫 Unfavorable Time<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
+            '%{x|%I:%M %p}<br>' +
+            'Wind %{text[0]:.2f} km/h<br>' +
+            'Wind Direction %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
+            '🌊 %{text[4]:.2f} ft<extra></extra>',
+        text: unfavorablePoints.map(point => {
+            const index = minutePoints.findIndex(t => t.getTime() === point.getTime());
+            return [
+                interpolatedSpeeds[index],
+                degreesToArrow(interpolatedDirections[index]),
+                degreesToCardinal(interpolatedDirections[index]),
+                Math.round(interpolatedDirections[index]),
+                interpolatedHeights[index]
+            ];
+        }),
         hoverlabel: { 
             bgcolor: 'white', 
             namelength: 0,
@@ -988,8 +1000,21 @@ data.good_times.forEach(period => {
         line: { color: 'yellow', width: period.thickness },
         hoverinfo: 'all',
         hovertemplate: 
-            '👍 Good Time<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
+            '✨ Good Time<br>' +
+            '%{x|%I:%M %p}<br>' +
+            'Wind %{text[0]:.2f} km/h<br>' +
+            'Wind Direction %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
+            '🌊 %{text[4]:.2f} ft<extra></extra>',
+        text: points.map(point => {
+            const index = minutePoints.findIndex(t => t.getTime() === point.getTime());
+            return [
+                interpolatedSpeeds[index],
+                degreesToArrow(interpolatedDirections[index]),
+                degreesToCardinal(interpolatedDirections[index]),
+                Math.round(interpolatedDirections[index]),
+                interpolatedHeights[index]
+            ];
+        }),
         hoverlabel: { 
             bgcolor: 'white', 
             namelength: 0,
@@ -997,6 +1022,7 @@ data.good_times.forEach(period => {
         }
     });
 });
+
 
 // Finally add best times on top
 data.best_times.forEach(period => {
@@ -1020,7 +1046,20 @@ data.best_times.forEach(period => {
         hoverinfo: 'all',
         hovertemplate: 
             '✨ Best Time<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
+            '%{x|%I:%M %p}<br>' +
+            'Wind %{text[0]:.2f} km/h<br>' +
+            'Wind Direction %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
+            '🌊 %{text[4]:.2f} ft<extra></extra>',
+        text: points.map(point => {
+            const index = minutePoints.findIndex(t => t.getTime() === point.getTime());
+            return [
+                interpolatedSpeeds[index],
+                degreesToArrow(interpolatedDirections[index]),
+                degreesToCardinal(interpolatedDirections[index]),
+                Math.round(interpolatedDirections[index]),
+                interpolatedHeights[index]
+            ];
+        }),
         hoverlabel: { 
             bgcolor: 'white', 
             namelength: 0,
@@ -1238,6 +1277,7 @@ async function generateDateButtons(spotId) {
 
         buttonsData.push({ dayName, dateFormatted, localDate });
         sunApiUrls.push({
+            //note hardcoded lat and lon for LA
             url: `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${localDate}&formatted=0`,
             localDate
         });

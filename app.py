@@ -425,11 +425,28 @@ def interpolate_data(times, data, minute_points):
 
 
 
+import logging
+from datetime import timedelta
 
+# Set up logging to output to a file
+logging.basicConfig(
+    filename="debug_best_times.log",
+    level=logging.DEBUG,
+    format="%(asctime)s - %(message)s"
+)
 
 def calculate_best_times(minute_points, interpolated_speeds, interpolated_directions, interpolated_heights, spot_config):
     best_times_to_go = []
-    best_start = None  # Track the start of a "Best Time" period
+    good_times_to_go = []
+    best_start = None
+    good_start = None
+    tolerance_period = timedelta(minutes=5)
+
+    logging.debug("Starting best times calculation with tolerance for temporary failures")
+    logging.debug("Time\tTide Height\tWind Speed\tWind Direction\tis_moderate_tide\tis_high_tide\tis_offshore\tis_glassy")
+
+    temporary_fail_start = None
+    good_temporary_fail_start = None
 
     for i in range(len(minute_points)):
         time = minute_points[i]
@@ -437,27 +454,51 @@ def calculate_best_times(minute_points, interpolated_speeds, interpolated_direct
         speed = interpolated_speeds[i]
         direction = interpolated_directions[i]
 
-        # Check conditions for "Best Times"
+        # Best Times conditions (keeping existing logic)
         is_moderate_tide = spot_config['tide']['low'] <= height <= spot_config['tide']['moderate']
         is_offshore = spot_config['offshore_wind']['min'] <= direction <= spot_config['offshore_wind']['max']
         is_glassy = speed <= spot_config['wind']['glassy']
 
-        # If conditions are met, start or continue a "Best Time" period
+        # Good Times conditions (new logic)
+        is_high_tide = spot_config['tide']['moderate'] < height <= spot_config['tide']['high']
+
+        # Best Times Logic (unchanged from original)
         if is_moderate_tide and (is_offshore or is_glassy):
-            if best_start is None:  # Start a new "Best Time" period
+            temporary_fail_start = None
+            if best_start is None:
                 best_start = time
+                logging.debug(f"Starting Best Time at {best_start.isoformat()}")
         else:
-            # If conditions are no longer met, end the current "Best Time" period
-            if best_start is not None:
+            if best_start and not temporary_fail_start:
+                temporary_fail_start = time
+                logging.debug(f"Temporary condition failure started at {time.isoformat()}")
+
+            if best_start and temporary_fail_start and (time - temporary_fail_start > tolerance_period):
                 best_times_to_go.append({
                     'start': best_start.isoformat(),
                     'end': time.isoformat(),
                     'color': 'green',
                     'thickness': 6
                 })
-                best_start = None  # Reset for the next potential "Best Time" period
+                logging.debug(f"Ending Best Time: {best_start.isoformat()} to {time.isoformat()} - Tolerance exceeded")
+                best_start = None
+                temporary_fail_start = None
 
-    # Handle case where "Best Time" period continues until the end
+        # Good Times Logic (new)
+        if is_high_tide and (is_offshore or is_glassy):
+            if good_start is None:
+                good_start = time
+        else:
+            if good_start:
+                good_times_to_go.append({
+                    'start': good_start.isoformat(),
+                    'end': time.isoformat(),
+                    'color': 'yellow',
+                    'thickness': 4
+                })
+                good_start = None
+
+    # Finalize the last best period if still active (unchanged)
     if best_start is not None:
         best_times_to_go.append({
             'start': best_start.isoformat(),
@@ -465,12 +506,18 @@ def calculate_best_times(minute_points, interpolated_speeds, interpolated_direct
             'color': 'green',
             'thickness': 6
         })
+        logging.debug(f"Ending Best Time: {best_start.isoformat()} to {minute_points[-1].isoformat()}")
 
-    return best_times_to_go, []
+    # Finalize the last good period if still active
+    if good_start is not None:
+        good_times_to_go.append({
+            'start': good_start.isoformat(),
+            'end': minute_points[-1].isoformat(),
+            'color': 'yellow',
+            'thickness': 4
+        })
 
-
-
-
+    return best_times_to_go, good_times_to_go
 
 
 
@@ -555,6 +602,8 @@ def get_data():
     interpolated_speeds = interpolate_data(wind_times, wind_speeds, minute_points)
     interpolated_directions = interpolate_data(wind_times, wind_directions, minute_points)
     interpolated_heights = interpolate_data(tide_times, tide_heights, minute_points)
+
+    
 
     # Calculate best and good times to go
     # best_times_to_go, good_times_to_go = calculate_best_times(minute_points, interpolated_speeds, interpolated_directions, interpolated_heights)
