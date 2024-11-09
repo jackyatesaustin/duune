@@ -19,20 +19,39 @@
         </div>
         
 
+        <div class="spotcontentandgraphs">
          
-        <div class="surf-forecast-container">
-            <h2 style="font-size: 28px;">Surf Forecast</h2>
-            <div class="forecast-day" id="day1">
-                <strong>Saturday:</strong> <span id="forecast1">West Northwest windswell hits tonight and is solid tomorrow morning. Offshore wind is solid till 10. Tide is solid from sunrise to 8:45 and from 10:30 to 11:30. Best Spot to Go - South Bay.</span>
+        <div class="la-overview-graphs-container">
+            <h2 style="font-size: 28px;">LA Surf Overview</h2>
+            <div class="overview-week-selector">
+                <button id="thisWeekBtn" class="week-selector-btn active">This Week</button>
+                <button id="nextWeekBtn" class="week-selector-btn">Next Week</button>
+            </div>
+            <div class="overview-graphs-grid">
+                <div class="overview-graph" id="southBayOverview">
+                    <h3>South Bay</h3>
+                    <p class="region-spots">Hermosa to Dockweiler</p>
+                    <div id="southBayWaveHeightPlot" style="height: 200px;"></div>
+                </div>
+                <div class="overview-graph" id="laWestOverview">
+                    <h3>LA West</h3>
+                    <p class="region-spots">Venice & Santa Monica</p>
+                    <div id="laWestWaveHeightPlot" style="height: 200px;"></div>
+                </div>
+                <div class="overview-graph" id="southMalibuOverview">
+                    <h3>South Malibu</h3>
+                    <p class="region-spots">Sunset to Malibu Pier</p>
+                    <div id="southMalibuWaveHeightPlot" style="height: 200px;"></div>
+                </div>
+                <div class="overview-graph" id="northMalibuOverview">
+                    <h3>North Malibu</h3>
+                    <p class="region-spots">North of Point Dume</p>
+                    <div id="northMalibuWaveHeightPlot" style="height: 200px;"></div>
+                </div>
+            </div>
+        </div>
 
-                <strong>Best Spot to Go:</strong> <span id="forecast1">South Bay beach breaks. Redondo, El Porto and Dockweiler. Manhattan Beach Piers been bad. </span>
-            </div>
-            <!--
-            <div class="forecast-day" id="day2">
-                <strong>Best Spot to Go:</strong> <span id="forecast1">South Bay beach breaks. Redondo, El Porto and Dockweiler. Manhattan Beach Piers been bad. </span>
-            </div>
-            -->
-        </div>    
+        </div>
 
         
         <!-- Main Content Box -->

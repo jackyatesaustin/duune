@@ -1,3 +1,16 @@
+/*
+ideas
+1. can we do this -     // Fetch sunrise and sunset times for the selected spot and date
+    const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${date}&formatted=0`;
+    let sunriseTime, sunsetTime;
+
+globally and then reference it?? that way we're not getting it everytime
+
+*/
+
+
+
+
 // At the top of the file with other global variables
 let isInitialLoad = true;
 let isUpdatingBiggestDays = false;
@@ -889,7 +902,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             namelength: 0  // Show full label length
         },
         hovermode: 'closest',
-        showlegend: false
+        showlegend: false,
+        
     };
 
     // Render wind graph
@@ -1160,11 +1174,22 @@ data.best_times.forEach(period => {
     `;
 
     // Simulate the loading process for the graph (or after your data fetch is done)
-    setTimeout(() => {
+    setTimeout( async() => {
         // After the data is fetched and the graph is ready, hide the loading GIF and message, show the graph
         waveLoading.style.display = 'none';  // Hide the loading GIF and message
         waveHeightPlot.style.display = 'block';  // Show the wave height plot
         updateWaveGraph(date, sunriseTime, sunsetTime);  // Update the graph
+        
+        
+        // Check which week is currently selected
+        const nextWeekBtn = document.getElementById('nextWeekBtn');
+        const startDate = nextWeekBtn.classList.contains('active') 
+            ? new Date(new Date().setDate(new Date().getDate() + 7))
+            : new Date();
+        
+        await updateRegionalOverviews(startDate.toISOString().split('T')[0]);
+
+
 
         // Hide loading for wind graph and show the plot
         document.getElementById('windLoading').style.display = 'none';
@@ -1181,27 +1206,6 @@ data.best_times.forEach(period => {
 }
 
 
-// Utility function to get segments of conditions
-/*
-function getConditionSegments(data, conditionFn) {
-    console.log(`%c[getConditionSegments] Starting to process data with length: ${data.length}`, "color: purple; font-weight: bold;");
-    const segments = [];
-    let segment = [];
-    for (let i = 0; i < data.length; i++) {
-        if (conditionFn(data[i])) {
-            segment.push(i);
-        } else if (segment.length) {
-            segments.push(segment);
-            segment = [];
-        }
-    }
-    if (segment.length) segments.push(segment);
-    console.log(`%c[getConditionSegments] Finished processing. Total segments found: ${segments.length}`, "color: purple; font-weight: bold;");
-    return segments;
-}
-*/
-
-
 
 // Add this helper function to convert degrees to cardinal directions
 function degreesToCardinal(degrees) {
@@ -1210,6 +1214,8 @@ function degreesToCardinal(degrees) {
     const index = Math.round(((degrees % 360) / 22.5)) % 16;
     return directions[index];
 }
+
+
 
 function degreesToArrow(degrees) {
     // Add 180 degrees to invert the direction (wind is coming FROM this direction)
@@ -1384,6 +1390,8 @@ function filterTimesForDay(waveTimes, startHour = 5, endHour = 21) {
         return hours >= startHour && hours <= endHour;
     });
 }
+
+
 
 function filterTimesAndHeightsForDay(waveTimes, waveHeights, startHour = 5, endHour = 21) {
     console.log(`%c[filterTimesAndHeightsForDay] Filtering wave times and heights between ${startHour}:00 and ${endHour}:00`, "color: purple; font-weight: bold;");
@@ -1628,6 +1636,7 @@ function adjustToLocalDate(utcDateString) {
 }
 
 
+
 //working but slow
 
 async function updateBiggestUpcomingLADays() {
@@ -1750,6 +1759,8 @@ function formatDate(selectedDate) {
     return formattedDate.replace(day, day + suffix);
 }
 
+
+
 // Function to update the label above the wave height graph
 function updateSpotDateLabel(selectedSpot, selectedDate) {
     console.log("%c[Update Label] Starting to update spot and date label...", "color: blue; font-weight: bold;");
@@ -1775,6 +1786,317 @@ function updateSpotDateLabel(selectedSpot, selectedDate) {
     console.log("%c[Update Label] Label updated successfully.", "color: blue; font-weight: bold;");
 }
 
+
+async function updateRegionalOverviews(startDate) {
+    console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, "color: purple; font-weight: bold;");
+
+    const regions = {
+        southBay: {
+            id: 'southBayWaveHeightPlot',
+            spots: ['Redondo Breakwater', 'Hermosa Pier', 'Manhattan Beach', 'El Porto', 'Dockweiler']
+           // spots: ['Redondo Breakwater', 'Manhattan Beach', 'El Porto', 'Dockweiler']
+        },
+        laWest: {
+            id: 'laWestWaveHeightPlot',
+            spots: ['Venice Breakwater', 'Santa Monica Bay St', 'Will Rogers']
+           // spots: ['Venice Breakwater', 'Santa Monica Bay St']
+        },
+        southMalibu: {
+            id: 'southMalibuWaveHeightPlot',
+            spots: ['Sunset', 'Topanga', 'Malibu First Point']
+           // spots: ['Sunset', 'Malibu First Point']
+        },
+        northMalibu: {
+            id: 'northMalibuWaveHeightPlot',
+            spots: ['Zuma', 'Leo Carrillo', 'County Line']
+        }
+    };
+
+    const windowWidth = window.innerWidth;
+    const isMobile = windowWidth <= 768;
+
+    // Generate array of 7 consecutive dates
+    const dates = [];
+    const start = new Date(startDate);
+    for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(start);
+        currentDate.setDate(start.getDate() + i);
+        dates.push(currentDate.toISOString().split('T')[0]);
+    }
+    console.log(`%c[RegionalOverviews] Processing dates:`, "color: purple;", dates);
+
+    for (const [regionName, region] of Object.entries(regions)) {
+        console.log(`%c[RegionalOverviews] Processing ${regionName} with spots:`, "color: blue;", region.spots);
+        
+        try {
+            let regionalData = new Map();
+            let spotDataLog = {}; // For logging purposes
+
+            // Fetch data for each spot in the region
+            for (const spot of region.spots) {
+                const spotId = await getSpotId(spot);
+                if (!spotId) {
+                    console.error(`%c[RegionalOverviews] ❌ Could not get ID for spot: ${spot}`, "color: red;");
+                    continue;
+                }
+                console.log(`%c[RegionalOverviews] ✓ Got spot ID for ${spot}: ${spotId}`, "color: green;");
+                
+                spotDataLog[spot] = {}; // Initialize logging object for this spot
+
+                // Get forecast data for each date
+                for (const currentDate of dates) {
+                    console.log(`%c[RegionalOverviews] Fetching data for ${spot} on ${currentDate}`, "color: blue;");
+                    await getSpotForecast(spotId, currentDate);
+                    
+                    if (cachedWaveData[currentDate]) {
+                        spotDataLog[spot][currentDate] = []; // Initialize array for this date
+
+                        cachedWaveData[currentDate].forEach(dataPoint => {
+                            const timeKey = dataPoint.time.getTime();
+                            if (!regionalData.has(timeKey)) {
+                                regionalData.set(timeKey, []);
+                            }
+                            regionalData.get(timeKey).push(dataPoint.height);
+                            
+                            // Log the data point
+                            spotDataLog[spot][currentDate].push({
+                                time: dataPoint.time.toLocaleString(),
+                                height: dataPoint.height
+                            });
+                        });
+
+                        console.log(`%c[RegionalOverviews] ✓ Data points for ${spot} on ${currentDate}:`, "color: green;", 
+                            spotDataLog[spot][currentDate]);
+                    } else {
+                        console.warn(`%c[RegionalOverviews] ⚠ No data found for ${spot} on ${currentDate}`, "color: orange;");
+                    }
+                }
+            }
+
+            if (regionalData.size === 0) {
+                console.error(`%c[RegionalOverviews] ❌ No valid data collected for ${regionName}`, "color: red;");
+                continue;
+            }
+
+            // Log detailed data for each spot
+            console.log(`%c[RegionalOverviews] Detailed data for ${regionName}:`, "color: purple;", spotDataLog);
+
+            // Convert Map to arrays for plotting and log averages
+            const times = Array.from(regionalData.keys()).sort();
+            const heights = times.map(time => {
+                const heightsAtTime = regionalData.get(time);
+                const avg = heightsAtTime.reduce((sum, height) => sum + height, 0) / heightsAtTime.length;
+                
+                // Log the averaging calculation
+                console.log(`%c[RegionalOverviews] Average calculation for ${new Date(time).toLocaleString()}:`, "color: blue;", {
+                    individualHeights: heightsAtTime,
+                    averageHeight: avg
+                });
+                
+                return avg;
+            });
+
+            console.log(`%c[RegionalOverviews] ${regionName} data summary:`, "color: blue;", {
+                totalTimepoints: times.length,
+                heightRange: {
+                    min: Math.min(...heights),
+                    max: Math.max(...heights),
+                    avg: heights.reduce((sum, h) => sum + h, 0) / heights.length
+                }
+            });
+
+// Inside updateRegionalOverviews function, where we create the trace and layout
+// Inside updateRegionalOverviews function, where we create the trace and layout
+// Create shapes array for night shading and day separators
+const shapes = [];
+
+// Special case for first day - add shading from start to sunrise
+const firstDayDate = new Date(dates[0]);
+const firstDaySunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dates[0]}&formatted=0`;
+try {
+    const firstDayResponse = await fetch(firstDaySunApiUrl);
+    const firstDaySunData = await firstDayResponse.json();
+    
+    if (firstDaySunData.status === 'OK') {
+        const firstDaySunrise = new Date(firstDaySunData.results.sunrise);
+        
+        // Add shading from start of day to sunrise
+        shapes.push({
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: new Date(firstDayDate.setHours(0, 0, 0, 0)).getTime(),
+            x1: firstDaySunrise.getTime(),
+            y0: 0,
+            y1: 1,
+            fillcolor: '#E5E5E5',
+            opacity: 0.3,
+            line: { width: 0 }
+        });
+    }
+} catch (error) {
+    console.error(`Failed to fetch sun times for first day:`, error);
+}
+
+
+for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(dates[i]);
+    
+    // Get sunrise/sunset times for each date
+    const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dates[i]}&formatted=0`;
+    try {
+        const response = await fetch(sunApiUrl);
+        const sunData = await response.json();
+        
+        if (sunData.status === 'OK') {
+            const sunriseTime = new Date(sunData.results.sunrise);
+            const sunsetTime = new Date(sunData.results.sunset);
+
+            // Night shading
+            shapes.push({
+                type: 'rect',
+                xref: 'x',
+                yref: 'paper',
+                x0: sunsetTime.getTime(),
+                x1: sunriseTime.getTime() + (24 * 60 * 60 * 1000),
+                y0: 0,
+                y1: 1,
+                fillcolor: '#E5E5E5',
+                opacity: 0.3,
+                line: { width: 0 }
+            });
+
+            // Add vertical line for start of each day
+            shapes.push({
+                type: 'line',
+                xref: 'x',
+                yref: 'paper',
+                x0: new Date(currentDate.setHours(0, 0, 0, 0)).getTime(),
+                x1: new Date(currentDate.setHours(0, 0, 0, 0)).getTime(),
+                y0: 0,
+                y1: 1,
+                line: {
+                    color: 'rgba(0, 0, 255, 0.3)',
+                    width: 1,
+                    dash: 'dot'
+                }
+            });
+        }
+    } catch (error) {
+        console.error(`Failed to fetch sun times for ${dates[i]}:`, error);
+    }
+}
+
+// Add one final line for the end of the last day
+shapes.push({
+    type: 'line',
+    xref: 'x',
+    yref: 'paper',
+    x0: new Date(dates[6] + 'T23:59:59').getTime(),
+    x1: new Date(dates[6] + 'T23:59:59').getTime(),
+    y0: 0,
+    y1: 1,
+    line: {
+        color: 'rgba(0, 0, 255, 0.3)',
+        width: 1,
+        dash: 'dot'
+    }
+});
+
+// Create trace for plotting
+const trace = {
+    x: times.map(t => new Date(t)),
+    y: heights,
+    mode: 'lines',
+    name: 'Average Wave Height',
+    line: { 
+        color: 'blue', 
+        width: 3,
+        shape: 'spline',
+        smoothing: 1.3
+    },
+    hovertemplate: `
+        <b>%{x|%I:%M %p}</b><br>
+        %{x|%a %b %d}<br>
+        Height: %{y:.1f} ft
+        <extra></extra>
+    `
+};
+
+// Create layout with shapes included
+const layout = {
+    xaxis: {
+        tickformat: '%a %m/%d',
+        dtick: 24 * 3600 * 1000,
+        tickmode: 'array',
+        tickvals: dates.map(date => {
+            const middayTime = new Date(date);
+            middayTime.setHours(12, 0, 0, 0);
+            return middayTime.getTime();
+        }),
+        range: [
+            new Date(dates[0] + 'T00:00:00').getTime(),
+            new Date(dates[6] + 'T23:59:59').getTime()
+        ],
+        tickfont: { size: isMobile ? 10 : 12 }
+    },
+    yaxis: {
+        title: 'Height (ft)',
+        tickfont: { size: isMobile ? 10 : 12 },
+        titlefont: { size: isMobile ? 12 : 14 }
+    },
+    height: 200,
+    margin: {
+        l: isMobile ? 40 : 50,
+        r: isMobile ? 30 : 40,
+        t: 20,
+        b: isMobile ? 30 : 40
+    },
+    shapes: shapes,
+    showlegend: false
+};
+
+// Plot the graph
+Plotly.newPlot(region.id, [trace], layout, {
+    responsive: true,
+    displayModeBar: false
+});
+
+            console.log(`%c[RegionalOverviews] ✓ Successfully plotted 7-day forecast for ${regionName}`, "color: green;");
+        } catch (error) {
+            console.error(`%c[RegionalOverviews] ❌ Error processing ${regionName}:`, "color: red;", error);
+        }
+    }
+}
+
+// Add this after your updateRegionalOverviews function
+document.addEventListener('DOMContentLoaded', function() {
+    const thisWeekBtn = document.getElementById('thisWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+
+    function updateButtonStates(activeBtn) {
+        thisWeekBtn.classList.toggle('active', activeBtn === thisWeekBtn);
+        nextWeekBtn.classList.toggle('active', activeBtn === nextWeekBtn);
+    }
+
+    thisWeekBtn.addEventListener('click', async () => {
+        console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
+        updateButtonStates(thisWeekBtn);
+        const today = new Date();
+        await updateRegionalOverviews(today.toISOString().split('T')[0]);
+    });
+
+    nextWeekBtn.addEventListener('click', async () => {
+        console.log('%c[WeekSelector] Switching to Next Week view', 'color: purple;');
+        updateButtonStates(nextWeekBtn);
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7); // Add 7 days to get to next week
+        await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
+    });
+
+    // Initialize with this week's data
+    thisWeekBtn.click();
+});
 
 
 window.addEventListener('resize', function() {

@@ -801,3 +801,71 @@ h2 {
 .legend-item.darkgreen span {
     background-color: darkgreen;
 }
+
+
+
+
+
+/* LA overview graphs */
+
+.overview-graphs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;  /* Or whatever maximum width you prefer */
+    margin: 0 auto;     /* Centers the container */
+}
+
+.overview-graph {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;        /* Takes full width of container */
+}
+
+.overview-graph h3 {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.region-spots {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+/* Optional: Make the container title centered */
+.la-overview-graphs-container h2 {
+    text-align: center;
+}
+
+.overview-week-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.week-selector-btn {
+    padding: 8px 16px;
+    border: 2px solid #007bff;
+    background: white;
+    color: #007bff;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.week-selector-btn:hover {
+    background: #007bff;
+    color: white;
+}
+
+.week-selector-btn.active {
+    background: #007bff;
+    color: white;
+}
