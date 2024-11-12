@@ -1,10 +1,13 @@
 /*
 ideas
-1. can we do this -     // Fetch sunrise and sunset times for the selected spot and date
+
+1. making timedate global and referencing it
+can we do this globally and then reference it so we're not getting it everytime -     // Fetch sunrise and sunset times for the selected spot and date
     const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${date}&formatted=0`;
     let sunriseTime, sunsetTime;
 
-globally and then reference it?? that way we're not getting it everytime
+
+
 
 */
 
@@ -16,9 +19,25 @@ let isInitialLoad = true;
 let isUpdatingBiggestDays = false;
 
 
+
 // Updated window.onload function THAT LOADS THE BUTTONS 
 window.onload = async function () {
     console.log("%c[App Init] Page loaded. Initializing application...", "color: blue; font-weight: bold;");
+
+        // Load regional overviews first
+        try {
+            console.log("%c[App Init] Loading regional overviews...", "color: blue;");
+            await updateRegionalOverviews(new Date().toISOString().split('T')[0]);
+            console.log("%c[App Init] Regional overviews loaded successfully", "color: green;");
+        } catch (error) {
+            console.error("%c[App Init] Error loading regional overviews:", "color: red;", error);
+        }
+
+
+    // Fetch wave forecast data from the API
+    await fetchWaveData();
+
+
 
     const dateInput = document.getElementById('dateInput');
     const spotSelect = document.getElementById('spotSelect');
@@ -575,8 +594,15 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
 
     // For each segment type, create a single trace with the appropriate color
     glassySegments.forEach(segment => {
+        /*
         const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
                         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
+        */
+        const isOffshore = data.spot_config.offshore_wind ? (
+            interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+            interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+            ) : false;           
+
         
         // Create a single trace for this segment
         
@@ -615,9 +641,17 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     });
 
     mildWindSegments.forEach(segment => {
+        /*
         const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
                         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
-        
+        */
+       const isOffshore = data.spot_config.offshore_wind ? (
+        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+    
+
+
         const trace = {
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedSpeeds[i]),
@@ -652,8 +686,17 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     });
 
     badWindSegments.forEach(segment => {
+        /*
         const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
                         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
+        */
+       const isOffshore = data.spot_config.offshore_wind ? (
+        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+    
+
+        
         
         const trace = {
             x: segment.map(i => minutePoints[i]),
@@ -691,12 +734,24 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
 
 
 
-
+/*
     const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < tideConfig.low);
     const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= tideConfig.low && height <= tideConfig.moderate);
     const highTideSegments = getConditionSegments(interpolatedHeights, height => height > tideConfig.moderate && height <= tideConfig.high);
     const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > tideConfig.high);
-    
+  */
+ 
+    const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < data.spot_config.tide.low);
+    const moderateTideSegments = getConditionSegments(interpolatedHeights, height => 
+        height >= data.spot_config.tide.low && height <= data.spot_config.tide.moderate
+    );
+    const highTideSegments = getConditionSegments(interpolatedHeights, height => 
+        height > data.spot_config.tide.moderate && height <= data.spot_config.tide.high
+    );
+    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > data.spot_config.tide.high);
+
+
+
 
     // Clear Best and Good times list
     const bestTimesList = document.getElementById('bestTimesList');
@@ -759,12 +814,109 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const tideTraces = [];
     let showLegendLow = true, showLegendModerate = true, showLegendHigh = true, showLegendVeryHigh = true;
 
+
+// Update the trace colors and names
+veryHighTideSegments.forEach(segment => {
+    tideTraces.push({
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedHeights[i]),
+        mode: 'lines',
+        name: `Very High Tide (> ${data.spot_config.tide.veryHigh} ft)`,
+        line: { color: 'red', width: 3 },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(255, 0, 0, 0.2)',
+        showlegend: showLegendVeryHigh,
+        hovertemplate: 
+        'Very High<br>' +
+        '📏 %{y:.1f} ft<br>' +
+        '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    });
+    showLegendVeryHigh = false;
+});
+
+highTideSegments.forEach(segment => {
+    tideTraces.push({
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedHeights[i]),
+        mode: 'lines',
+        name: `High Tide (${data.spot_config.tide.high}-${data.spot_config.tide.veryHigh} ft)`,
+        line: { color: 'yellow', width: 3 },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(255, 255, 0, 0.2)',
+        showlegend: showLegendHigh,
+        hovertemplate: 
+        'High<br>' +
+        '📏 %{y:.1f} ft<br>' +
+        '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    });
+    showLegendHigh = false;
+});
+
+moderateTideSegments.forEach(segment => {
+    tideTraces.push({
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedHeights[i]),
+        mode: 'lines',
+        name: `Good Tide (${data.spot_config.tide.low}-${data.spot_config.tide.high} ft)`,
+        line: { color: 'limegreen', width: 6 },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(0, 255, 0, 0.2)',
+        showlegend: showLegendModerate,
+        hovertemplate: 
+        'Good<br>' +
+        '📏 %{y:.1f} ft<br>' +
+        '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    });
+    showLegendModerate = false;
+});
+
+lowTideSegments.forEach(segment => {
+    tideTraces.push({
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedHeights[i]),
+        mode: 'lines',
+        //name: `Low Tide (< ${data.spot_config.tide.low} ft)`,
+        name: `Low Tide)`,
+        line: { color: 'red', width: 3 },
+        fill: 'tozeroy',
+        fillcolor: 'rgba(255, 0, 0, 0.2)',
+        showlegend: showLegendLow,
+        hovertemplate: 
+        'Low<br>' +
+        '📏 %{y:.1f} ft<br>' +
+        '🕒 %{x|%I:%M %p}<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    });
+    showLegendLow = false;
+});
+
+    /*
     lowTideSegments.forEach(segment => {
         tideTraces.push({
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedHeights[i]),
             mode: 'lines',
-            name: `Low Tide (< ${tideConfig.moderate} ft)`,
+            //name: `Low Tide (< ${tideConfig.moderate} ft)`,
+            name: `Low Tide (< ${data.spot_config.tide.low} ft)`,
             line: { color: 'lightcoral', width: 3 },
             fill: 'tozeroy',
             fillcolor: 'rgba(255, 192, 192, 0.2)',
@@ -789,7 +941,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedHeights[i]),
             mode: 'lines',
-            name: `Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)`,
+           // name: `Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)`,
+           name: `Moderate Tide (${data.spot_config.tide.low}-${data.spot_config.tide.moderate} ft)`,
             line: { color: 'limegreen', width: 6 },
             fill: 'tozeroy',
             fillcolor: 'rgba(0, 255, 0, 0.2)',
@@ -814,7 +967,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedHeights[i]),
             mode: 'lines',
-            name: `High Tide (${tideConfig.high}-${tideConfig.veryHigh} ft)`,
+            //name: `High Tide (${tideConfig.high}-${tideConfig.veryHigh} ft)`,
+            name: `High Tide (${data.spot_config.tide.moderate}-${data.spot_config.tide.high} ft)`,
             line: { color: 'yellow', width: 6 },
             fill: 'tozeroy',
             fillcolor: 'rgba(255, 255, 0, 0.2)',
@@ -822,9 +976,9 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
             //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
             hovertemplate: 
-            '🌊 High<br>' +
-            '📏 %{y:.1f} ft<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
+                '🌊 High<br>' +
+                '📏 %{y:.1f} ft<br>' +
+                '🕒 %{x|%I:%M %p}<extra></extra>',
             hoverlabel: { 
                 bgcolor: 'white', 
                 namelength: 0,
@@ -839,7 +993,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             x: segment.map(i => minutePoints[i]),
             y: segment.map(i => interpolatedHeights[i]),
             mode: 'lines',
-            name: `Very High Tide (> ${tideConfig.veryHigh} ft)`,
+            //name: `Very High Tide (> ${tideConfig.veryHigh} ft)`,
+            name: `Very High Tide (> ${data.spot_config.tide.high} ft)`,
             line: { color: 'red', width: 3 },
             fill: 'tozeroy',
             fillcolor: 'rgba(255, 0, 0, 0.2)',
@@ -847,9 +1002,9 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
             //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
             //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
             hovertemplate: 
-            '🌊 Very High<br>' +
-            '📏 %{y:.1f} ft<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
+                '🌊 Very High<br>' +
+                '📏 %{y:.1f} ft<br>' +
+                '🕒 %{x|%I:%M %p}<extra></extra>',
             hoverlabel: { 
                 bgcolor: 'white', 
                 namelength: 0,
@@ -858,7 +1013,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         });
         showLegendVeryHigh = false;
     });
-
+*/
 
     // Adjust for mobile screen responsiveness
     const isMobile = window.innerWidth < 768;
@@ -1163,10 +1318,10 @@ data.best_times.forEach(period => {
 `;
 
     document.getElementById('tideLegend').innerHTML = `
-        <div class="legend-item lightcoral"><span></span> Low Tide (< ${tideConfig.moderate} ft)</div>
-        <div class="legend-item green"><span></span> Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)</div>
-        <div class="legend-item yellow"><span></span> High Tide (${tideConfig.high}-${tideConfig.veryHigh} ft)</div>
-        <div class="legend-item red"><span></span> Very High Tide (> ${tideConfig.veryHigh} ft)</div>
+        <div class="legend-item lightcoral"><span></span> Low</div>
+        <div class="legend-item green"><span></span> Moderate</div>
+        <div class="legend-item yellow"><span></span> High</div>
+        <div class="legend-item red"><span></span> Very High</div>
     `;
     document.getElementById('bestTimesLegend').innerHTML = `
         <div class="legend-item green"><span></span> Best Time</div>
@@ -1187,7 +1342,7 @@ data.best_times.forEach(period => {
             ? new Date(new Date().setDate(new Date().getDate() + 7))
             : new Date();
         
-        await updateRegionalOverviews(startDate.toISOString().split('T')[0]);
+    //    await updateRegionalOverviews(startDate.toISOString().split('T')[0]);
 
 
 
@@ -1614,7 +1769,7 @@ async function updateTopUpcomingDays(spotName) {
                 document.getElementById('biggestDayRight').onclick = () => updateDateAndGraph(topDays[2].date);
             }
         } else {
-            document.getElementById('biggestDayLeft').textContent = 'No wave data available for upcoming days';
+            document.getElementById('biggestDayLeft').textContent = 'Loading this. One sec...';
             document.getElementById('biggestDayCenter').textContent = '';
             document.getElementById('biggestDayRight').textContent = '';
         }
@@ -1787,28 +1942,33 @@ function updateSpotDateLabel(selectedSpot, selectedDate) {
 }
 
 
+
+
 async function updateRegionalOverviews(startDate) {
     console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, "color: purple; font-weight: bold;");
 
+
+    //get the surf spots that are most different directionally facing, or get the surf spots that are at the ends of the region
     const regions = {
         southBay: {
             id: 'southBayWaveHeightPlot',
-            spots: ['Redondo Breakwater', 'Hermosa Pier', 'Manhattan Beach', 'El Porto', 'Dockweiler']
-           // spots: ['Redondo Breakwater', 'Manhattan Beach', 'El Porto', 'Dockweiler']
+            // spots: ['Redondo Breakwater', 'Hermosa Pier', 'Manhattan Beach', 'El Porto', 'Dockweiler']
+            spots: ['El Porto', 'Redondo Breakwater']
         },
         laWest: {
             id: 'laWestWaveHeightPlot',
-            spots: ['Venice Breakwater', 'Santa Monica Bay St', 'Will Rogers']
-           // spots: ['Venice Breakwater', 'Santa Monica Bay St']
+            //spots: ['Venice Breakwater', 'Santa Monica Bay St', 'Will Rogers']
+            spots: ['Venice Breakwater', 'Will Rogers']
         },
         southMalibu: {
             id: 'southMalibuWaveHeightPlot',
-            spots: ['Sunset', 'Topanga', 'Malibu First Point']
-           // spots: ['Sunset', 'Malibu First Point']
+           // spots: ['Sunset', 'Topanga', 'Malibu First Point']
+            spots: ['Sunset', 'Malibu First Point']
         },
         northMalibu: {
             id: 'northMalibuWaveHeightPlot',
-            spots: ['Zuma', 'Leo Carrillo', 'County Line']
+            //spots: ['Zuma', 'Leo Carrillo', 'County Line']
+            spots: ['Zuma', 'Leo Carrillo']
         }
     };
 
@@ -1829,8 +1989,8 @@ async function updateRegionalOverviews(startDate) {
         console.log(`%c[RegionalOverviews] Processing ${regionName} with spots:`, "color: blue;", region.spots);
         
         try {
-            let regionalData = new Map();
-            let spotDataLog = {}; // For logging purposes
+            let regionalData = new Map(); // Reset for each region
+            let spotDataLog = {}; // Reset for each region's logging purposes
 
             // Fetch data for each spot in the region
             for (const spot of region.spots) {
@@ -2003,7 +2163,23 @@ shapes.push({
     }
 });
 
-// Create trace for plotting
+let waveData = [];
+try {
+    const response = await fetch('/wave_data');
+    if (response.ok) {
+        waveData = await response.json();
+        console.log(`%c[RegionalOverviews] Fetched wave data:`, "color: purple;", waveData);
+    } else {
+        console.error(`%c[RegionalOverviews] Failed to fetch wave data`, "color: red;");
+    }
+} catch (error) {
+    console.error(`%c[RegionalOverviews] Error fetching wave data:`, "color: red;", error);
+}
+
+
+
+// Inside updateRegionalOverviews function, modify the trace creation:
+
 const trace = {
     x: times.map(t => new Date(t)),
     y: heights,
@@ -2018,9 +2194,33 @@ const trace = {
     hovertemplate: `
         <b>%{x|%I:%M %p}</b><br>
         %{x|%a %b %d}<br>
-        Height: %{y:.1f} ft
+        Height: %{y:.1f} ft<br>
+        %{customdata}<br>
         <extra></extra>
-    `
+    `,
+    
+    customdata: times.map(time => {
+        // Convert time to Date object if it isn't already
+        const timeDate = time instanceof Date ? time : new Date(time);
+        
+        // Find matching wave data for this timestamp
+        const matchingWaveData = waveData.find(d => {
+            // Convert wave data timestamp to Date object
+            const waveTime = new Date(d.timestamp);
+            // Compare timestamps rounded to minutes for better matching
+            return Math.abs(waveTime.getTime() - timeDate.getTime()) < 300000; // Within 5 minutes
+        });
+
+        if (matchingWaveData && matchingWaveData.swells) {
+            // Create a string for each swell
+            const swellsText = matchingWaveData.swells.map((swell, index) => 
+                `Swell ${index + 1}: ${swell.direction}° ${degreesToCardinal(swell.direction)} @ ${swell.period}s`
+            ).join('<br>');
+            
+            return swellsText;
+        }
+        return 'No swell data available';
+    })
 };
 
 // Create layout with shapes included
@@ -2053,7 +2253,7 @@ const layout = {
         b: isMobile ? 30 : 40
     },
     shapes: shapes,
-    showlegend: false
+    showlegend: false,
 };
 
 // Plot the graph
@@ -2068,6 +2268,16 @@ Plotly.newPlot(region.id, [trace], layout, {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 // Add this after your updateRegionalOverviews function
 document.addEventListener('DOMContentLoaded', function() {
@@ -2097,6 +2307,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize with this week's data
     thisWeekBtn.click();
 });
+
+
+// Function to fetch wave data from Flask API
+async function fetchWaveData() {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/wave_data');
+        if (!response.ok) throw new Error("Network response was not ok");
+
+        const waveData = await response.json();
+        console.log("%c[fetch wave data] Wave Data:", "color: blue; font-weight: bold;", waveData);
+
+    } catch (error) {
+        console.error("%c[fetch wave data] Error fetching wave data:", "color: red; font-weight: bold;", error);
+    }
+}
+
+
+
 
 
 window.addEventListener('resize', function() {

@@ -14,6 +14,9 @@ from datetime import datetime, timedelta
 from surf_spots_config import surf_spots_config
 
 
+
+
+
 app = Flask(__name__)
 # Set up caching for the Flask app
 cache = Cache(config={'CACHE_TYPE': 'simple'})  # You can switch to Redis if needed
@@ -199,6 +202,96 @@ surf_spots_config = {
     }
 }
 """
+
+
+#################### scraping wave data from noaa ############################################
+
+from datetime import datetime
+import pytz
+import requests
+
+def fetch_wave_data():
+    try:
+        now = datetime.now()
+        year = now.year
+        month = now.month
+        day = now.day
+        
+        url = f"https://api.spitcast.com/api/buoy_ww3/12/{year}/{month}/{day}"
+        print(f"Fetching wave data from: {url}")
+        
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        data = response.json()
+        wave_data = []
+        
+        # Process forecast data
+        for entry in data:
+            # Get GMT date components
+            date_gmt = entry.get('date_gmt', {})
+            if date_gmt:
+                # Convert GMT date components to datetime
+                forecast_dt = datetime(
+                    year=date_gmt.get('yy', 2024),
+                    month=date_gmt.get('mm', 1),
+                    day=date_gmt.get('dd', 1),
+                    hour=date_gmt.get('hh', 0)
+                )
+                
+                # Convert to Pacific time
+                pacific_tz = pytz.timezone('America/Los_Angeles')
+                local_dt = forecast_dt.replace(tzinfo=pytz.UTC).astimezone(pacific_tz)
+                
+                # Get all valid swells (numbered 0-5)
+                swells = []
+                for i in range(6):  # Check all possible swells
+                    swell = entry.get(str(i), {})
+                    if all(swell.get(key) is not None for key in ['dir', 'hs', 'tp']):
+                        # Calculate inverse direction
+                        direction = (swell['dir'] + 180) % 360 if swell['dir'] is not None else None
+                        swells.append({
+                            "direction": direction,
+                            "height": swell['hs'],  # Wave height in meters
+                            "period": swell['tp']   # Wave period in seconds
+                        })
+                
+                # Get dominant swell data and invert its direction too
+                dom_data = entry.get('dom', {})
+                dom_direction = (dom_data.get('dir') + 180) % 360 if dom_data.get('dir') is not None else None
+                
+                wave_data.append({
+                    "timestamp": local_dt.isoformat(),
+                    "swells": swells,
+                    "dominant": {
+                        "direction": dom_direction,
+                        "height": dom_data.get('hs'),  # Wave height in meters
+                        "period": dom_data.get('tp')   # Wave period in seconds
+                    },
+                    "hst": entry.get('hst')  # Include significant wave height
+                })
+        
+        # Sort by timestamp to ensure chronological order
+        wave_data.sort(key=lambda x: x['timestamp'])
+        
+        print(f"Processed wave data (first 2 entries): {wave_data[:2]}")
+        print(f"Total forecast entries: {len(wave_data)}")
+        return wave_data
+        
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while fetching the wave data: {e}")
+        return []
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return []
+
+
+@app.route('/wave_data', methods=['GET'])
+def get_wave_data():
+    wave_data = fetch_wave_data()
+    return jsonify(wave_data)
+
+
 
 #################### getting water temp with ndbc-api ############################################
 

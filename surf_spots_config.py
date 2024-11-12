@@ -3,6 +3,7 @@ surf_spots_config = {
         "lat": 33.863,
         "lon": -118.400,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -24,6 +25,7 @@ surf_spots_config = {
         "lat": 33.862,
         "lon": -118.399,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -45,6 +47,51 @@ surf_spots_config = {
         "lat": 33.884,
         "lon": -118.410,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
+        "tide": {
+            "low": 2,
+            "moderate": 4.5,
+            "high": 5.1,
+            "veryHigh": 6
+        },
+        "wave_angle": 250,
+        "offshore_wind": {
+            "min": 20,
+            "max": 50
+        },
+        "wind": {
+            "glassy": 5,
+            "mild": 7,
+            "bad": 10
+        }
+    },
+        "Manhattan Beach Pier South": {
+        "lat": 33.884,
+        "lon": -118.410,
+        "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
+        "tide": {
+            "low": 2,
+            "moderate": 4.5,
+            "high": 5.1,
+            "veryHigh": 6
+        },
+        "wave_angle": 250,
+        "offshore_wind": {
+            "min": 20,
+            "max": 50
+        },
+        "wind": {
+            "glassy": 5,
+            "mild": 7,
+            "bad": 10
+        }
+    },
+        "Manhattan Beach Pier North": {
+        "lat": 33.884,
+        "lon": -118.410,
+        "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -66,6 +113,7 @@ surf_spots_config = {
         "lat": 33.900,
         "lon": -118.420,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -74,8 +122,8 @@ surf_spots_config = {
         },
         "wave_angle": 250,
         "offshore_wind": {
-            "min": 35,
-            "max": 100
+            "min": 25,
+            "max": 120
         },
         "wind": {
             "glassy": 5,
@@ -87,6 +135,7 @@ surf_spots_config = {
         "lat": 33.931,
         "lon": -118.442,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -108,6 +157,7 @@ surf_spots_config = {
         "lat": 33.976,
         "lon": -118.467,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -129,6 +179,7 @@ surf_spots_config = {
         "lat": 33.978,
         "lon": -118.465,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -150,6 +201,7 @@ surf_spots_config = {
         "lat": 33.9947,
         "lon": -118.4656,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -171,6 +223,7 @@ surf_spots_config = {
         "lat": 34.0044,
         "lon": -118.4678,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -192,6 +245,7 @@ surf_spots_config = {
         "lat": 34.0157,
         "lon": -118.4962,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -213,6 +267,7 @@ surf_spots_config = {
         "lat": 34.0286,
         "lon": -118.4968,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -234,6 +289,7 @@ surf_spots_config = {
         "lat": 34.0205,
         "lon": -118.4978,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -276,6 +332,7 @@ surf_spots_config = {
         "lat": 34.0254,
         "lon": -118.7784,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -297,6 +354,7 @@ surf_spots_config = {
         "lat": 34.0258,
         "lon": -118.7795,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -318,6 +376,7 @@ surf_spots_config = {
         "lat": 34.0262,
         "lon": -118.7804,
         "station_id": "ICAC1",  # Closest station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 2,
             "moderate": 4.5,
@@ -339,9 +398,10 @@ surf_spots_config = {
         "lat": 34.010,
         "lon": -118.820,
         "station_id": "NTBC1",  # Closest station for Zuma
+        "county_id": 12,
         "spot_id": 206,
         "tide": {
-            "low": 1.5,
+            "low": 3.4,
             "moderate": 4.5,
             "high": 5.5,
             "veryHigh": 6.5
@@ -361,6 +421,7 @@ surf_spots_config = {
         "lat": 34.0400,
         "lon": -118.8354,
         "station_id": "NTBC1",  # Closest station for County Line and Leo Carrillo
+        "county_id": 12,
         "tide": {
             "low": 1.5,
             "moderate": 4.5,
@@ -382,6 +443,7 @@ surf_spots_config = {
         "lat": 34.049,
         "lon": -118.963,
         "station_id": "NTBC1",  # Closest station for County Line and Leo Carrillo
+        "county_id": 12,
         "tide": {
             "low": 1.5,
             "moderate": 4.5,
@@ -403,6 +465,7 @@ surf_spots_config = {
         "lat": 34.0522,
         "lon": -118.2437,
         "station_id": "ICAC1",  # Default station in Santa Monica
+        "county_id": 12,
         "tide": {
             "low": 1.5,
             "moderate": 4,
