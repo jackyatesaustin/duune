@@ -24,14 +24,8 @@ let isUpdatingBiggestDays = false;
 window.onload = async function () {
     console.log("%c[App Init] Page loaded. Initializing application...", "color: blue; font-weight: bold;");
 
-        // Load regional overviews first
-        try {
-            console.log("%c[App Init] Loading regional overviews...", "color: blue;");
-            await updateRegionalOverviews(new Date().toISOString().split('T')[0]);
-            console.log("%c[App Init] Regional overviews loaded successfully", "color: green;");
-        } catch (error) {
-            console.error("%c[App Init] Error loading regional overviews:", "color: red;", error);
-        }
+  //  await updateRegionalOverviews(new Date().toISOString().split('T')[0]);
+    
 
 
     // Fetch wave forecast data from the API
@@ -1945,7 +1939,11 @@ function updateSpotDateLabel(selectedSpot, selectedDate) {
 
 
 async function updateRegionalOverviews(startDate) {
-    console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, "color: purple; font-weight: bold;");
+    //console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, "color: purple; font-weight: bold;");
+    console.log('%c[RegionalOverviews] Call stack:', 'color: purple; font-weight: bold;', 
+        new Error().stack);
+    console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, 
+        "color: purple; font-weight: bold;");
 
 
     //get the surf spots that are most different directionally facing, or get the surf spots that are at the ends of the region
@@ -2278,7 +2276,7 @@ Plotly.newPlot(region.id, [trace], layout, {
 
 
 
-
+/*
 // Add this after your updateRegionalOverviews function
 document.addEventListener('DOMContentLoaded', function() {
     const thisWeekBtn = document.getElementById('thisWeekBtn');
@@ -2307,6 +2305,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize with this week's data
     thisWeekBtn.click();
 });
+
+*/
+
+
+// Add a flag at the top of your file
+let isInitialized = false;
+
+// Modify the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    const thisWeekBtn = document.getElementById('thisWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+
+    function updateButtonStates(activeBtn) {
+        thisWeekBtn.classList.toggle('active', activeBtn === thisWeekBtn);
+        nextWeekBtn.classList.toggle('active', activeBtn === nextWeekBtn);
+    }
+
+    thisWeekBtn.addEventListener('click', async () => {
+        console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
+        updateButtonStates(thisWeekBtn);
+        const today = new Date();
+        await updateRegionalOverviews(today.toISOString().split('T')[0]);
+    });
+
+    nextWeekBtn.addEventListener('click', async () => {
+        console.log('%c[WeekSelector] Switching to Next Week view', 'color: purple;');
+        updateButtonStates(nextWeekBtn);
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
+    });
+
+    // Initialize only if not already done
+    if (!isInitialized) {
+        isInitialized = true;
+        thisWeekBtn.click();
+    }
+});
+
+
+
+
+
 
 
 // Function to fetch wave data from Flask API
