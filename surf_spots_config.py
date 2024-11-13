@@ -122,8 +122,8 @@ surf_spots_config = {
         },
         "wave_angle": 250,
         "offshore_wind": {
-            "min": 25,
-            "max": 120
+            "min": 28,
+            "max": 110
         },
         "wind": {
             "glassy": 5,

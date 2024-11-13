@@ -248,7 +248,10 @@ function updateWaveGraph(date, sunrise, sunset) {
                 x1: sunrise,
                 y0: 0,
                 y1: 1,
-                fillcolor: 'rgba(211, 211, 211, 0.3)',
+                //fillcolor: 'rgba(211, 211, 211, 0.3)',
+                //fillcolor: '#E5E5E5',
+                fillcolor: '#E5E5E5',
+                opacity: 0.3,
                 line: { width: 0 }
             },
             {
@@ -259,7 +262,10 @@ function updateWaveGraph(date, sunrise, sunset) {
                 x1: new Date(`${date}T23:59:59`),
                 y0: 0,
                 y1: 1,
-                fillcolor: 'rgba(211, 211, 211, 0.3)',
+                //fillcolor: 'rgba(211, 211, 211, 0.3)',
+                //fillcolor: '#E5E5E5',
+                fillcolor: '#E5E5E5',
+                opacity: 0.3,
                 line: { width: 0 }
             }
         );
@@ -1012,48 +1018,70 @@ lowTideSegments.forEach(segment => {
     // Adjust for mobile screen responsiveness
     const isMobile = window.innerWidth < 768;
 
-    // Existing layout for the graphs
-    const layout = {
-        xaxis: {
-            range: [minTime, maxTime],
-            tickformat: '%-I %p', // Adjust time format to 12-hour with AM/PM
-            dtick: isMobile ? 7200000 : 3600000, // On mobile, show ticks every 2 hours
-            dtick: 3600000, // Tick every hour (in milliseconds)
-            title: '',
-            tickfont: {
-                size: isMobile ? 10 : 12, // Smaller font for mobile
-            },
-            fixedrange: true // Disable scrolling on the x-axis for consistency
+// First layout definition (around line 1000)
+const layout = {
+    xaxis: {
+        range: [minTime, maxTime],
+        tickformat: '%-I %p',
+        dtick: isMobile ? 7200000 : 3600000,
+        title: '',
+        tickfont: {
+            size: isMobile ? 10 : 12,
         },
-        yaxis: { 
-            title: '', 
-            tickfont: {
-                size: isMobile ? 10 : 12, // Smaller font for mobile
-            },
-            fixedrange: true // Disable scrolling on the y-axis
+        fixedrange: true
+    },
+    yaxis: { 
+        title: '', 
+        tickfont: {
+            size: isMobile ? 10 : 12,
         },
-        height: isMobile ? 200 : 240, // Adjust height for mobile screens
-        margin: { l: isMobile ? 40 : 50, r: 40, t: 30, b: isMobile ? 30 : 40 }, // Adjust margins for mobile
-        margin: { l: 50, r: 50, t: 40, b: 40 },
-        hovermode: 'closest',
-        showlegend: false
-    };
+        fixedrange: true
+    },
+    height: isMobile ? 200 : 240,
+    margin: { l: isMobile ? 40 : 50, r: 40, t: 30, b: isMobile ? 30 : 40 },
+    hovermode: 'closest',
+    showlegend: false,
+    shapes: [
+        // Before sunrise
+        {
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: minTime,
+            x1: sunriseTime,
+            y0: 0,
+            y1: 1,
+            fillcolor: '#E5E5E5',
+            opacity: 0.3,
+            line: { width: 0 }
+        },
+        // After sunset
+        {
+            type: 'rect',
+            xref: 'x',
+            yref: 'paper',
+            x0: sunsetTime,
+            x1: maxTime,
+            y0: 0,
+            y1: 1,
+            fillcolor: '#E5E5E5',
+            opacity: 0.3,
+            line: { width: 0 }
+        }
+    ]
+};
 
-    // Wind graph layout
-    const windLayout = {
-        title: `Wind Speed for ${spot} on ${date}`, // Add spot and da
-        ...layout,  // Inherit from the common layout
-        yaxis: {
-            title: 'Wind Speed (km/h)',
-            fixedrange: true,  // Disable scrolling
-        },
-        hoverlabel: {
-            namelength: 0  // Show full label length
-        },
-        hovermode: 'closest',
-        showlegend: false,
-        
-    };
+const windLayout = {
+    ...layout,  // Spread first to get all base properties
+    title: `Wind Speed for ${spot} on ${date}`,
+    yaxis: {
+        ...layout.yaxis,  // Preserve base yaxis properties
+        title: 'Wind Speed (km/h)',
+    },
+    hoverlabel: {
+        namelength: 0
+    }
+};
 
     // Render wind graph
     console.log(`Updating wind graph for spot: ${spot} with ${windTraces.length} trace(s) .`);
@@ -1066,18 +1094,18 @@ lowTideSegments.forEach(segment => {
 
     // Tide graph layout
     console.log(`Updating tide graph for spot: ${spot} with ${tideTraces.length} trace(s) on ${date}.`);
+
+
     const tideLayout = {
-        title: `Tide for ${spot} on ${date}`, // Add spot and da
-        ...layout,  // Inherit from the common layout
+        ...layout,
+        title: `Tide for ${spot} on ${date}`,
         yaxis: {
+            ...layout.yaxis,
             title: 'Tide Height (ft)',
-            fixedrange: true,  // Disable scrolling
         },
         hoverlabel: {
-            namelength: 0  // Show full label length
-        },
-        hovermode: 'closest',
-        showlegend: false
+            namelength: 0
+        }
     };
 
     // Render tide graph
@@ -1343,12 +1371,12 @@ data.best_times.forEach(period => {
         // Hide loading for wind graph and show the plot
         document.getElementById('windLoading').style.display = 'none';
         document.getElementById('windPlot').style.display = 'block';
-        Plotly.newPlot('windPlot', windTraces, windLayout, { responsive: true });  // This is the existing wind plot update
+       // Plotly.newPlot('windPlot', windTraces, windLayout, { responsive: true });  // This is the existing wind plot update
 
         // Hide loading for tide graph and show the plot
         document.getElementById('tideLoading').style.display = 'none';
         document.getElementById('tidePlot').style.display = 'block';
-        Plotly.newPlot('tidePlot', tideTraces, tideLayout, { responsive: true });  // This is th
+      //  Plotly.newPlot('tidePlot', tideTraces, tideLayout, { responsive: true });  // This is th
 
     }, 2000);  // Simulate a delay or adjust based on the actual graph load time
 
@@ -1946,6 +1974,8 @@ async function updateRegionalOverviews(startDate) {
         "color: purple; font-weight: bold;");
 
 
+
+
     //get the surf spots that are most different directionally facing, or get the surf spots that are at the ends of the region
     const regions = {
         southBay: {
@@ -2309,6 +2339,7 @@ document.addEventListener('DOMContentLoaded', function() {
 */
 
 
+
 // Add a flag at the top of your file
 let isInitialized = false;
 
@@ -2350,6 +2381,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+
+
 // Function to fetch wave data from Flask API
 async function fetchWaveData() {
     try {
@@ -2376,3 +2409,21 @@ window.addEventListener('resize', function() {
 });
 
 
+
+
+
+// Add this helper function
+async function checkServerConnection() {
+    try {
+        const response = await fetch('/health_check');  // You'll need to add this endpoint to your Flask app
+        if (!response.ok) {
+            throw new Error('Server not responding');
+        }
+        return true;
+    } catch (error) {
+        console.error('%c[Server Check] Backend server is not running!', 'color: red; font-weight: bold;');
+        // Maybe show a user-friendly message
+        alert('Unable to connect to server. Please ensure the application is running.');
+        return false;
+    }
+}
