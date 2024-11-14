@@ -592,17 +592,143 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     console.log("Mild segments:", mildWindSegments);
     console.log("Bad segments:", badWindSegments);
 
+
+
+
+
+    
+    
+
+// Glassy segments
+glassySegments.forEach(segment => {
+    const isOffshore = data.spot_config.offshore_wind ? (
+        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+
+    const trace = {
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedSpeeds[i]),
+        mode: 'lines',
+        name: ``,
+        line: { 
+            color: isOffshore ? 'darkgreen' : 'limegreen',
+            width: 3,
+            simplify: false
+        },
+        fill: 'tozeroy',
+        fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
+        showlegend: showLegendGlassy,
+        text: segment.map(i => [
+            degreesToArrow(interpolatedDirections[i]),
+            degreesToCardinal(interpolatedDirections[i]),
+            Math.round(interpolatedDirections[i])
+        ]),
+        hovertemplate: 
+            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Glassy<br>') +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    };
+    windTraces.push(trace);
+    showLegendGlassy = false;
+});
+
+// Mild segments
+mildWindSegments.forEach(segment => {
+    const isOffshore = data.spot_config.offshore_wind ? (
+        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+
+    const trace = {
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedSpeeds[i]),
+        mode: 'lines',
+        name: ``,
+        line: { 
+            color: isOffshore ? 'darkgreen' : 'yellow',
+            width: 3,
+            simplify: false
+        },
+        fill: 'tozeroy',
+        fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
+        showlegend: showLegendMild,
+        text: segment.map(i => [
+            degreesToArrow(interpolatedDirections[i]),
+            degreesToCardinal(interpolatedDirections[i]),
+            Math.round(interpolatedDirections[i])
+        ]),
+        hovertemplate: 
+            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Mild<br>') +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    };
+    windTraces.push(trace);
+    showLegendMild = false;
+});
+
+// Bad segments
+badWindSegments.forEach(segment => {
+    const isOffshore = data.spot_config.offshore_wind ? (
+        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
+        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+
+    const trace = {
+        x: segment.map(i => minutePoints[i]),
+        y: segment.map(i => interpolatedSpeeds[i]),
+        mode: 'lines',
+        name: ``,
+        line: { 
+            color: isOffshore ? 'darkgreen' : 'red',
+            width: 3,
+            simplify: false
+        },
+        fill: 'tozeroy',
+        fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
+        showlegend: showLegendBad,
+        text: segment.map(i => [
+            degreesToArrow(interpolatedDirections[i]),
+            degreesToCardinal(interpolatedDirections[i]),
+            Math.round(interpolatedDirections[i])
+        ]),
+        hovertemplate: 
+            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Strong<br>') +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
+    };
+    windTraces.push(trace);
+    showLegendBad = false;
+});
+
+
+
+    /*
     // For each segment type, create a single trace with the appropriate color
     glassySegments.forEach(segment => {
-        /*
-        const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-                        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
-        */
+
         const isOffshore = data.spot_config.offshore_wind ? (
             interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
             interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
             ) : false;           
-
         
         // Create a single trace for this segment
         
@@ -640,11 +766,8 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         showLegendGlassy = false;
     });
 
+
     mildWindSegments.forEach(segment => {
-        /*
-        const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-                        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
-        */
        const isOffshore = data.spot_config.offshore_wind ? (
         interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
@@ -686,10 +809,6 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     });
 
     badWindSegments.forEach(segment => {
-        /*
-        const isOffshore = interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-                        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max;
-        */
        const isOffshore = data.spot_config.offshore_wind ? (
         interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
@@ -732,14 +851,10 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     });
 
 
+*/
 
 
-/*
-    const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < tideConfig.low);
-    const moderateTideSegments = getConditionSegments(interpolatedHeights, height => height >= tideConfig.low && height <= tideConfig.moderate);
-    const highTideSegments = getConditionSegments(interpolatedHeights, height => height > tideConfig.moderate && height <= tideConfig.high);
-    const veryHighTideSegments = getConditionSegments(interpolatedHeights, height => height > tideConfig.high);
-  */
+
  
     const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < data.spot_config.tide.low);
     const moderateTideSegments = getConditionSegments(interpolatedHeights, height => 
