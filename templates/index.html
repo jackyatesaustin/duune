@@ -168,41 +168,49 @@
         <img id="loadingGif" src="" alt="Loading..." style="height: 200px;" />
         <p id="loadingMessage" style="font-size: 18px;">One sec, the wave height graph is loading...</p>
     </div>
-    <div id="waveHeightPlot" style="height: 300px;"></div>
-                <!-- Best and Good Times Section -->
-                <div class="best-good-times-container">
-                    
-                    <div class="section" id="bestTimesContainer">
-                        <h2>Best Times to Go</h2>
-                        <ul id="bestTimesList">
-                            <li>..loading..</li>
-                        </ul>
-                    </div>
-                    <div class="section" id="bestTimesContainer">
-                        <h2>Good Times to Go</h2>
-                        <ul id="goodTimesList">
-                            <li>..loading..</li>
-                        </ul>
-                    </div>
-                    
-                </div>        
 
-                <!-- Additional Info Section -->
-                <div class="additional-info-container">
-                    <div class="info-box">
-                        <h3>Water Temp & What to Wear</h3>
-                        <p id="waterTemp">..loading..</p>
-                        <p id="wearRecommendation"></p>
-                    </div>
-                    <div class="info-box">
-                        <h3>Sunrise & Sunset</h3>
-                        <p id="sunTimes">..loading..</p>
-                    </div>
-                    <div class="info-box">
-                        <h3>What Board to Bring</h3>
-                        <p id="boardRecommendation">..loading..</p> <!-- Added ID here -->
-                    </div>
+                    <!-- Best and Good Times Section -->
+            <!-- Combined Container for All Boxes -->
+            <div style="display: flex; gap: 10px; width: 100%; margin: 20px 0;">
+                <!-- Best Times Box -->
+                <div class="section" id="bestTimesContainer">
+                    <h2>Best Times to Go</h2>
+                    <ul id="bestTimesList">
+                        <li>..loading..</li>
+                    </ul>
                 </div>
+                
+                <!-- Good Times Box -->
+                <div class="section" id="bestTimesContainer">
+                    <h2>Good Times to Go</h2>
+                    <ul id="goodTimesList">
+                        <li>..loading..</li>
+                    </ul>
+                </div>
+                
+                <!-- Water Temp Box -->
+                <div class="info-box">
+                    <h3>Water Temp & What to Wear</h3>
+                    <p id="waterTemp">..loading..</p>
+                    <p id="wearRecommendation"></p>
+                </div>
+                
+                <!-- Sun Times Box -->
+                <div class="info-box">
+                    <h3>Sunrise & Sunset</h3>
+                    <p id="sunTimes">..loading..</p>
+                </div>
+                
+                <!-- Board Box -->
+                <div class="info-box">
+                    <h3>What Board to Bring</h3>
+                    <p id="boardRecommendation">..loading..</p>
+                </div>
+            </div>
+
+
+    <div id="waveHeightPlot" style="height: 300px;"></div>
+
                 <!-- Graphs Section -->
                 <div id="bestTimesPlot" class="graph-container" style="height: 120px;"></div>
                 <div class="legend" id="bestTimesLegend"></div>

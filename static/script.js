@@ -190,6 +190,8 @@ async function getSpotForecast(spotId) {
 
 
 
+
+
 //testing
 function updateWaveGraph(date, sunrise, sunset) {
     console.log(`%c[WaveGraph] Starting updateWaveGraph for date: ${date}`, "color: purple; font-weight: bold;");    
@@ -223,14 +225,29 @@ function updateWaveGraph(date, sunrise, sunset) {
     console.log("%c[WaveGraph] Mapped Heights After Sorting:", "color: purple;", waveHeights);
 
 
-    // Plot data with sorted times and heights
+    // Updated trace with smooth line and better hover
     const trace = {
         x: waveTimes,
         y: waveHeights,
-        mode: 'lines+markers',
-        name: 'Wave Height (ft)',
-        line: { color: 'blue', width: 4 },
-        hovertemplate: 'Time: %{x}<br>Height: %{y} ft<extra></extra>'
+        mode: 'lines',  // Removed markers for smoother look
+        name: 'Wave Height',
+        line: { 
+            color: 'blue', 
+            width: 3,
+            shape: 'spline',    // Add spline shape for smoothing
+            smoothing: 1.3      // Add smoothing factor
+        },
+        hovertemplate: `
+            <b>%{x|%I:%M %p}</b><br>
+            %{x|%a %b %d}<br>
+            Height: %{y:.1f} ft
+            <extra></extra>
+        `,
+        hoverlabel: { 
+            bgcolor: 'white', 
+            namelength: 0,
+            font: { size: 14, family: 'Arial, sans-serif' }
+        }
     };
 
     console.log("%c[WaveGraph] Trace Data Ready for Plot:", "color: purple;", trace);
@@ -325,7 +342,7 @@ function updateWaveGraph(date, sunrise, sunset) {
         };
 
     console.log("%c[WaveGraph] Layout for Plot Ready:", "color: purple;", layout);
-    Plotly.newPlot('waveHeightPlot', [trace], layout, { responsive: true, displayModeBar: false, staticPlot: true });
+    Plotly.newPlot('waveHeightPlot', [trace], layout, { responsive: true, displayModeBar: false, staticPlot: false });
     console.log("%c[WaveGraph] Plotly Plot Updated Successfully for date: " + date, "color: green; font-weight: bold;");
 
 }
