@@ -577,75 +577,27 @@ def get_data():
 
 
 
-import logging
-from datetime import datetime, timedelta
-
-# Set up logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
-
-import requests
-from datetime import datetime, timedelta
-
-import requests
-from datetime import datetime, timedelta
-
-import requests
-import logging
-from datetime import datetime, timedelta
-
-# Set up logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
-
-
-
-import requests
-from datetime import datetime, timedelta
-
-
-import requests
-from datetime import datetime, timedelta
-import pytz  # Ensure pytz is imported for timezone handling
-
-
-import requests
-from datetime import datetime, timedelta
-import pytz  # Ensure pytz is imported for timezone handling
 
 
 import pytz
 from datetime import datetime, timedelta
 import requests
 
-
-
-import pytz
-from datetime import datetime, timedelta
-import requests
-
-import pytz
-from datetime import datetime, timedelta
-import requests
-
-import pytz
-from datetime import datetime, timedelta
-import requests
-
-
-
-
-import pytz
-from datetime import datetime, timedelta
-import requests
+import os
 
 def get_best_surf_spots_by_intervals():
     results = {"today": [], "tomorrow": []}
     pacific_tz = pytz.timezone("America/Los_Angeles")  # Define timezone
-
+    
+    # Try to use BASE_URL from environment, fallback to localhost if not set
+    BASE_URL = os.environ.get('BASE_URL', 'http://127.0.0.1:5000')
+    
+    # Rest of your function remains exactly the same
     for day_offset in [0, 1]:  # 0 for today, 1 for tomorrow
         date = (datetime.now() + timedelta(days=day_offset)).strftime('%Y-%m-%d')
         day_name = "today" if day_offset == 0 else "tomorrow"
         
-        print(f"Processing {day_name}: {date}")
+        print(f"Processing {day_name}: {date}")  # Keep your print statements
         
         # Get sunrise and sunset times for the day
         sunrise, sunset = fetch_sun_times(date)
@@ -668,8 +620,8 @@ def get_best_surf_spots_by_intervals():
                 
                 spot_id = spot_data["spot_id"]
 
-                # Fetch wave forecast data for the specific spot and date
-                wave_data_url = f"http://127.0.0.1:5000/get_wave_forecast?spot_id={spot_id}&date={date}"
+                # Update only this URL line
+                wave_data_url = f"{BASE_URL}/get_wave_forecast?spot_id={spot_id}&date={date}"
                 response = requests.get(wave_data_url)
                 
                 if response.status_code != 200:
@@ -714,7 +666,6 @@ def get_best_surf_spots_by_intervals():
 
     print("Completed processing best surf spots by intervals")
     return results
-
 
 @app.route('/best_surf_spots')
 def get_best_surf_spots():
