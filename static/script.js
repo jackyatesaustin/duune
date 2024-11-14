@@ -1198,14 +1198,45 @@ const windLayout = {
     }
 };
 
-    // Render wind graph
-    console.log(`Updating wind graph for spot: ${spot} with ${windTraces.length} trace(s) .`);
-    //Plotly.newPlot('windPlot', windTraces, windLayout, { responsive: true });
-    Plotly.newPlot('windPlot', windTraces, windLayout, { 
-        responsive: true,
-        displayModeBar: false,  // Optional: removes the modebar
-        showTips: false  // Removes tooltips
-    });
+
+
+// Create background traces for day/night
+const maxWindSpeed = Math.max(...interpolatedSpeeds) * 1.1; // Get max wind speed and add 10% buffer
+
+const nightTraces = [
+    // Before sunrise
+    {
+        x: [minTime, minTime, sunriseTime, sunriseTime],
+        y: [0, maxWindSpeed, maxWindSpeed, 0],  // Create a complete rectangle
+        fill: 'toself',
+        fillcolor: '#E5E5E5',
+        mode: 'none',
+        showlegend: false,
+        hoverinfo: 'skip',
+        opacity: 0.3
+    },
+    // After sunset
+    {
+        x: [sunsetTime, sunsetTime, maxTime, maxTime],
+        y: [0, maxWindSpeed, maxWindSpeed, 0],  // Create a complete rectangle
+        fill: 'toself',
+        fillcolor: '#E5E5E5',
+        mode: 'none',
+        showlegend: false,
+        hoverinfo: 'skip',
+        opacity: 0.3
+    }
+];
+
+// Combine night traces with wind traces and plot
+Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, { 
+    responsive: true,
+    displayModeBar: false,
+    showTips: false
+});
+
+
+
 
     // Tide graph layout
     console.log(`Updating tide graph for spot: ${spot} with ${tideTraces.length} trace(s) on ${date}.`);
@@ -1223,8 +1254,43 @@ const windLayout = {
         }
     };
 
-    // Render tide graph
-    Plotly.newPlot('tidePlot', tideTraces, tideLayout, { responsive: true });
+
+
+// Get the max tide height for the background
+const maxTideHeight = Math.max(...interpolatedHeights) * 1.1; // Add 10% buffer
+
+// Create background traces for day/night in tide graph
+const tideNightTraces = [
+    // Before sunrise
+    {
+        x: [minTime, minTime, sunriseTime, sunriseTime],
+        y: [0, maxTideHeight, maxTideHeight, 0],  // Create a complete rectangle
+        fill: 'toself',
+        fillcolor: '#E5E5E5',
+        mode: 'none',
+        showlegend: false,
+        hoverinfo: 'skip',
+        opacity: 0.3
+    },
+    // After sunset
+    {
+        x: [sunsetTime, sunsetTime, maxTime, maxTime],
+        y: [0, maxTideHeight, maxTideHeight, 0],  // Create a complete rectangle
+        fill: 'toself',
+        fillcolor: '#E5E5E5',
+        mode: 'none',
+        showlegend: false,
+        hoverinfo: 'skip',
+        opacity: 0.3
+    }
+];
+
+// Render tide graph with night traces
+Plotly.newPlot('tidePlot', [...tideNightTraces, ...tideTraces], tideLayout, { 
+    responsive: true,
+    displayModeBar: false,
+    showTips: false
+});
 
 
     /*
@@ -1377,28 +1443,54 @@ data.best_times.forEach(period => {
 
 
 
-    // Render Best Times Graph with synchronized layout
-    Plotly.newPlot('bestTimesPlot', bestTimesTraces, {
-        ...layout,  // Use the same layout as wind and tide graphs to ensure alignment
-        height: isMobile ? 100 : 120, // Adjust height for mobile
-        height: 120,
-        yaxis: { visible: false }, // Hide y-axis for best times
-        xaxis: { 
-            ...layout.xaxis,
-            fixedrange: true  // Ensure scrolling is disabled on x-axis for Best Times
-        },
-        responsive: true, 
-        hovermode: 'closest',  // Make sure this is set
+const bestTimesNightTraces = [
+    // Before sunrise
+    {
+        x: [minTime, minTime, sunriseTime, sunriseTime],
+        y: [0, 1, 1, 0],  // Best times graph uses 0-1 range
+        fill: 'toself',
+        fillcolor: '#E5E5E5',
+        mode: 'none',
         showlegend: false,
-        hoverdistance: 50,  // Increase hover sensitivity
-        hoverlabel: {
-            namelength: -1  // Show full label length
-        }
-        }, {
-            displayModeBar: false,  // Optional: removes the modebar
-            responsive: true,
-            showTips: false  // Removes tooltips
-        });
+        hoverinfo: 'skip',
+        opacity: 0.3
+    },
+    // After sunset
+    {
+        x: [sunsetTime, sunsetTime, maxTime, maxTime],
+        y: [0, 1, 1, 0],  // Best times graph uses 0-1 range
+        fill: 'toself',
+        fillcolor: '#E5E5E5',
+        mode: 'none',
+        showlegend: false,
+        hoverinfo: 'skip',
+        opacity: 0.3
+    }
+];
+
+// Render best times graph with night traces
+Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
+    ...layout,
+    height: isMobile ? 100 : 120,
+    yaxis: { visible: false },
+    xaxis: { 
+        ...layout.xaxis,
+        fixedrange: true
+    },
+    responsive: true,
+    hovermode: 'closest',
+    showlegend: false,
+    hoverdistance: 50,
+    hoverlabel: {
+        namelength: -1
+    }
+}, {
+    displayModeBar: false,
+    responsive: true,
+    showTips: false
+});
+
+
 
 
     // Sync Hover for vertical lines
