@@ -716,13 +716,33 @@ def get_best_surf_spots_by_intervals():
     return results
 
 
-@app.route('/best_surf_spots', methods=['GET'])
-def best_surf_spots():
-    # Run the function to get the best surf spots by intervals
-    results = get_best_surf_spots_by_intervals()
-    
-    # Return the results as a JSON response
-    return jsonify(results)
+@app.route('/best_surf_spots')
+def get_best_surf_spots():
+    try:
+        app.logger.info('Starting best surf spots calculation')
+        
+        # Get today's date in the correct timezone
+        tz = pytz.timezone('America/Los_Angeles')
+        today = datetime.now(tz).date()
+        
+        app.logger.info(f'Processing today: {today}')
+        
+        # Get best spots with detailed error handling
+        try:
+            best_spots = get_best_surf_spots_by_intervals()
+            app.logger.info('Successfully calculated best surf spots')
+            return jsonify(best_spots)
+        except Exception as e:
+            app.logger.error(f'Error in get_best_surf_spots_by_intervals: {str(e)}', exc_info=True)
+            raise  # Re-raise to be caught by outer try/except
+        
+    except Exception as e:
+        app.logger.error(f'Error in best_surf_spots route: {str(e)}', exc_info=True)
+        return jsonify({
+            'error': str(e),
+            'message': 'Failed to calculate best surf spots',
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 
 

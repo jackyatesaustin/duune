@@ -2585,15 +2585,22 @@ function displayBestSpots(day) {
 }
 
 // Function to fetch and initialize best spots data
+// Update the initializeBestSpots function with better error logging
 async function initializeBestSpots(forceRefresh = false) {
     try {
         startLoadingAnimation();
         
-        // Only fetch new data if we don't have it or if force refresh
         if (!bestSpotsData || forceRefresh) {
             const response = await fetch('/best_surf_spots');
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Try to get more error details
+                const errorText = await response.text();
+                console.error('Server response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorText
+                });
+                throw new Error(`Server error (${response.status}): ${errorText}`);
             }
             bestSpotsData = await response.json();
         }
@@ -2604,7 +2611,10 @@ async function initializeBestSpots(forceRefresh = false) {
         console.error('Error fetching best spots:', error);
         stopLoadingAnimation();
         document.getElementById('bestSpotsContent').innerHTML = 
-            `<div class="error">Failed to load best spots data: ${error.message}</div>`;
+            `<div class="error">
+                Unable to load best spots data. Please try again later.<br>
+                <small style="color: #666;">Error: ${error.message}</small>
+            </div>`;
     }
 }
 
