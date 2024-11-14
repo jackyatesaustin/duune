@@ -28,180 +28,6 @@ cache.init_app(app)
 # Set up default station as "ICAC1"
 default_station_id = "ICAC1"
 
-"""
-surf_spot_locations = {
-    "Redondo Breakwater": {"lat": 33.863, "lon": -118.400, "station_id": default_station_id},
-    "Hermosa Pier": {"lat": 33.862, "lon": -118.399, "station_id": default_station_id},
-    "default": {"lat": 34.0522, "lon": -118.2437, "station_id": default_station_id}
-}
-"""
-
-"""
-surf_spots_config = {
-    "Redondo Breakwater": {
-        "lat": 33.863,
-        "lon": -118.400,
-        "station_id": "ICAC1",  # Closest station in Santa Monica
-        "spot_id": 201,  # Spitcast ID
-        "tide": {
-            "low": 2,
-            "moderate": 4.5,
-            "high": 5.1,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 5,
-            "mild": 7,
-            "bad": 10
-        }
-    },
-    "Hermosa Pier": {
-        "lat": 33.862,
-        "lon": -118.399,
-        "station_id": "ICAC1",  # Closest station in Santa Monica
-        "tide": {
-            "low": 2,
-            "moderate": 4.5,
-            "high": 5.1,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 5,
-            "mild": 7,
-            "bad": 10
-        }
-    },
-    "Manhattan Beach": {
-        "lat": 33.884,
-        "lon": -118.410,
-        "station_id": "ICAC1",  # Closest station in Santa Monica
-        "tide": {
-            "low": 2,
-            "moderate": 4.5,
-            "high": 5.1,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 5,
-            "mild": 7,
-            "bad": 10
-        }
-    },
-    "El Porto": {
-        "lat": 33.900,
-        "lon": -118.420,
-        "station_id": "ICAC1",  # Closest station in Santa Monica
-        "tide": {
-            "low": 2,
-            "moderate": 4.5,
-            "high": 5.1,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 5,
-            "mild": 7,
-            "bad": 10
-        }
-    },
-    "Dockweiler": {
-        "lat": 33.931,
-        "lon": -118.442,
-        "station_id": "ICAC1",  # Closest station in Santa Monica
-        "tide": {
-            "low": 2,
-            "moderate": 4.5,
-            "high": 5.1,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 5,
-            "mild": 7,
-            "bad": 10
-        }
-    },
-    "Venice Pier South": {
-        "lat": 33.976,
-        "lon": -118.467,
-        "station_id": "ICAC1",  # Closest station in Santa Monica
-        "tide": {
-            "low": 2,
-            "moderate": 4.5,
-            "high": 5.1,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 5,
-            "mild": 7,
-            "bad": 10
-        }
-    },
-    "County Line": {
-        "lat": 34.049,
-        "lon": -118.963,
-        "station_id": "NTBC1",  # Closest station for County Line and Leo Carrillo
-        "tide": {
-            "low": 1.5,
-            "moderate": 4.5,
-            "high": 5.5,
-            "veryHigh": 6.5
-        },
-        "wind": {
-            "glassy": 4,
-            "mild": 6,
-            "bad": 8
-        }
-    },
-    "Leo Carrillo": {
-        "lat": 34.046,
-        "lon": -118.939,
-        "station_id": "NTBC1",  # Closest station for County Line and Leo Carrillo
-        "tide": {
-            "low": 1.5,
-            "moderate": 4.5,
-            "high": 5.5,
-            "veryHigh": 6.5
-        },
-        "wind": {
-            "glassy": 4,
-            "mild": 6,
-            "bad": 8
-        }
-    },
-    "Zuma": {
-        "lat": 34.010,
-        "lon": -118.820,
-        "station_id": "NTBC1",  # Closest station for Zuma
-        "spot_id": 206,
-        "tide": {
-            "low": 1.5,
-            "moderate": 4.5,
-            "high": 5.5,
-            "veryHigh": 6.5
-        },
-        "wind": {
-            "glassy": 4,
-            "mild": 6,
-            "bad": 8
-        }
-    },
-    "default": {
-        "lat": 34.0522,
-        "lon": -118.2437,
-        "station_id": "ICAC1",  # Default station in Santa Monica
-        "tide": {
-            "low": 1.5,
-            "moderate": 4,
-            "high": 5,
-            "veryHigh": 6
-        },
-        "wind": {
-            "glassy": 4,
-            "mild": 6,
-            "bad": 8
-        }
-    }
-}
-"""
 
 
 #################### scraping wave data from noaa ############################################
@@ -740,6 +566,164 @@ def get_data():
         'interpolated_directions': interpolated_directions.tolist(),
         'spot_config': spot_config  # Include spot configuration directly here
     })
+
+
+
+
+
+
+
+
+
+
+
+import logging
+from datetime import datetime, timedelta
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+
+import requests
+from datetime import datetime, timedelta
+
+import requests
+from datetime import datetime, timedelta
+
+import requests
+import logging
+from datetime import datetime, timedelta
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
+
+import requests
+from datetime import datetime, timedelta
+
+
+import requests
+from datetime import datetime, timedelta
+import pytz  # Ensure pytz is imported for timezone handling
+
+
+import requests
+from datetime import datetime, timedelta
+import pytz  # Ensure pytz is imported for timezone handling
+
+
+import pytz
+from datetime import datetime, timedelta
+import requests
+
+
+
+import pytz
+from datetime import datetime, timedelta
+import requests
+
+import pytz
+from datetime import datetime, timedelta
+import requests
+
+import pytz
+from datetime import datetime, timedelta
+import requests
+
+
+
+
+import pytz
+from datetime import datetime, timedelta
+import requests
+
+def get_best_surf_spots_by_intervals():
+    results = {"today": [], "tomorrow": []}
+    pacific_tz = pytz.timezone("America/Los_Angeles")  # Define timezone
+
+    for day_offset in [0, 1]:  # 0 for today, 1 for tomorrow
+        date = (datetime.now() + timedelta(days=day_offset)).strftime('%Y-%m-%d')
+        day_name = "today" if day_offset == 0 else "tomorrow"
+        
+        print(f"Processing {day_name}: {date}")
+        
+        # Get sunrise and sunset times for the day
+        sunrise, sunset = fetch_sun_times(date)
+        print(f"{day_name.capitalize()} sunrise at {sunrise}, sunset at {sunset}")
+        
+        interval_start = sunrise
+
+        while interval_start < sunset:
+            interval_end = interval_start + timedelta(hours=2)
+            if interval_end > sunset:
+                interval_end = sunset  # Ensure we don't go past sunset
+            print(f"Checking interval {interval_start.strftime('%H:%M')} to {interval_end.strftime('%H:%M')}")
+
+            spot_averages = []
+            for spot_name, spot_data in surf_spots_config.items():
+                # Ensure that spot has a valid spot_id and skip entries without a spot_id
+                if "spot_id" not in spot_data:
+                    print(f"Skipping '{spot_name}' due to missing 'spot_id' in config")
+                    continue
+                
+                spot_id = spot_data["spot_id"]
+
+                # Fetch wave forecast data for the specific spot and date
+                wave_data_url = f"http://127.0.0.1:5000/get_wave_forecast?spot_id={spot_id}&date={date}"
+                response = requests.get(wave_data_url)
+                
+                if response.status_code != 200:
+                    print(f"Failed to fetch wave data for spot '{spot_name}'")
+                    continue
+                
+                wave_data = response.json()
+
+                # Filter wave data within the interval, using fallback values for missing keys
+                interval_wave_heights = []
+                for entry in wave_data:
+                    try:
+                        entry_time = pacific_tz.localize(datetime(
+                            entry['date_local'].get('yy'),
+                            entry['date_local'].get('mm'),
+                            entry['date_local'].get('dd'),
+                            entry['date_local'].get('hh', 0),  # Default to 0 if 'hh' is missing
+                            entry['date_local'].get('min', 0)  # Default to 0 if 'min' is missing
+                        ))
+                        
+                        if interval_start <= entry_time < interval_end:
+                            interval_wave_heights.append(entry['size_ft'])
+                    except KeyError as e:
+                        print(f"KeyError encountered in 'date_local': {entry['date_local']}")
+                        continue
+
+                if interval_wave_heights:
+                    average_height = sum(interval_wave_heights) / len(interval_wave_heights)
+                    spot_averages.append((spot_name, average_height))
+
+            # Sort spots by average height and select the top 2
+            top_two_spots = sorted(spot_averages, key=lambda x: x[1], reverse=True)[:2]
+
+            # Add to results for the day
+            results[day_name].append({
+                "interval": f"{interval_start.strftime('%H:%M')} - {interval_end.strftime('%H:%M')}",
+                "top_spots": top_two_spots
+            })
+
+            # Move to the next interval
+            interval_start = interval_end
+
+    print("Completed processing best surf spots by intervals")
+    return results
+
+
+@app.route('/best_surf_spots', methods=['GET'])
+def best_surf_spots():
+    # Run the function to get the best surf spots by intervals
+    results = get_best_surf_spots_by_intervals()
+    
+    # Return the results as a JSON response
+    return jsonify(results)
+
 
 
 

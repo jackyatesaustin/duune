@@ -51,6 +51,21 @@
             </div>
         </div>
 
+
+        <div class="best-spots-container">
+            <h2 style="font-size: 28px; text-align: center;">Best Spots by Time</h2>
+            <div class="overview-week-selector">
+                <button id="todayBestSpotsBtn" class="week-selector-btn active">Today</button>
+                <button id="tomorrowBestSpotsBtn" class="week-selector-btn">Tomorrow</button>
+            </div>
+            <div id="bestSpotsDisplay" class="best-spots-display">
+                <div id="bestSpotsContent" class="intervals-container">
+                    <!-- Loading message will appear here -->
+                </div>
+            </div>
+        </div>
+
+
         </div>
 
         
@@ -70,7 +85,8 @@
         <!-- Surf Spot Selector and Date Selector (Now inside the Extended Forecast Box) -->
         <div class="selection-container">
             <div class="spot-selector">     
-                <select id="spotSelect" onchange="getData()">
+            <!--    <select id="spotSelect" onchange="getData()">   made this change and it loads more quickly-->
+                <select id="spotSelect">
                     <option value="Redondo Breakwater">Redondo Breakwater</option>
                     <option value="Hermosa Pier">Hermosa Pier</option>
                     <option value="Manhattan Beach">Manhattan Beach</option>

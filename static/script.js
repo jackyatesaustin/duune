@@ -2306,6 +2306,17 @@ Plotly.newPlot(region.id, [trace], layout, {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 /*
 // Add this after your updateRegionalOverviews function
 document.addEventListener('DOMContentLoaded', function() {
@@ -2427,3 +2438,203 @@ async function checkServerConnection() {
         return false;
     }
 }
+
+
+
+
+
+
+/* Best Spots by Time */
+
+
+
+// Global variables
+let bestSpotsData = null;
+let loadingInterval;
+
+// Loading messages array
+const loadingMessages = [
+    "Checking out the sandbars...",
+    "Looking at the wind...",
+    "Checking the tide...",
+    "Getting a coffee...",
+    "Checking buoys...",
+    "Drinking more coffee..."
+];
+
+// Function to start loading animation
+function startLoadingAnimation() {
+    const container = document.getElementById('bestSpotsContent');
+    let currentMessageIndex = 0;
+    
+    // Clear any existing intervals
+    if (loadingInterval) clearInterval(loadingInterval);
+    
+    // Show initial message
+    container.innerHTML = `<div class="loading">${loadingMessages[0]}</div>`;
+    
+    // Start rotating messages
+    loadingInterval = setInterval(() => {
+        currentMessageIndex = (currentMessageIndex + 1) % loadingMessages.length;
+        const loadingElement = container.querySelector('.loading');
+        if (loadingElement) {
+            loadingElement.textContent = loadingMessages[currentMessageIndex];
+        } else {
+            clearInterval(loadingInterval);
+        }
+    }, 2000);
+}
+
+// Function to stop loading animation
+function stopLoadingAnimation() {
+    if (loadingInterval) {
+        clearInterval(loadingInterval);
+        loadingInterval = null;
+    }
+    // Clear loading message if it's still showing
+    const loadingElement = document.querySelector('.loading');
+    if (loadingElement) {
+        loadingElement.remove();
+    }
+}
+
+// Function to format time to 12-hour format
+function formatTime(timeStr) {
+    try {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) {
+            console.error('Invalid time format:', timeStr);
+            return timeStr; // Return original if parsing fails
+        }
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const hour12 = hours % 12 || 12;
+        return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+    } catch (error) {
+        console.error('Error formatting time:', error);
+        return timeStr; // Return original if error occurs
+    }
+}
+
+function formatInterval(intervalStr) {
+    try {
+        const [start, end] = intervalStr.split(' - ');
+        
+        // Get all intervals for the day
+        const dayData = bestSpotsData.today || bestSpotsData.tomorrow;
+        const isFirstInterval = dayData && dayData[0].interval === intervalStr;
+        const isLastInterval = dayData && dayData[dayData.length - 1].interval === intervalStr;
+        
+        // Format the times, replacing first/last with Sunrise/Sunset
+        const startTime = isFirstInterval ? 'Sunrise' : formatTime(start);
+        const endTime = isLastInterval ? 'Sunset' : formatTime(end);
+        
+        return `${startTime} - ${endTime}`;
+    } catch (error) {
+        console.error('Error formatting interval:', error);
+        return intervalStr; // Return original if error occurs
+    }
+}
+
+// Function to format best spots interval
+function formatBestSpotsInterval(interval) {
+    if (!interval.top_spots || interval.top_spots.length === 0) {
+        return ''; // Skip empty intervals
+    }
+
+    const spots = interval.top_spots
+        .map(spot => {
+            const height = typeof spot[1] === 'number' ? spot[1].toFixed(1) : '?';
+            return `
+                <div class="spot-item">
+                    <span class="spot-name">${spot[0]}</span>
+                    <span class="spot-height">${height}ft</span>
+                </div>
+            `;
+        })
+        .join('');
+    
+    return `
+        <div class="interval-box">
+            <div class="interval-time">${formatInterval(interval.interval)}</div>
+            <div class="interval-spots">${spots}</div>
+        </div>
+    `;
+}
+
+// Function to display best spots
+function displayBestSpots(day) {
+    const container = document.getElementById('bestSpotsContent');
+    
+    if (!bestSpotsData) {
+        startLoadingAnimation();
+        return;
+    }
+
+    const dayData = bestSpotsData[day];
+    if (!dayData) {
+        container.innerHTML = '<div class="error">No data available</div>';
+        return;
+    }
+
+    const html = dayData
+        .map(interval => formatBestSpotsInterval(interval))
+        .filter(html => html !== '')
+        .join('');
+
+    container.innerHTML = html || '<div class="no-data">No spots available for this time period</div>';
+}
+
+// Function to fetch and initialize best spots data
+async function initializeBestSpots(forceRefresh = false) {
+    try {
+        startLoadingAnimation();
+        
+        // Only fetch new data if we don't have it or if force refresh
+        if (!bestSpotsData || forceRefresh) {
+            const response = await fetch('/best_surf_spots');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            bestSpotsData = await response.json();
+        }
+        
+        stopLoadingAnimation();
+        displayBestSpots('today');
+    } catch (error) {
+        console.error('Error fetching best spots:', error);
+        stopLoadingAnimation();
+        document.getElementById('bestSpotsContent').innerHTML = 
+            `<div class="error">Failed to load best spots data: ${error.message}</div>`;
+    }
+}
+
+// Add event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const todayBtn = document.getElementById('todayBestSpotsBtn');
+    const tomorrowBtn = document.getElementById('tomorrowBestSpotsBtn');
+
+    if (!todayBtn || !tomorrowBtn) {
+        console.error('Could not find best spots buttons');
+        return;
+    }
+
+    function updateButtonStates(activeBtn) {
+        todayBtn.classList.toggle('active', activeBtn === todayBtn);
+        tomorrowBtn.classList.toggle('active', activeBtn === tomorrowBtn);
+    }
+
+    todayBtn.addEventListener('click', () => {
+        updateButtonStates(todayBtn);
+        displayBestSpots('today');
+    });
+
+    tomorrowBtn.addEventListener('click', () => {
+        updateButtonStates(tomorrowBtn);
+        displayBestSpots('tomorrow');
+    });
+
+    // Initialize with error handling
+    initializeBestSpots().catch(error => {
+        console.error('Failed to initialize best spots:', error);
+    });
+});
