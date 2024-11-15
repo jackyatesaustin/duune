@@ -225,11 +225,10 @@ function updateWaveGraph(date, sunrise, sunset) {
     console.log("%c[WaveGraph] Mapped Heights After Sorting:", "color: purple;", waveHeights);
 
 
-    // Updated trace with smooth line and better hover
     const trace = {
         x: waveTimes,
         y: waveHeights,
-        mode: 'lines',  // Removed markers for smoother look
+        mode: 'lines',
         name: 'Wave Height',
         line: { 
             color: 'blue', 
@@ -312,33 +311,43 @@ function updateWaveGraph(date, sunrise, sunset) {
         const windowWidth = window.innerWidth;
         const isMobile = windowWidth <= 768;  // Detect if mobile (you can tweak the pixel threshold)
         
+
         const layout = {
-           title: `Wave Height for ${spot} on ${date}`,
-           xaxis: {
-               tickformat: '%-I %p',
-               dtick: isMobile ? 7200000 : 3600000,  // Use fewer ticks on mobile
-               range: [new Date(`${date}T00:00:00`).getTime(), new Date(`${date}T23:59:59`).getTime()],
-               tickfont: {
-                   size: isMobile ? 10 : 14,  // Smaller font size on mobile
-               }
-           },
-           yaxis: { 
-               title: 'Wave Height (ft)', 
-               tickfont: {
-                   size: isMobile ? 10 : 14  // Adjust y-axis tick size for mobile
-               },
-               titlefont: {
-                   size: isMobile ? 12 : 16  // Adjust title size for mobile
-               }
-           },
-           height: isMobile ? 250 : 300,  // Smaller height on mobile
-           margin: { 
-               l: isMobile ? 40 : 50, 
-               r: isMobile ? 30 : 50, 
-               t: isMobile ? 30 : 40, 
-               b: isMobile ? 40 : 50 
-           },
-           shapes: shapes
+            title: `Wave Height for ${spot} on ${date}`,
+            xaxis: {
+                tickformat: '%-I %p',  // Format as "1 PM", "2 PM", etc.
+                dtick: 3600000,        // Show ticks every hour (3600000ms = 1 hour)
+                range: [
+                    new Date(date + 'T04:00:00').getTime(),  // 4 AM
+                    new Date(date + 'T20:00:00').getTime()   // 8 PM
+                ],
+                tickfont: {
+                    size: isMobile ? 10 : 14,
+                }
+            },
+            yaxis: { 
+                title: 'Wave Height (ft)', 
+                tickfont: {
+                    size: isMobile ? 10 : 14
+                },
+                titlefont: {
+                    size: isMobile ? 12 : 16
+                }
+                
+            },
+            height: isMobile ? 250 : 300,
+            margin: { 
+                l: isMobile ? 40 : 50, 
+                r: isMobile ? 30 : 50, 
+                t: isMobile ? 30 : 40, 
+                b: isMobile ? 40 : 50 
+            },
+            shapes: shapes,
+            hovermode: 'closest',
+            hoverdistance: 50,
+            hoverlabel: {
+                namelength: -1
+            },
         };
 
     console.log("%c[WaveGraph] Layout for Plot Ready:", "color: purple;", layout);
@@ -565,21 +574,22 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     document.getElementById('bestTimesList').innerHTML = '';
     document.getElementById('goodTimesList').innerHTML = '';
 
-    data.best_times.forEach(period => {
-        const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        const listItem = document.createElement('li');
-        listItem.textContent = `${startTime} - ${endTime}`;
-        document.getElementById('bestTimesList').appendChild(listItem);
-    });
+// Inside getData function where the times are populated
+data.best_times.forEach(period => {
+    const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric' }); // Remove minutes
+    const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric' }); // Remove minutes
+    const listItem = document.createElement('li');
+    listItem.textContent = `${startTime} - ${endTime}`;
+    document.getElementById('bestTimesList').appendChild(listItem);
+});
 
-    data.good_times.forEach(period => {
-        const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        const listItem = document.createElement('li');
-        listItem.textContent = `${startTime} - ${endTime}`;
-        document.getElementById('goodTimesList').appendChild(listItem);
-    });
+data.good_times.forEach(period => {
+    const startTime = new Date(period.start).toLocaleTimeString([], { hour: 'numeric' }); // Remove minutes
+    const endTime = new Date(period.end).toLocaleTimeString([], { hour: 'numeric' }); // Remove minutes
+    const listItem = document.createElement('li');
+    listItem.textContent = `${startTime} - ${endTime}`;
+    document.getElementById('goodTimesList').appendChild(listItem);
+});
 
     const minTime = minutePoints[0];
     const maxTime = minutePoints[minutePoints.length - 1];
@@ -1559,7 +1569,7 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     document.getElementById('windLegend').innerHTML = `
     <div class="legend-item green"><span></span> Glassy</div>
     <div class="legend-item yellow"><span></span> Mild Wind</div>
-    <div class="legend-item red"><span></span> Strong Wind</div>
+    <div class="legend-item red"><span></span> Bad Wind</div>
     <div class="legend-item darkgreen"><span></span> Offshore Wind</div>
 `;
 
@@ -1572,6 +1582,7 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     document.getElementById('bestTimesLegend').innerHTML = `
         <div class="legend-item green"><span></span> Best Time</div>
         <div class="legend-item yellow"><span></span> Good Time</div>
+        <div class="legend-item red"><span></span> Unfavorable Time</div>
     `;
 
     // Simulate the loading process for the graph (or after your data fetch is done)
