@@ -1594,10 +1594,42 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
         
         
         // Check which week is currently selected
-        const nextWeekBtn = document.getElementById('nextWeekBtn');
-        const startDate = nextWeekBtn.classList.contains('active') 
-            ? new Date(new Date().setDate(new Date().getDate() + 7))
-            : new Date();
+    // When handling the next week button click
+    document.getElementById('nextWeekBtn').addEventListener('click', async function() {
+        // Get today's date and add 7 days
+        const today = new Date();
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
+        
+        // Format the date in ISO format and explicitly handle timezone
+        const formattedDate = nextWeek.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            timeZone: 'America/Los_Angeles'  // Explicitly set Pacific timezone
+        }).split('/').reverse().join('-');
+
+        try {
+            // Update UI to show loading state
+            document.getElementById('bestSpotsContent').innerHTML = '<p>Loading...</p>';
+            
+            // Make the API call with the timezone-adjusted date
+            const response = await fetch(`/get_best_spots?date=${formattedDate}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            
+            // Update the UI with the new data
+            updateBestSpotsDisplay(data);
+            
+            // Update button states
+            this.classList.add('active');
+            document.getElementById('todayBestSpotsBtn').classList.remove('active');
+        } catch (error) {
+            console.error('Error fetching next week data:', error);
+            document.getElementById('bestSpotsContent').innerHTML = 
+                '<p>Error loading best spots. Please try again.</p>';
+        }
+    });
         
     //    await updateRegionalOverviews(startDate.toISOString().split('T')[0]);
 
