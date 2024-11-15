@@ -1214,17 +1214,29 @@ const layout = {
 };
 
 const windLayout = {
-    ...layout,  // Spread first to get all base properties
-    title: `Wind Speed for ${spot} on ${date}`,
-    yaxis: {
-        ...layout.yaxis,  // Preserve base yaxis properties
-        title: 'Wind Speed (km/h)',
+    xaxis: {
+        tickformat: '%I %p',  // 12-hour format
+        dtick: isMobile ? 3 * 3600 * 1000 : 3600 * 1000,  // Every 3 hours on mobile
+        tickfont: { size: isMobile ? 8 : 12 }
     },
-    hoverlabel: {
-        namelength: 0
-    }
+    yaxis: {
+        title: isMobile ? null : 'Wind Speed (km/h)',  // Remove title on mobile
+        tickfont: { size: isMobile ? 8 : 12 },
+        titlefont: { size: isMobile ? 10 : 14 }
+    },
+    height: isMobile ? 150 : 200,
+    margin: {
+        l: isMobile ? 25 : 50,
+        r: isMobile ? 15 : 40,
+        t: isMobile ? 5 : 30,   // Minimal top margin on mobile
+        b: isMobile ? 20 : 40
+    },
+    title: {
+        text: isMobile ? null : `Wind speed for ${spot} on ${date}`,  // Remove title on mobile
+        font: { size: 14 }
+    },
+    showlegend: false
 };
-
 
 
 // Create background traces for day/night
@@ -1270,15 +1282,28 @@ Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, {
 
 
     const tideLayout = {
-        ...layout,
-        title: `Tide for ${spot} on ${date}`,
-        yaxis: {
-            ...layout.yaxis,
-            title: 'Tide Height (ft)',
+        xaxis: {
+            tickformat: '%I %p',
+            dtick: isMobile ? 3 * 3600 * 1000 : 3600 * 1000,  // Every 3 hours on mobile
+            tickfont: { size: isMobile ? 8 : 12 }
         },
-        hoverlabel: {
-            namelength: 0
-        }
+        yaxis: {
+            title: isMobile ? null : 'Tide Height (ft)',  // Remove title on mobile
+            tickfont: { size: isMobile ? 8 : 12 },
+            titlefont: { size: isMobile ? 10 : 14 }
+        },
+        height: isMobile ? 150 : 200,
+        margin: {
+            l: isMobile ? 25 : 50,
+            r: isMobile ? 15 : 40,
+            t: isMobile ? 5 : 30,   // Minimal top margin on mobile
+            b: isMobile ? 20 : 40
+        },
+        title: {
+            text: isMobile ? null : `Tide for ${spot} on ${date}`,  // Remove title on mobile
+            font: { size: 14 }
+        },
+        showlegend: false
     };
 
 
