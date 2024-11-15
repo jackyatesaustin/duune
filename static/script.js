@@ -2863,37 +2863,37 @@ function debugDateInfo() {
 }
 
 // Update initializeBestSpots
+// Function to fetch and initialize best spots data
 async function initializeBestSpots(forceRefresh = false) {
     try {
         startLoadingAnimation();
         
         if (!bestSpotsData || forceRefresh) {
-            // Add date debugging
-            debugDateInfo();
+            // Get local timezone info
+            const localDate = new Date();
+            const tzOffset = localDate.getTimezoneOffset();
+            const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            console.log('[Best Spots Init] Data received:', bestSpotsData);
+            console.log('[Best Spots Init] Today data:', bestSpotsData?.today);
+            console.log('[Best Spots Init] Tomorrow data:', bestSpotsData?.tomorrow);
             
-            console.log('[Best Spots Init] Fetching new data');
+            console.log('[Best Spots Init] Timezone info:', {
+                localTime: localDate.toLocaleString(),
+                utcTime: localDate.toUTCString(),
+                tzOffset: tzOffset,
+                tzName: tzName
+            });
+
             const response = await fetch('/best_surf_spots', {
                 headers: {
-                    'X-Timezone-Offset': new Date().getTimezoneOffset(),
-                    'X-Local-Date': new Date().toISOString() // Add local date to headers
+                    'X-Timezone-Offset': tzOffset,
+                    'X-Timezone-Name': tzName,
+                    'X-Local-Time': localDate.toISOString()
                 }
             });
             
-            // ... rest of the function ...
-            
             bestSpotsData = await response.json();
-            
-            // Log detailed information about the spots data
-            console.log('[Best Spots Init] Data analysis:', {
-                todayIntervals: bestSpotsData.today?.map(interval => ({
-                    time: interval.interval,
-                    numSpots: interval.top_spots?.length || 0
-                })),
-                tomorrowIntervals: bestSpotsData.tomorrow?.map(interval => ({
-                    time: interval.interval,
-                    numSpots: interval.top_spots?.length || 0
-                }))
-            });
         }
         
         stopLoadingAnimation();
@@ -2905,7 +2905,7 @@ async function initializeBestSpots(forceRefresh = false) {
             <div class="error">
                 Unable to load best spots data. Please try again later.
                 <br><small>Error: ${error.message}</small>
-                <br><small>Time: ${new Date().toLocaleString()}</small>
+                <br><small>Local Time: ${new Date().toLocaleString()}</small>
                 <br><small>Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}</small>
             </div>`;
     }

@@ -589,15 +589,19 @@ def get_best_surf_spots_by_intervals():
     results = {"today": [], "tomorrow": []}
     pacific_tz = pytz.timezone("America/Los_Angeles")  # Define timezone
     
+        # Get current time in Pacific timezone
+    current_time = datetime.now(pytz.UTC).astimezone(pacific_tz)
+    print(f"Current Pacific time: {current_time}")
+
     # Try to use BASE_URL from environment, fallback to localhost if not set
     BASE_URL = os.environ.get('BASE_URL', 'http://127.0.0.1:5000')
     
     # Rest of your function remains exactly the same
     for day_offset in [0, 1]:  # 0 for today, 1 for tomorrow
-        date = (datetime.now() + timedelta(days=day_offset)).strftime('%Y-%m-%d')
+        date = (current_time + timedelta(days=day_offset)).strftime('%Y-%m-%d')
         day_name = "today" if day_offset == 0 else "tomorrow"
         
-        print(f"Processing {day_name}: {date}")  # Keep your print statements
+        print(f"Processing {day_name}: {date}")
         
         # Get sunrise and sunset times for the day
         sunrise, sunset = fetch_sun_times(date)
@@ -667,16 +671,23 @@ def get_best_surf_spots_by_intervals():
     print("Completed processing best surf spots by intervals")
     return results
 
+
+
+
 @app.route('/best_surf_spots')
 def get_best_surf_spots():
     try:
         app.logger.info('Starting best surf spots calculation')
         
-        # Get today's date in the correct timezone
-        tz = pytz.timezone('America/Los_Angeles')
-        today = datetime.now(tz).date()
+        # Get timezone info from headers
+        tz_name = request.headers.get('X-Timezone-Name', 'America/Los_Angeles')
+        client_tz = pytz.timezone(tz_name)
         
-        app.logger.info(f'Processing today: {today}')
+        # Get today's date in the client's timezone
+        today = datetime.now(client_tz).date()
+        tomorrow = today + timedelta(days=1)
+        
+        app.logger.info(f'Processing dates - Today: {today}, Tomorrow: {tomorrow}')
         
         # Get best spots with detailed error handling
         try:
@@ -685,7 +696,7 @@ def get_best_surf_spots():
             return jsonify(best_spots)
         except Exception as e:
             app.logger.error(f'Error in get_best_surf_spots_by_intervals: {str(e)}', exc_info=True)
-            raise  # Re-raise to be caught by outer try/except
+            raise
         
     except Exception as e:
         app.logger.error(f'Error in best_surf_spots route: {str(e)}', exc_info=True)
