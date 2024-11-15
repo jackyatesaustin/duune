@@ -2844,31 +2844,56 @@ function displayBestSpots(day) {
 
 // Function to fetch and initialize best spots data
 // Update the initializeBestSpots function with better error logging
+// Add this helper function
+function debugDateInfo() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    console.log('[Date Debug] Current date/time info:', {
+        currentTime: now.toLocaleString(),
+        currentTimeISO: now.toISOString(),
+        tomorrowDate: tomorrow.toLocaleString(),
+        tomorrowISO: tomorrow.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffset: now.getTimezoneOffset(),
+        localTime: now.toLocaleTimeString(),
+        utcTime: now.toUTCString()
+    });
+}
+
+// Update initializeBestSpots
 async function initializeBestSpots(forceRefresh = false) {
     try {
         startLoadingAnimation();
         
         if (!bestSpotsData || forceRefresh) {
+            // Add date debugging
+            debugDateInfo();
+            
             console.log('[Best Spots Init] Fetching new data');
             const response = await fetch('/best_surf_spots', {
                 headers: {
-                    // Add timezone offset to request headers
-                    'X-Timezone-Offset': new Date().getTimezoneOffset()
+                    'X-Timezone-Offset': new Date().getTimezoneOffset(),
+                    'X-Local-Date': new Date().toISOString() // Add local date to headers
                 }
             });
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('[Best Spots Init] Server response:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: errorText
-                });
-                throw new Error(`Server error (${response.status}): ${errorText}`);
-            }
+            // ... rest of the function ...
             
             bestSpotsData = await response.json();
-            console.log('[Best Spots Init] Received data:', bestSpotsData);
+            
+            // Log detailed information about the spots data
+            console.log('[Best Spots Init] Data analysis:', {
+                todayIntervals: bestSpotsData.today?.map(interval => ({
+                    time: interval.interval,
+                    numSpots: interval.top_spots?.length || 0
+                })),
+                tomorrowIntervals: bestSpotsData.tomorrow?.map(interval => ({
+                    time: interval.interval,
+                    numSpots: interval.top_spots?.length || 0
+                }))
+            });
         }
         
         stopLoadingAnimation();
@@ -2881,6 +2906,7 @@ async function initializeBestSpots(forceRefresh = false) {
                 Unable to load best spots data. Please try again later.
                 <br><small>Error: ${error.message}</small>
                 <br><small>Time: ${new Date().toLocaleString()}</small>
+                <br><small>Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}</small>
             </div>`;
     }
 }
