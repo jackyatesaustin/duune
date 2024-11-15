@@ -1594,42 +1594,10 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
         
         
         // Check which week is currently selected
-    // When handling the next week button click
-    document.getElementById('nextWeekBtn').addEventListener('click', async function() {
-        // Get today's date and add 7 days
-        const today = new Date();
-        const nextWeek = new Date(today);
-        nextWeek.setDate(today.getDate() + 7);
-        
-        // Format the date in ISO format and explicitly handle timezone
-        const formattedDate = nextWeek.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            timeZone: 'America/Los_Angeles'  // Explicitly set Pacific timezone
-        }).split('/').reverse().join('-');
-
-        try {
-            // Update UI to show loading state
-            document.getElementById('bestSpotsContent').innerHTML = '<p>Loading...</p>';
-            
-            // Make the API call with the timezone-adjusted date
-            const response = await fetch(`/get_best_spots?date=${formattedDate}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            
-            // Update the UI with the new data
-            updateBestSpotsDisplay(data);
-            
-            // Update button states
-            this.classList.add('active');
-            document.getElementById('todayBestSpotsBtn').classList.remove('active');
-        } catch (error) {
-            console.error('Error fetching next week data:', error);
-            document.getElementById('bestSpotsContent').innerHTML = 
-                '<p>Error loading best spots. Please try again.</p>';
-        }
-    });
+        const nextWeekBtn = document.getElementById('nextWeekBtn');
+        const startDate = nextWeekBtn.classList.contains('active') 
+            ? new Date(new Date().setDate(new Date().getDate() + 7))
+            : new Date();
         
     //    await updateRegionalOverviews(startDate.toISOString().split('T')[0]);
 
@@ -2829,17 +2797,32 @@ function formatBestSpotsInterval(interval) {
 }
 
 // Function to display best spots
+// Update the display function with better logging
 function displayBestSpots(day) {
     const container = document.getElementById('bestSpotsContent');
     
+    // Add detailed logging
+    console.log(`[Best Spots Display] Starting display for ${day}`);
+    console.log(`[Best Spots Display] Current bestSpotsData:`, bestSpotsData);
+    
     if (!bestSpotsData) {
+        console.log('[Best Spots Display] No data available, showing loading animation');
         startLoadingAnimation();
         return;
     }
 
     const dayData = bestSpotsData[day];
-    if (!dayData) {
-        container.innerHTML = '<div class="error">No data available</div>';
+    console.log(`[Best Spots Display] Data for ${day}:`, dayData);
+
+    if (!dayData || !Array.isArray(dayData)) {
+        console.log(`[Best Spots Display] Invalid or missing data for ${day}`);
+        container.innerHTML = `<div class="error">No data available for ${day}</div>`;
+        return;
+    }
+
+    if (dayData.length === 0) {
+        console.log(`[Best Spots Display] Empty data array for ${day}`);
+        container.innerHTML = '<div class="no-data">No spots available for this time period</div>';
         return;
     }
 
@@ -2848,8 +2831,16 @@ function displayBestSpots(day) {
         .filter(html => html !== '')
         .join('');
 
-    container.innerHTML = html || '<div class="no-data">No spots available for this time period</div>';
+    if (!html) {
+        console.log(`No valid intervals found for ${day}`);
+        container.innerHTML = '<div class="no-data">No spots available for this time period</div>';
+        return;
+    }
+
+    console.log(`Successfully rendered ${day}'s data`);
+    container.innerHTML = html;
 }
+
 
 // Function to fetch and initialize best spots data
 // Update the initializeBestSpots function with better error logging
@@ -2858,29 +2849,38 @@ async function initializeBestSpots(forceRefresh = false) {
         startLoadingAnimation();
         
         if (!bestSpotsData || forceRefresh) {
-            const response = await fetch('/best_surf_spots');
+            console.log('[Best Spots Init] Fetching new data');
+            const response = await fetch('/best_surf_spots', {
+                headers: {
+                    // Add timezone offset to request headers
+                    'X-Timezone-Offset': new Date().getTimezoneOffset()
+                }
+            });
+            
             if (!response.ok) {
-                // Try to get more error details
                 const errorText = await response.text();
-                console.error('Server response:', {
+                console.error('[Best Spots Init] Server response:', {
                     status: response.status,
                     statusText: response.statusText,
                     body: errorText
                 });
                 throw new Error(`Server error (${response.status}): ${errorText}`);
             }
+            
             bestSpotsData = await response.json();
+            console.log('[Best Spots Init] Received data:', bestSpotsData);
         }
         
         stopLoadingAnimation();
         displayBestSpots('today');
     } catch (error) {
-        console.error('Error fetching best spots:', error);
+        console.error('[Best Spots Init] Error:', error);
         stopLoadingAnimation();
-        document.getElementById('bestSpotsContent').innerHTML = 
-            `<div class="error">
-                Unable to load best spots data. Please try again later.<br>
-                <small style="color: #666;">Error: ${error.message}</small>
+        document.getElementById('bestSpotsContent').innerHTML = `
+            <div class="error">
+                Unable to load best spots data. Please try again later.
+                <br><small>Error: ${error.message}</small>
+                <br><small>Time: ${new Date().toLocaleString()}</small>
             </div>`;
     }
 }
@@ -2891,7 +2891,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tomorrowBtn = document.getElementById('tomorrowBestSpotsBtn');
 
     if (!todayBtn || !tomorrowBtn) {
-        console.error('Could not find best spots buttons');
+        console.error('[DOM Load] Could not find best spots buttons');
         return;
     }
 
@@ -2901,17 +2901,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     todayBtn.addEventListener('click', () => {
+        console.log('[Button Click] Today button clicked');
         updateButtonStates(todayBtn);
         displayBestSpots('today');
     });
 
     tomorrowBtn.addEventListener('click', () => {
+        console.log('[Button Click] Tomorrow button clicked');
         updateButtonStates(tomorrowBtn);
-        displayBestSpots('tomorrow');
+        displayBestSpots('tomorrow'); // Simply display tomorrow's data without reloading
     });
 
-    // Initialize with error handling
+    // Initial load
     initializeBestSpots().catch(error => {
-        console.error('Failed to initialize best spots:', error);
+        console.error('[DOM Load] Failed to initialize best spots:', error);
     });
 });
