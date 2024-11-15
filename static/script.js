@@ -323,8 +323,7 @@ function updateWaveGraph(date, sunrise, sunset) {
                 ],
                 tickfont: {
                     size: isMobile ? 10 : 14,
-                },
-                fixedrange: true  // Disable x-axis zoom
+                }
             },
             yaxis: { 
                 title: 'Wave Height (ft)', 
@@ -333,8 +332,8 @@ function updateWaveGraph(date, sunrise, sunset) {
                 },
                 titlefont: {
                     size: isMobile ? 12 : 16
-                },
-                fixedrange: true  // Disable y-axis zoom
+                }
+                
             },
             height: isMobile ? 250 : 300,
             margin: { 
@@ -350,12 +349,9 @@ function updateWaveGraph(date, sunrise, sunset) {
                 namelength: -1
             },
         };
-        
-        Plotly.newPlot('waveHeightPlot', [trace], layout, { 
-            responsive: true, 
-            displayModeBar: false, 
-            staticPlot: false 
-        });
+
+    console.log("%c[WaveGraph] Layout for Plot Ready:", "color: purple;", layout);
+    Plotly.newPlot('waveHeightPlot', [trace], layout, { responsive: true, displayModeBar: false, staticPlot: false });
     console.log("%c[WaveGraph] Plotly Plot Updated Successfully for date: " + date, "color: green; font-weight: bold;");
 
 }
@@ -1531,13 +1527,10 @@ const bestTimesNightTraces = [
 Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     ...layout,
     height: isMobile ? 100 : 120,
-    yaxis: { 
-        visible: false,
-        fixedrange: true  // Disable y-axis zoom
-    },
+    yaxis: { visible: false },
     xaxis: { 
         ...layout.xaxis,
-        fixedrange: true  // Disable x-axis zoom
+        fixedrange: true
     },
     responsive: true,
     hovermode: 'closest',
@@ -2522,7 +2515,6 @@ const trace = {
 };
 
 // Create layout with shapes included
-// Create layout with shapes included
 const layout = {
     xaxis: {
         tickformat: '%a %m/%d',
@@ -2537,35 +2529,29 @@ const layout = {
             new Date(dates[0] + 'T00:00:00').getTime(),
             new Date(dates[6] + 'T23:59:59').getTime()
         ],
-        tickfont: { size: isMobile ? 8 : 12 },
-        fixedrange: true  // Disable x-axis zoom
+        tickfont: { size: isMobile ? 10 : 12 }
     },
     yaxis: {
         title: 'Height (ft)',
-        tickfont: { size: isMobile ? 8 : 12 },
-        titlefont: { size: isMobile ? 10 : 14 },
-        fixedrange: true  // Disable y-axis zoom
+        tickfont: { size: isMobile ? 10 : 12 },
+        titlefont: { size: isMobile ? 12 : 14 }
     },
-    height: isMobile ? 150 : 200,
+    height: 200,
     margin: {
-        l: isMobile ? 30 : 50,
-        r: isMobile ? 20 : 40,
-        t: isMobile ? 10 : 20,
-        b: isMobile ? 25 : 40
+        l: isMobile ? 40 : 50,
+        r: isMobile ? 30 : 40,
+        t: 20,
+        b: isMobile ? 30 : 40
     },
     shapes: shapes,
     showlegend: false,
-    hovermode: isMobile ? 'closest' : 'x',
-    hoverdistance: isMobile ? 50 : 25
 };
 
-// When plotting
-Plotly.newPlot('waveHeightPlot', traces, layout, {
-    displayModeBar: false,  // Hide the modebar completely
+// Plot the graph
+Plotly.newPlot(region.id, [trace], layout, {
     responsive: true,
-    showTips: false
+    displayModeBar: false
 });
-
 
             console.log(`%c[RegionalOverviews] ✓ Successfully plotted 7-day forecast for ${regionName}`, "color: green;");
         } catch (error) {
