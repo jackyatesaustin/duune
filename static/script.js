@@ -311,9 +311,11 @@ function updateWaveGraph(date, sunrise, sunset) {
         const windowWidth = window.innerWidth;
         const isMobile = windowWidth <= 768;  // Detect if mobile (you can tweak the pixel threshold)
         
-
         const layout = {
-            title: `Wave Height for ${spot} on ${date}`,
+            title: {
+                text: `Wave height for ${spot} on ${date}`,
+                font: { size: isMobile ? 10 : 14 }  // Smaller title on mobile
+            },
             xaxis: {
                 tickformat: '%-I %p',  // Format as "1 PM", "2 PM", etc.
                 dtick: 3600000,        // Show ticks every hour (3600000ms = 1 hour)
@@ -323,7 +325,8 @@ function updateWaveGraph(date, sunrise, sunset) {
                 ],
                 tickfont: {
                     size: isMobile ? 10 : 14,
-                }
+                },
+                fixedrange: true  // Disable x-axis zoom
             },
             yaxis: { 
                 title: 'Wave Height (ft)', 
@@ -332,8 +335,8 @@ function updateWaveGraph(date, sunrise, sunset) {
                 },
                 titlefont: {
                     size: isMobile ? 12 : 16
-                }
-                
+                },
+                fixedrange: true  // Disable y-axis zoom
             },
             height: isMobile ? 250 : 300,
             margin: { 
@@ -343,15 +346,24 @@ function updateWaveGraph(date, sunrise, sunset) {
                 b: isMobile ? 40 : 50 
             },
             shapes: shapes,
-            hovermode: 'closest',
-            hoverdistance: 50,
+            hovermode: 'x',           // Changed from 'closest' to 'x'
+            hoverdistance: 50,        // Adjusted for better touch response
             hoverlabel: {
-                namelength: -1
+                namelength: -1,
+                bgcolor: 'white',
+                font: { size: 12 }
             },
+            dragmode: false          // Disable drag mode
         };
-
-    console.log("%c[WaveGraph] Layout for Plot Ready:", "color: purple;", layout);
-    Plotly.newPlot('waveHeightPlot', [trace], layout, { responsive: true, displayModeBar: false, staticPlot: false });
+        
+        Plotly.newPlot('waveHeightPlot', [trace], layout, { 
+            responsive: true, 
+            displayModeBar: false, 
+            staticPlot: false,
+            scrollZoom: false,         // Disable scroll zoom
+            doubleClick: false,        // Disable double-click zoom
+            modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
+        });
     console.log("%c[WaveGraph] Plotly Plot Updated Successfully for date: " + date, "color: green; font-weight: bold;");
 
 }
@@ -652,7 +664,7 @@ glassySegments.forEach(segment => {
             Math.round(interpolatedDirections[i])
         ]),
         hovertemplate: 
-            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Glassy<br>') +
+            (isOffshore ? 'Offshore<br>' : 'Glassy<br>') +
             '💨 %{y:.1f} km/h<br>' + 
             '🕒 %{x|%I:%M %p}<br>' + 
             '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
@@ -692,7 +704,7 @@ mildWindSegments.forEach(segment => {
             Math.round(interpolatedDirections[i])
         ]),
         hovertemplate: 
-            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Mild<br>') +
+            (isOffshore ? 'Offshore<br>' : 'Mild<br>') +
             '💨 %{y:.1f} km/h<br>' + 
             '🕒 %{x|%I:%M %p}<br>' + 
             '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
@@ -732,7 +744,7 @@ badWindSegments.forEach(segment => {
             Math.round(interpolatedDirections[i])
         ]),
         hovertemplate: 
-            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Strong<br>') +
+            (isOffshore ? 'Offshore<br>' : 'Bad<br>') +
             '💨 %{y:.1f} km/h<br>' + 
             '🕒 %{x|%I:%M %p}<br>' + 
             '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
@@ -1218,7 +1230,7 @@ const windLayout = {
         tickformat: '%I %p',  // 12-hour format
         dtick: isMobile ? 3 * 3600 * 1000 : 3600 * 1000,  // Every 3 hours on mobile
         tickfont: { size: isMobile ? 8 : 12 },
-        fixedrange: isMobile  // Disable zoom on mobile
+        fixedrange: true,  // Disable zoom for all devices
     },
     yaxis: {
         title: isMobile ? null : 'Wind Speed (km/h)',  // Remove title on mobile
@@ -1237,7 +1249,10 @@ const windLayout = {
         text: `Wind speed for ${spot} on ${date}`,
         font: { size: isMobile ? 10 : 14 }  // Smaller title on mobile
     },
-    showlegend: false
+    showlegend: false,
+    dragmode: false,
+    hovermode: 'closest',  // Better touch response
+    hoverdistance: -1       // Show hover for entire width
 };
 
 // Create background traces for day/night
@@ -1272,9 +1287,12 @@ const nightTraces = [
 Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, { 
     responsive: true,
     displayModeBar: false,
-    showTips: false
+    showTips: false,
+    scrollZoom: false,  // Disable scroll zoom
+    doubleClick: false, // Disable double-click zoom
+    modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'],
+    staticPlot: false  // Allow hover interactions but disable all other interactions
 });
-
 
 
 
@@ -1287,7 +1305,7 @@ Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, {
             tickformat: '%I %p',
             dtick: isMobile ? 3 * 3600 * 1000 : 3600 * 1000,  // Every 3 hours on mobile
             tickfont: { size: isMobile ? 8 : 12 },
-            fixedrange: isMobile  // Disable zoom on mobile
+            fixedrange: true,  // Disable zoom for all devices
         },
         yaxis: {
             title: isMobile ? null : 'Tide Height (ft)',  // Remove title on mobile
@@ -1306,7 +1324,10 @@ Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, {
             text: `Tide for ${spot} on ${date}`,
             font: { size: isMobile ? 10 : 14 }  // Smaller title on mobile
         },
-        showlegend: false
+        showlegend: false,
+        dragmode: false,  // Disable drag mode
+        hovermode: 'closest',  // Changed from 'x unified' to 'closest'
+        hoverdistance: -1,      // Adjusted for better touch response
     };
 
 
@@ -1344,7 +1365,11 @@ const tideNightTraces = [
 Plotly.newPlot('tidePlot', [...tideNightTraces, ...tideTraces], tideLayout, { 
     responsive: true,
     displayModeBar: false,
-    showTips: false
+    showTips: false,
+    scrollZoom: false,
+    doubleClick: false,
+    modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d'],
+    staticPlot: false
 });
 
 
@@ -1538,11 +1563,15 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     hoverdistance: 50,
     hoverlabel: {
         namelength: -1
-    }
-}, {
+    },
+    dragmode: false  // Add drag prevention
+},
+{
     displayModeBar: false,
     responsive: true,
-    showTips: false
+    showTips: false,
+    scrollZoom: false,  // Add scroll zoom prevention
+    doubleClick: false  // Add double-click zoom prevention
 });
 
 
@@ -2529,12 +2558,14 @@ const layout = {
             new Date(dates[0] + 'T00:00:00').getTime(),
             new Date(dates[6] + 'T23:59:59').getTime()
         ],
-        tickfont: { size: isMobile ? 10 : 12 }
+        tickfont: { size: isMobile ? 10 : 12 },
+        fixedrange: true
     },
     yaxis: {
         title: 'Height (ft)',
         tickfont: { size: isMobile ? 10 : 12 },
-        titlefont: { size: isMobile ? 12 : 14 }
+        titlefont: { size: isMobile ? 12 : 14 },
+        fixedrange: true
     },
     height: 200,
     margin: {
@@ -2545,12 +2576,24 @@ const layout = {
     },
     shapes: shapes,
     showlegend: false,
+    hovermode: 'x',           // Changed from 'x unified' to 'x'
+    hoverdistance: 50,        // Adjusted for better touch response
+    dragmode: false,
+    hoverlabel: {
+        bgcolor: 'white',
+        bordercolor: '#c7c7c7',
+        font: { size: 12 }
+    }
 };
 
 // Plot the graph
 Plotly.newPlot(region.id, [trace], layout, {
     responsive: true,
-    displayModeBar: false
+    displayModeBar: false,
+    staticPlot: false,
+    scrollZoom: false,
+    doubleClick: false,      // Disable double-click zoom
+    modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
 });
 
             console.log(`%c[RegionalOverviews] ✓ Successfully plotted 7-day forecast for ${regionName}`, "color: green;");
