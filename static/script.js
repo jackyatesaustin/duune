@@ -640,9 +640,18 @@ data.good_times.forEach(period => {
 
 // Glassy segments
 glassySegments.forEach(segment => {
+    /*
     const isOffshore = data.spot_config.offshore_wind ? (
         interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+    */
+
+    const isOffshore = data.spot_config.offshore_wind ? (
+        segment.some(index => 
+            interpolatedDirections[index] >= data.spot_config.offshore_wind.min && 
+            interpolatedDirections[index] <= data.spot_config.offshore_wind.max
+        )
     ) : false;
 
     const trace = {
@@ -659,9 +668,9 @@ glassySegments.forEach(segment => {
         fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
         showlegend: showLegendGlassy,
         text: segment.map(i => [
-            degreesToArrow(interpolatedDirections[i]),
-            degreesToCardinal(interpolatedDirections[i]),
-            Math.round(interpolatedDirections[i])
+            degreesToArrow(interpolatedDirections[i] % 360),
+            degreesToCardinal(interpolatedDirections[i] % 360),
+            Math.round(interpolatedDirections[i] % 360)
         ]),
         hovertemplate: 
             (isOffshore ? 'Offshore<br>' : 'Glassy<br>') +
@@ -680,9 +689,18 @@ glassySegments.forEach(segment => {
 
 // Mild segments
 mildWindSegments.forEach(segment => {
+    /*
     const isOffshore = data.spot_config.offshore_wind ? (
         interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
+    ) : false;
+    */
+
+    const isOffshore = data.spot_config.offshore_wind ? (
+        segment.some(index => 
+            interpolatedDirections[index] >= data.spot_config.offshore_wind.min && 
+            interpolatedDirections[index] <= data.spot_config.offshore_wind.max
+        )
     ) : false;
 
     const trace = {
@@ -699,9 +717,9 @@ mildWindSegments.forEach(segment => {
         fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
         showlegend: showLegendMild,
         text: segment.map(i => [
-            degreesToArrow(interpolatedDirections[i]),
-            degreesToCardinal(interpolatedDirections[i]),
-            Math.round(interpolatedDirections[i])
+            degreesToArrow(interpolatedDirections[i] % 360),
+            degreesToCardinal(interpolatedDirections[i] % 360),
+            Math.round(interpolatedDirections[i] % 360)
         ]),
         hovertemplate: 
             (isOffshore ? 'Offshore<br>' : 'Mild<br>') +
@@ -720,10 +738,20 @@ mildWindSegments.forEach(segment => {
 
 // Bad segments
 badWindSegments.forEach(segment => {
+    /*
     const isOffshore = data.spot_config.offshore_wind ? (
         interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
         interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
     ) : false;
+    */
+
+    const isOffshore = data.spot_config.offshore_wind ? (
+        segment.some(index => 
+            interpolatedDirections[index] >= data.spot_config.offshore_wind.min && 
+            interpolatedDirections[index] <= data.spot_config.offshore_wind.max
+        )
+    ) : false;
+
 
     const trace = {
         x: segment.map(i => minutePoints[i]),
@@ -739,9 +767,9 @@ badWindSegments.forEach(segment => {
         fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
         showlegend: showLegendBad,
         text: segment.map(i => [
-            degreesToArrow(interpolatedDirections[i]),
-            degreesToCardinal(interpolatedDirections[i]),
-            Math.round(interpolatedDirections[i])
+            degreesToArrow(interpolatedDirections[i] % 360),
+            degreesToCardinal(interpolatedDirections[i] % 360),
+            Math.round(interpolatedDirections[i] % 360)
         ]),
         hovertemplate: 
             (isOffshore ? 'Offshore<br>' : 'Bad<br>') +
@@ -760,141 +788,10 @@ badWindSegments.forEach(segment => {
 
 
 
-    /*
-    // For each segment type, create a single trace with the appropriate color
-    glassySegments.forEach(segment => {
-
-        const isOffshore = data.spot_config.offshore_wind ? (
-            interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-            interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
-            ) : false;           
-        
-        // Create a single trace for this segment
-        
-        const trace = {
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedSpeeds[i]),
-            mode: 'lines',
-            name: ``,
-            line: { 
-                color: isOffshore ? 'darkgreen' : 'limegreen',
-                width: 3,
-                simplify: false  // Prevent line simplification
-            },
-            fill: 'tozeroy',
-            fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
-            showlegend: showLegendGlassy,
-            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-            (isOffshore ? '🌊 Offshore<br>' : '🌬️ Glassy<br>') +
-            '💨 %{y:.1f} km/h<br>' + 
-            '🕒 %{x|%I:%M %p}<br>' + 
-            '🧭 ' + degreesToArrow(interpolatedDirections[segment[0]]) + ' ' + 
-            degreesToCardinal(interpolatedDirections[segment[0]]) + ' ' +
-            `(${Math.round(interpolatedDirections[segment[0]])}°)` + '<extra></extra>',
-            hoverinfo: 'text',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        };
-        
-        windTraces.push(trace);
-        showLegendGlassy = false;
-    });
-
-
-    mildWindSegments.forEach(segment => {
-       const isOffshore = data.spot_config.offshore_wind ? (
-        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
-    ) : false;
-    
-
-
-        const trace = {
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedSpeeds[i]),
-            mode: 'lines',
-            name: ``,
-            line: { 
-                color: isOffshore ? 'darkgreen' : 'yellow',
-                width: 3,
-                simplify: false
-            },
-            fill: 'tozeroy',
-            fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
-            showlegend: showLegendMild,
-            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-            (isOffshore ? 'Offshore<br>' : 'Mild<br>') +
-            '💨 %{y:.1f} km/h<br>' + 
-            '🕒 %{x|%I:%M %p}<br>' + 
-            '🧭 ' + degreesToArrow(interpolatedDirections[segment[0]]) + ' ' + 
-            degreesToCardinal(interpolatedDirections[segment[0]]) + ' ' +
-            `(${Math.round(interpolatedDirections[segment[0]])}°)` + '<extra></extra>',
-            hoverinfo: 'text',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        };
-        windTraces.push(trace);
-        showLegendMild = false;
-    });
-
-    badWindSegments.forEach(segment => {
-       const isOffshore = data.spot_config.offshore_wind ? (
-        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
-    ) : false;
-    
-
-        
-        
-        const trace = {
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedSpeeds[i]),
-            mode: 'lines',
-            name: ``,
-            line: { 
-                color: isOffshore ? 'darkgreen' : 'red',
-                width: 3,
-                simplify: false
-            },
-            fill: 'tozeroy',
-            fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
-            showlegend: showLegendBad,
-            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} km/h<br>Direction: ' + degreesToCardinal(interpolatedDirections[segment[0]]) + '<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-            (isOffshore ? 'Offshore<br>' : 'Bad<br>') +
-            '💨 %{y:.1f} km/h<br>' + 
-            '🕒 %{x|%I:%M %p}<br>' + 
-            '🧭 ' + degreesToArrow(interpolatedDirections[segment[0]]) + ' ' + 
-            degreesToCardinal(interpolatedDirections[segment[0]]) + ' ' +
-            `(${Math.round(interpolatedDirections[segment[0]])}°)` + '<extra></extra>',
-            hoverinfo: 'text',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        };
-        windTraces.push(trace);
-        showLegendBad = false;
-    });
-
-
-*/
 
 
 
- 
+
     const lowTideSegments = getConditionSegments(interpolatedHeights, height => height < data.spot_config.tide.low);
     const moderateTideSegments = getConditionSegments(interpolatedHeights, height => 
         height >= data.spot_config.tide.low && height <= data.spot_config.tide.moderate
@@ -1063,111 +960,8 @@ lowTideSegments.forEach(segment => {
     showLegendLow = false;
 });
 
-    /*
-    lowTideSegments.forEach(segment => {
-        tideTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedHeights[i]),
-            mode: 'lines',
-            //name: `Low Tide (< ${tideConfig.moderate} ft)`,
-            name: `Low Tide (< ${data.spot_config.tide.low} ft)`,
-            line: { color: 'lightcoral', width: 3 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(255, 192, 192, 0.2)',
-            showlegend: showLegendLow,
-            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-            '🌊 Low<br>' +
-            '📏 %{y:.1f} ft<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        });
-        showLegendLow = false;
-    });
 
-    moderateTideSegments.forEach(segment => {
-        tideTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedHeights[i]),
-            mode: 'lines',
-           // name: `Moderate Tide (${tideConfig.moderate}-${tideConfig.high} ft)`,
-           name: `Moderate Tide (${data.spot_config.tide.low}-${data.spot_config.tide.moderate} ft)`,
-            line: { color: 'limegreen', width: 6 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(0, 255, 0, 0.2)',
-            showlegend: showLegendModerate,
-            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-            '🌊 Moderate<br>' +
-            '📏 %{y:.1f} ft<br>' +
-            '🕒 %{x|%I:%M %p}<extra></extra>',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        });
-        showLegendModerate = false;
-    });
 
-    highTideSegments.forEach(segment => {
-        tideTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedHeights[i]),
-            mode: 'lines',
-            //name: `High Tide (${tideConfig.high}-${tideConfig.veryHigh} ft)`,
-            name: `High Tide (${data.spot_config.tide.moderate}-${data.spot_config.tide.high} ft)`,
-            line: { color: 'yellow', width: 6 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(255, 255, 0, 0.2)',
-            showlegend: showLegendHigh,
-            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-                '🌊 High<br>' +
-                '📏 %{y:.1f} ft<br>' +
-                '🕒 %{x|%I:%M %p}<extra></extra>',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        });
-        showLegendHigh = false;
-    });
-
-    veryHighTideSegments.forEach(segment => {
-        tideTraces.push({
-            x: segment.map(i => minutePoints[i]),
-            y: segment.map(i => interpolatedHeights[i]),
-            mode: 'lines',
-            //name: `Very High Tide (> ${tideConfig.veryHigh} ft)`,
-            name: `Very High Tide (> ${data.spot_config.tide.high} ft)`,
-            line: { color: 'red', width: 3 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(255, 0, 0, 0.2)',
-            showlegend: showLegendVeryHigh,
-            //hovertemplate: '%{y:.1f} ft<br>%{x}<extra></extra>'
-            //hovertemplate: '%{y:.1f} ft<br>%{x|%I:%M %p}<extra></extra>'
-            hovertemplate: 
-                '🌊 Very High<br>' +
-                '📏 %{y:.1f} ft<br>' +
-                '🕒 %{x|%I:%M %p}<extra></extra>',
-            hoverlabel: { 
-                bgcolor: 'white', 
-                namelength: 0,
-                font: { size: 14, family: 'Arial, sans-serif' }
-            }
-        });
-        showLegendVeryHigh = false;
-    });
-*/
 
     // Adjust for mobile screen responsiveness
     const isMobile = window.innerWidth < 768;
