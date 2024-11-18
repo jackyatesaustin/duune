@@ -29,7 +29,7 @@ window.onload = async function () {
 
 
     // Fetch wave forecast data from the API
-    await fetchWaveData();
+  //  await fetchWaveData();
 
 
 
@@ -2493,7 +2493,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
+/*
 // Function to fetch wave data from Flask API
 async function fetchWaveData() {
     try {
@@ -2507,7 +2507,7 @@ async function fetchWaveData() {
         console.error("%c[fetch wave data] Error fetching wave data:", "color: red; font-weight: bold;", error);
     }
 }
-
+*/
 
 
 
