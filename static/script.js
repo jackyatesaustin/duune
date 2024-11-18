@@ -329,7 +329,7 @@ function updateWaveGraph(date, sunrise, sunset) {
                 fixedrange: true  // Disable x-axis zoom
             },
             yaxis: { 
-                title: 'Wave Height (ft)', 
+             //t)', 
                 tickfont: {
                     size: isMobile ? 10 : 14
                 },
@@ -872,7 +872,7 @@ veryHighTideSegments.forEach(segment => {
         x: segment.map(i => minutePoints[i]),
         y: segment.map(i => interpolatedHeights[i]),
         mode: 'lines',
-        name: `Very High Tide (> ${data.spot_config.tide.veryHigh} ft)`,
+        //name: `Very High Tide (> ${data.spot_config.tide.veryHigh} ft)`,
         line: { color: 'red', width: 3 },
         fill: 'tozeroy',
         fillcolor: 'rgba(255, 0, 0, 0.2)',
@@ -895,7 +895,7 @@ highTideSegments.forEach(segment => {
         x: segment.map(i => minutePoints[i]),
         y: segment.map(i => interpolatedHeights[i]),
         mode: 'lines',
-        name: `High Tide (${data.spot_config.tide.high}-${data.spot_config.tide.veryHigh} ft)`,
+       // name: `High Tide (${data.spot_config.tide.high}-${data.spot_config.tide.veryHigh} ft)`,
         line: { color: 'yellow', width: 3 },
         fill: 'tozeroy',
         fillcolor: 'rgba(255, 255, 0, 0.2)',
@@ -918,7 +918,7 @@ moderateTideSegments.forEach(segment => {
         x: segment.map(i => minutePoints[i]),
         y: segment.map(i => interpolatedHeights[i]),
         mode: 'lines',
-        name: `Good Tide (${data.spot_config.tide.low}-${data.spot_config.tide.high} ft)`,
+       // name: `Good Tide (${data.spot_config.tide.low}-${data.spot_config.tide.high} ft)`,
         line: { color: 'limegreen', width: 6 },
         fill: 'tozeroy',
         fillcolor: 'rgba(0, 255, 0, 0.2)',
@@ -942,7 +942,7 @@ lowTideSegments.forEach(segment => {
         y: segment.map(i => interpolatedHeights[i]),
         mode: 'lines',
         //name: `Low Tide (< ${data.spot_config.tide.low} ft)`,
-        name: `Low Tide)`,
+       // name: `Low Tide)`,
         line: { color: 'red', width: 3 },
         fill: 'tozeroy',
         fillcolor: 'rgba(255, 0, 0, 0.2)',
@@ -1027,7 +1027,7 @@ const windLayout = {
         fixedrange: true,  // Disable zoom for all devices
     },
     yaxis: {
-        title: isMobile ? null : 'Wind Speed (km/h)',  // Remove title on mobile
+     //   title: isMobile ? null : 'Wind Speed (km/h)',  // Remove title on mobile
         tickfont: { size: isMobile ? 8 : 12 },
         titlefont: { size: isMobile ? 10 : 14 },
         fixedrange: isMobile  // Disable zoom on mobile
@@ -1102,7 +1102,7 @@ Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, {
             fixedrange: true,  // Disable zoom for all devices
         },
         yaxis: {
-            title: isMobile ? null : 'Tide Height (ft)',  // Remove title on mobile
+        //    title: isMobile ? null : 'Tide Height (ft)',  // Remove title on mobile
             tickfont: { size: isMobile ? 8 : 12 },
             titlefont: { size: isMobile ? 10 : 14 },
             fixedrange: isMobile  // Disable zoom on mobile
@@ -2298,7 +2298,7 @@ const trace = {
     x: times.map(t => new Date(t)),
     y: heights,
     mode: 'lines',
-    name: 'Average Wave Height',
+   // name: 'Average Wave Height',
     line: { 
         color: 'blue', 
         width: 3,
@@ -2356,20 +2356,22 @@ const layout = {
         fixedrange: true
     },
     yaxis: {
-        title: 'Height (ft)',
+       // title: 'Height (ft)',
         tickfont: { size: isMobile ? 10 : 12 },
         titlefont: { size: isMobile ? 12 : 14 },
         fixedrange: true
     },
     height: 200,
     margin: {
-        l: isMobile ? 40 : 50,
-        r: isMobile ? 30 : 40,
-        t: 20,
-        b: isMobile ? 30 : 40
+        l: isMobile ? 35 : 45,  // Reduced left margin
+        r: isMobile ? 15 : 20,  // Reduced right margin
+        t: 20,                  // Keep top margin small
+        b: isMobile ? 30 : 40,  // Bottom margin for x-axis labels
+        pad: 0                  // Remove internal padding
     },
     shapes: shapes,
     showlegend: false,
+    autosize: true,
     hovermode: 'x',           // Changed from 'x unified' to 'x'
     hoverdistance: 50,        // Adjusted for better touch response
     dragmode: false,

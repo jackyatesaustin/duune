@@ -512,7 +512,7 @@ footer {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 1px;
     font-family: Arial, sans-serif;
     background-color: #f7f9fc;
 }
@@ -744,7 +744,7 @@ h2 {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 20px;
+    padding: 10px;
     max-width: 1200px;  /* Or whatever maximum width you prefer */
     margin: 0 auto;     /* Centers the container */
 }
@@ -755,11 +755,22 @@ h2 {
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     width: 100%;        /* Takes full width of container */
+    box-sizing: border-box;
 }
 
 .overview-graph h3 {
     text-align: center;
     margin-bottom: 5px;
+}
+
+
+#southBayWaveHeightPlot,
+#laWestWaveHeightPlot,
+#southMalibuWaveHeightPlot,
+#northMalibuWaveHeightPlot {
+    width: 100%;
+    height: 200px;
+    margin: 0 auto;  /* Center the plot horizontally */
 }
 
 .region-spots {
