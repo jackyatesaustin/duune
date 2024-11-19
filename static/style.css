@@ -27,7 +27,7 @@ body {
 }
 
 .container {
-    width: 90%;
+    width: 100%;
     max-width: 1200px;
     margin: 20px auto;
     padding: 20px;
@@ -743,8 +743,8 @@ h2 {
 .overview-graphs-grid {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 10px;
+    gap: 10px;
+    padding: 5px;
     max-width: 1200px;  /* Or whatever maximum width you prefer */
     margin: 0 auto;     /* Centers the container */
 }
@@ -752,7 +752,7 @@ h2 {
 .overview-graph {
     background: white;
     border-radius: 8px;
-    padding: 15px;
+    padding: 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     width: 100%;        /* Takes full width of container */
     box-sizing: border-box;

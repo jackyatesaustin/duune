@@ -2340,7 +2340,8 @@ const trace = {
 // Create layout with shapes included
 const layout = {
     xaxis: {
-        tickformat: '%a %m/%d',
+        //tickformat: '%a %m/%d',
+        tickformat: '%a<br>%d', // Changed from '%a %m/%d'
         dtick: 24 * 3600 * 1000,
         tickmode: 'array',
         tickvals: dates.map(date => {
