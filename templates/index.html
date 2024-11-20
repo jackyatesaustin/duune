@@ -19,6 +19,96 @@
         </div>
         
 
+
+
+
+
+
+        <!-- Add this right after the title/logo section -->
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="pickSpotContent">Pick a Spot & Date</button>
+            <button class="tab-button" data-tab="bestSpotsTimesContent">Best Spots & Times</button>
+            <!-- <button class="tab-button" data-tab="biggestDaysContent">Biggest Days</button> --> 
+            <button class="tab-button" data-tab="weeklyReportContent">Weekly Report</button>
+        </div>
+
+        
+
+        <!-- Wrap each major section in a tab-content div -->
+        <!-- Best Spots & Times Content -->
+        <div id="bestSpotsTimesContent" class="tab-content" style="display: none;">
+            <div class="best-spots-container">
+                <h2 style="font-size: 28px; text-align: center;">Best Spots by Time</h2>
+                <div class="overview-week-selector">
+                    <button id="todayBestSpotsBtn" class="week-selector-btn active">Today</button>
+                    <button id="tomorrowBestSpotsBtn" class="week-selector-btn">Tomorrow</button>
+                </div>
+                <div id="bestSpotsDisplay" class="best-spots-display">
+                    <div id="bestSpotsContent" class="intervals-container">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Weekly Report Content -->
+        <!-- Weekly Report Content -->
+        <div id="weeklyReportContent" class="tab-content" style="display: none;">
+            <div class="spotcontentandgraphs">
+                <div class="la-overview-graphs-container">
+                    <h2 style="font-size: 28px;">Overview</h2>
+                    <div class="overview-week-selector">
+                        <button id="thisWeekBtn" class="week-selector-btn active">This Week</button>
+                        <button id="nextWeekBtn" class="week-selector-btn">Next Week</button>
+                    </div>
+                    <div class="overview-graphs-grid">
+                        <div class="overview-graph" id="southBayOverview">
+                            <h3>South Bay</h3>
+                            <p class="region-spots">Hermosa to Dockweiler</p>
+                            <div id="southBayWaveHeightPlot" style="height: 200px;"></div>
+                        </div>
+                        <div class="overview-graph" id="laWestOverview">
+                            <h3>The Westside</h3>
+                            <p class="region-spots">Venice & Santa Monica</p>
+                            <div id="laWestWaveHeightPlot" style="height: 200px;"></div>
+                        </div>
+                        <div class="overview-graph" id="southMalibuOverview">
+                            <h3>South Malibu</h3>
+                            <p class="region-spots">Sunset to Malibu Pier</p>
+                            <div id="southMalibuWaveHeightPlot" style="height: 200px;"></div>
+                        </div>
+                        <div class="overview-graph" id="northMalibuOverview">
+                            <h3>North Malibu</h3>
+                            <p class="region-spots">North of Point Dume</p>
+                            <div id="northMalibuWaveHeightPlot" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+        <!--    THE REGIONAL OVERVIEW GRAPHS ORIGINAL CODE 
+
         <div class="spotcontentandgraphs">
          
         <div class="la-overview-graphs-container">
@@ -51,7 +141,11 @@
             </div>
         </div>
 
+        -->
 
+
+
+         <!--    THE REGIONAL OVERVIEW GRAPHS ORIGINAL CODE
         <div class="best-spots-container">
             <h2 style="font-size: 28px; text-align: center;">Best Spots by Time</h2>
             <div class="overview-week-selector">
@@ -60,10 +154,14 @@
             </div>
             <div id="bestSpotsDisplay" class="best-spots-display">
                 <div id="bestSpotsContent" class="intervals-container">
-                    <!-- Loading message will appear here -->
+                    
                 </div>
             </div>
         </div>
+
+        -->
+
+
 
 
         </div>
@@ -74,166 +172,166 @@
 
 
 
-<!-- Extended Forecast Section -->
-<div class="extended-forecast-container">
-    <div class="extended-forecast-box">
-        <h2 style="font-size: 28px;">Pick a Spot & Date </h2>
-        
-        <p id="selectedSpotDateLabel"></p>
 
-        <div>
-        <!-- Surf Spot Selector and Date Selector (Now inside the Extended Forecast Box) -->
-        <div class="selection-container">
-            <div class="spot-selector">     
-            <!--    <select id="spotSelect" onchange="getData()">   made this change and it loads more quickly-->
-                <select id="spotSelect">
-                    <option value="Redondo Breakwater">Redondo Breakwater</option>
-                    <option value="Hermosa Pier">Hermosa Pier</option>
-                    <option value="Manhattan Beach">Manhattan Beach</option>
-                    <option value="Manhattan Beach Pier South">Manhattan Beach Pier South</option>
-                    <option value="Manhattan Beach Pier North">Manhattan Beach Pier North</option>
-                    <option value="Bruces Beach">Bruces Beach</option>
-                    <option value="El Porto">El Porto</option>
-                    <option value="Dockweiler">Dockweiler</option>
-                    <option value="Venice Pier South">Venice Pier South</option>
-                    <option value="Venice Pier North">Venice Pier North</option>
-                    <option value="Venice Bay">Venice Bay</option>
-                    <option value="Venice Breakwater">Venice Breakwater</option>
-                    <option value="Santa Monica Bay St">Santa Monica Bay St</option>
-                    <option value="Will Rogers">Will Rogers</option>
-                    <option value="Sunset">Sunset</option>
-                    <option value="Topanga">Topanga</option>
-                    <option value="Malibu First Point">Malibu First Point</option>
-                    <option value="Malibu Second Point">Malibu Second Point</option>
-                    <option value="Malibu Third Point">Malibu Third Point</option>
-                    <option value="Zuma">Zuma</option> <!-- Added option for Zuma -->
-                    <option value="Leo Carrillo">Leo Carrillo</option>
-                    <option value="County Line">County Line</option>
-                </select>
-            </div>
-            <div class="date-selector">
-                <label for="dateInput"></label>
-                <input type="date" id="dateInput" onchange="getData()"> <!-- Automatically triggers getData on change -->
-            </div>  
-        </div>
+            <div id="pickSpotContent" class="tab-content">
+                <!-- Extended Forecast Section -->
+                <div class="extended-forecast-container">
+                    <div class="extended-forecast-box">
+                        <h2 style="font-size: 28px;">Pick a Spot & Date </h2>
+                        
+                        <p id="selectedSpotDateLabel"></p>
 
-        
-        <div class="upcoming-days-wrapper">
-            <!-- Biggest Upcoming Days for the selected spot -->
-            
-                <div class="info-box full-width">
-                    <h4>Biggest Upcoming Days for <span id="surfSpotName">this spot</span></h4>
-                    <div class="biggest-days-container">
-                        <div class="biggest-day" id="biggestDayLeft">..loading..</div>
-                        <div class="biggest-day" id="biggestDayCenter">..loading..</div>
-                        <div class="biggest-day" id="biggestDayRight">..loading..</div>
+                        <div>
+                        <!-- Surf Spot Selector and Date Selector (Now inside the Extended Forecast Box) -->
+                        <div class="selection-container">
+                            <div class="spot-selector">     
+                            <!--    <select id="spotSelect" onchange="getData()">   made this change and it loads more quickly-->
+                                <select id="spotSelect">
+                                    <option value="Redondo Breakwater">Redondo Breakwater</option>
+                                    <option value="Hermosa Pier">Hermosa Pier</option>
+                                    <option value="Manhattan Beach">Manhattan Beach</option>
+                                    <option value="Manhattan Beach Pier South">Manhattan Beach Pier South</option>
+                                    <option value="Manhattan Beach Pier North">Manhattan Beach Pier North</option>
+                                    <option value="Bruces Beach">Bruces Beach</option>
+                                    <option value="El Porto">El Porto</option>
+                                    <option value="Dockweiler">Dockweiler</option>
+                                    <option value="Venice Pier South">Venice Pier South</option>
+                                    <option value="Venice Pier North">Venice Pier North</option>
+                                    <option value="Venice Bay">Venice Bay</option>
+                                    <option value="Venice Breakwater">Venice Breakwater</option>
+                                    <option value="Santa Monica Bay St">Santa Monica Bay St</option>
+                                    <option value="Will Rogers">Will Rogers</option>
+                                    <option value="Sunset">Sunset</option>
+                                    <option value="Topanga">Topanga</option>
+                                    <option value="Malibu First Point">Malibu First Point</option>
+                                    <option value="Malibu Second Point">Malibu Second Point</option>
+                                    <option value="Malibu Third Point">Malibu Third Point</option>
+                                    <option value="Zuma">Zuma</option> <!-- Added option for Zuma -->
+                                    <option value="Leo Carrillo">Leo Carrillo</option>
+                                    <option value="County Line">County Line</option>
+                                </select>
+                            </div>
+                            <div class="date-selector">
+                                <label for="dateInput"></label>
+                                <input type="date" id="dateInput" onchange="getData()"> <!-- Automatically triggers getData on change -->
+                            </div>  
+                        </div>
+
+                        
+                        <div class="upcoming-days-wrapper">
+                            <!-- Biggest Upcoming Days for the selected spot -->
+                            <div class="info-box full-width">
+                                <h4>Biggest Upcoming Days for <span id="surfSpotName">this spot</span></h4>
+                                <div class="biggest-days-container">
+                                    <div class="biggest-day" id="biggestDayLeft">..loading..</div>
+                                    <div class="biggest-day" id="biggestDayCenter">..loading..</div>
+                                    <div class="biggest-day" id="biggestDayRight">..loading..</div>
+                                </div>
+                            </div>
+                        
+                            <!-- Biggest Upcoming Days in LA -->
+                            <div class="info-box full-width">
+                                <h4>Biggest Upcoming Days in LA</h4>
+                                <div class="biggest-la-days-container">
+                                    <div class="la-day" id="laDayLeft">..loading..</div>
+                                    <div class="la-day" id="laDayCenter">..loading..</div>
+                                    <div class="la-day" id="laDayRight">..loading..</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        
+
+                
+                            </div>
+                                <div class="forecast-scroll-container" id="extendedForecast"> 
+                                <!-- Forecast buttons will be dynamically generated here -->
+                            </div>
+
                     </div>
                 </div>
-            
-        
-            <!-- Biggest Upcoming Days in LA -->
-            
-                <div class="info-box full-width">
-                    <h4>Biggest Upcoming Days in LA</h4>
-                    <div class="biggest-la-days-container">
-                        <div class="la-day" id="laDayLeft">..loading..</div>
-                        <div class="la-day" id="laDayCenter">..loading..</div>
-                        <div class="la-day" id="laDayRight">..loading..</div>
+
+
+
+                <div class="spotcontentandgraphs">
+                    
+                    <p id="spotDateAboveGraph" style="font-size: 28px; font-weight: bold; text-align: center; margin: 20px 0;"></p>
+
+
+                    <!-- GIF Placeholder (Hidden by default) -->
+                    <div id="waveLoading" style="text-align: center;">
+                        <img id="loadingGif" src="" alt="Loading..." style="height: 200px;" />
+                        <p id="loadingMessage" style="font-size: 18px;">One sec, the wave height graph is loading...</p>
+                    </div>
+
+                                    <!-- Best and Good Times Section -->
+                            <!-- Combined Container for All Boxes -->
+                            <div style="display: flex; gap: 10px; width: 100%; margin: 20px 0;">
+                                <!-- Best Times Box -->
+                                <div class="section" id="bestTimesContainer">
+                                    <h2>Best Times to Go</h2>
+                                    <ul id="bestTimesList">
+                                        <li>..loading..</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Good Times Box -->
+                                <div class="section" id="bestTimesContainer">
+                                    <h2>Good Times to Go</h2>
+                                    <ul id="goodTimesList">
+                                        <li>..loading..</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Water Temp Box -->
+                                <div class="info-box">
+                                    <h3>Water Temp & What to Wear</h3>
+                                    <p id="waterTemp">..loading..</p>
+                                    <p id="wearRecommendation"></p>
+                                </div>
+                                
+                                <!-- Sun Times Box -->
+                                <div class="info-box">
+                                    <h3>Sunrise & Sunset</h3>
+                                    <p id="sunTimes">..loading..</p>
+                                </div>
+                                
+                                <!-- Board Box -->
+                                <div class="info-box">
+                                    <h3>What Board to Bring</h3>
+                                    <p id="boardRecommendation">..loading..</p>
+                                </div>
+                            </div>
+
+
+                    <div id="waveHeightPlot" style="height: 300px;"></div>
+
+                                <!-- Graphs Section -->
+                                <div id="bestTimesPlot" class="graph-container" style="height: 120px;"></div>
+                                <div class="legend" id="bestTimesLegend"></div>
+
+                                
+                                <div id="windLoading" style="text-align: center;">
+                                    <img id="loadingGifWind" src="" alt="Loading..." style="height: 200px;" />
+                                    <p id="loadingMessageWind" style="font-size: 18px;">One sec, the wind graph is loading...</p>
+                                </div>
+                                <div id="windPlot" class="graph-container" style="height: 240px;"></div>
+                                <div class="legend" id="windLegend"></div>
+
+                                
+                                <div id="tideLoading" style="text-align: center;">
+                                    <img id="loadingGifTide" src="" alt="Loading..." style="height: 200px;" />
+                                    <p id="loadingMessageTide" style="font-size: 18px;">One sec, the tide graph is loading...</p>
+                                </div>
+                                <div id="tidePlot" class="graph-container" style="height: 240px;"></div>
+                                <div class="legend" id="tideLegend"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-        </div>
-        
-        
-        
-        
-
- 
             </div>
-                <div class="forecast-scroll-container" id="extendedForecast"> 
-                <!-- Forecast buttons will be dynamically generated here -->
-            </div>
-
-    </div>
-</div>
-
-
-
-<div class="spotcontentandgraphs">
-    
-    <p id="spotDateAboveGraph" style="font-size: 28px; font-weight: bold; text-align: center; margin: 20px 0;"></p>
-
-
-    <!-- GIF Placeholder (Hidden by default) -->
-    <div id="waveLoading" style="text-align: center;">
-        <img id="loadingGif" src="" alt="Loading..." style="height: 200px;" />
-        <p id="loadingMessage" style="font-size: 18px;">One sec, the wave height graph is loading...</p>
-    </div>
-
-                    <!-- Best and Good Times Section -->
-            <!-- Combined Container for All Boxes -->
-            <div style="display: flex; gap: 10px; width: 100%; margin: 20px 0;">
-                <!-- Best Times Box -->
-                <div class="section" id="bestTimesContainer">
-                    <h2>Best Times to Go</h2>
-                    <ul id="bestTimesList">
-                        <li>..loading..</li>
-                    </ul>
-                </div>
-                
-                <!-- Good Times Box -->
-                <div class="section" id="bestTimesContainer">
-                    <h2>Good Times to Go</h2>
-                    <ul id="goodTimesList">
-                        <li>..loading..</li>
-                    </ul>
-                </div>
-                
-                <!-- Water Temp Box -->
-                <div class="info-box">
-                    <h3>Water Temp & What to Wear</h3>
-                    <p id="waterTemp">..loading..</p>
-                    <p id="wearRecommendation"></p>
-                </div>
-                
-                <!-- Sun Times Box -->
-                <div class="info-box">
-                    <h3>Sunrise & Sunset</h3>
-                    <p id="sunTimes">..loading..</p>
-                </div>
-                
-                <!-- Board Box -->
-                <div class="info-box">
-                    <h3>What Board to Bring</h3>
-                    <p id="boardRecommendation">..loading..</p>
-                </div>
-            </div>
-
-
-    <div id="waveHeightPlot" style="height: 300px;"></div>
-
-                <!-- Graphs Section -->
-                <div id="bestTimesPlot" class="graph-container" style="height: 120px;"></div>
-                <div class="legend" id="bestTimesLegend"></div>
-
-                
-                <div id="windLoading" style="text-align: center;">
-                    <img id="loadingGifWind" src="" alt="Loading..." style="height: 200px;" />
-                    <p id="loadingMessageWind" style="font-size: 18px;">One sec, the wind graph is loading...</p>
-                </div>
-                <div id="windPlot" class="graph-container" style="height: 240px;"></div>
-                <div class="legend" id="windLegend"></div>
-
-                
-                <div id="tideLoading" style="text-align: center;">
-                    <img id="loadingGifTide" src="" alt="Loading..." style="height: 200px;" />
-                    <p id="loadingMessageTide" style="font-size: 18px;">One sec, the tide graph is loading...</p>
-                </div>
-                <div id="tidePlot" class="graph-container" style="height: 240px;"></div>
-                <div class="legend" id="tideLegend"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
     <!-- Footer -->
     <footer>

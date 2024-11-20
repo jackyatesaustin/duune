@@ -242,8 +242,8 @@ function updateWaveGraph(date, sunrise, sunset) {
             shape: 'spline',    // Add spline shape for smoothing
             smoothing: 1.3      // Add smoothing factor
         },
-        fill: 'tozeroy',      // Keeps the fill under the line
-        fillcolor: 'rgba(0, 100, 255, 0.2)',  // Light blue fill
+        fill: 'tozeroy',
+        fillcolor: 'rgba(128, 128, 128, 0.2)',  // Default fill
         hovertemplate: `
             <b>%{x|%I:%M %p}</b><br>
             %{x|%a %b %d}<br>
@@ -299,21 +299,7 @@ function updateWaveGraph(date, sunrise, sunset) {
     const spot = document.getElementById('spotSelect').value;
     //const dateInput = document.getElementById('dateInput');
 
-    /*
-    const layout = {
-       //title: `Wave Height`,
-       title: `Wave Height for ${spot} on ${date}`, // Add this line for spot and date label
-        xaxis: {
-            tickformat: '%-I %p',
-            dtick: 3600000,
-            range: [new Date(`${date}T00:00:00`).getTime(), new Date(`${date}T23:59:59`).getTime()],
-        },
-        yaxis: { title: 'Wave Height (ft)' },
-        height: 300,
-        margin: { l: 50, r: 50, t: 40, b: 40 },
-        shapes: shapes
-    };
-    */
+
 
         // Responsive design settings
         const windowWidth = window.innerWidth;
@@ -1218,6 +1204,10 @@ while (currentTime <= maxTime) {
     currentTime.setMinutes(currentTime.getMinutes() + 5);
 }
 
+
+
+
+
 if (unfavorablePoints.length > 0) {
     bestTimesTraces.push({
         x: unfavorablePoints,
@@ -1448,10 +1438,10 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     `;
     */
     document.getElementById('windLegend').innerHTML = `
-    <div class="legend-item darkgreen"><span></span> Offshore Wind</div>
+    <div class="legend-item darkgreen"><span></span> Offshore</div>
     <div class="legend-item green"><span></span> Glassy</div>
-    <div class="legend-item yellow"><span></span> Mild Wind</div>
-    <div class="legend-item red"><span></span> Bad Wind</div>
+    <div class="legend-item yellow"><span></span> Mild</div>
+    <div class="legend-item red"><span></span> Bad</div>
 `;
 
     document.getElementById('tideLegend').innerHTML = `
@@ -1461,9 +1451,9 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
         <div class="legend-item red"><span></span> Very High</div>
     `;
     document.getElementById('bestTimesLegend').innerHTML = `
-        <div class="legend-item green"><span></span> Best Time</div>
-        <div class="legend-item yellow"><span></span> Good Time</div>
-        <div class="legend-item red"><span></span> Unfavorable Time</div>
+        <div class="legend-item green"><span></span> Best</div>
+        <div class="legend-item yellow"><span></span> Good</div>
+        <div class="legend-item red"><span></span> Unfavorable</div>
     `;
 
     // Simulate the loading process for the graph (or after your data fetch is done)
@@ -1706,104 +1696,6 @@ function filterTimesAndHeightsForDay(waveTimes, waveHeights, startHour = 5, endH
     console.log(`%c[filterTimesAndHeightsForDay] Filtered heights:`, "color: purple;", filteredHeights);
     return { filteredTimes, filteredHeights };
 }
-
-/*
-async function updateTopUpcomingDays(spotName) {
-    console.log(`%c[updateTopUpcomingDays] Updating top upcoming days for spot: ${spotName}`, "color: darkblue; font-weight: bold;");
-
-    // Immediately update the surf spot name in the title
-    document.getElementById('surfSpotName').textContent = spotName;
-
-    // Immediately set loading indicators for the biggest-day elements
-    document.getElementById('biggestDayLeft').textContent = '..loading..';
-    document.getElementById('biggestDayCenter').textContent = '..loading..';
-    document.getElementById('biggestDayRight').textContent = '..loading..';
-
-    const daysWithWaveData = [];
-    console.log(`%c[updateTopUpcomingDays] Fetching cached wave data...`, "color: darkblue;");
-
-    // Fetch cached wave data and sunrise/sunset times
-    for (const dateKey of Object.keys(cachedWaveData)) {
-        console.log(`%c[updateTopUpcomingDays] Processing wave data for date: ${dateKey}`, "color: darkblue;");
-        const waveDataForDate = cachedWaveData[dateKey];
-
-        // Adjust the date to local time to fix the UTC issue
-        const correctDate = new Date(Date.parse(dateKey + 'T00:00:00'));
-
-        const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dateKey}&formatted=0`;
-        let sunriseTime, sunsetTime;
-
-        console.log(`%c[updateTopUpcomingDays] Fetching sunrise/sunset data for ${dateKey}...`, "color: darkblue;");
-
-        try {
-            const sunResponse = await fetch(sunApiUrl);
-            const sunData = await sunResponse.json();
-
-            if (sunData.status === "OK") {
-                sunriseTime = new Date(sunData.results.sunrise);
-                sunsetTime = new Date(sunData.results.sunset);
-                console.log(`%c[updateTopUpcomingDays] Sunrise: ${sunriseTime}, Sunset: ${sunsetTime} for ${dateKey}`, "color: darkblue;");
-            } else {
-                console.error(`Error fetching sun times for ${dateKey}`);
-                continue;
-            }
-        } catch (error) {
-            console.error("Error fetching sun times:", error);
-            continue;
-        }
-
-        if (waveDataForDate && waveDataForDate.length > 0) {
-            // Filter the wave data to include only data points between sunrise and sunset
-            const filteredWaveData = waveDataForDate.filter(item => item.time >= sunriseTime && item.time <= sunsetTime);
-            console.log(`%c[updateTopUpcomingDays] Filtered wave data length for ${dateKey}: ${filteredWaveData.length}`, "color: darkblue;");
-            if (filteredWaveData.length > 0) {
-                const maxWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
-                const minWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
-
-                daysWithWaveData.push({
-                    date: correctDate,
-                    waveRange: `${maxWaveHeight.toFixed(1)} - ${minWaveHeight.toFixed(1)} ft`,
-                    maxWaveHeight
-                });
-            }
-        }
-    }
-
-    console.log(`%c[updateTopUpcomingDays] Sorting days by wave height...`, "color: darkblue;");
-    // Sort and display the biggest upcoming days
-    daysWithWaveData.sort((a, b) => b.maxWaveHeight - a.maxWaveHeight);
-
-    if (daysWithWaveData.length > 0) {
-        const topDays = daysWithWaveData.slice(0, 3);
-        console.log(`%c[updateTopUpcomingDays] Top days:`, "color: darkblue;", topDays);
-
-        const updateDateAndGraph = (date) => {
-            const localDate = date.toISOString().split('T')[0]; // Correct local date format
-            document.getElementById('dateInput').value = localDate;
-            console.log(`%c[updateTopUpcomingDays] Updating data and graph for date: ${localDate}`, "color: darkblue;");
-            getData(); // Update data and graph based on the new date
-        };
-
-        // Update the biggest days with the top upcoming days
-        document.getElementById('biggestDayLeft').textContent = `${topDays[0].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[0].waveRange}`;
-        document.getElementById('biggestDayLeft').onclick = () => updateDateAndGraph(topDays[0].date);
-
-        if (topDays[1]) {
-            document.getElementById('biggestDayCenter').textContent = `${topDays[1].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[1].waveRange}`;
-            document.getElementById('biggestDayCenter').onclick = () => updateDateAndGraph(topDays[1].date);
-        }
-
-        if (topDays[2]) {
-            document.getElementById('biggestDayRight').textContent = `${topDays[2].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[2].waveRange}`;
-            document.getElementById('biggestDayRight').onclick = () => updateDateAndGraph(topDays[2].date);
-        }
-    } else {
-        document.getElementById('biggestDayLeft').textContent = 'No wave data available for upcoming days';
-        document.getElementById('biggestDayCenter').textContent = '';
-        document.getElementById('biggestDayRight').textContent = '';
-    }
-}
-*/
 
 
 
@@ -2847,3 +2739,101 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('[DOM Load] Failed to initialize best spots:', error);
     });
 });
+
+/* End Best Spots by Time */
+
+
+
+
+
+
+
+
+
+
+
+
+/* Making the buttons at the top of the page */
+
+// Modify the showTab function to handle loading regional overviews
+function showTab(tabName) {
+    console.log(`%c[Tabs] Switching to tab: ${tabName}`, "color: blue; font-weight: bold;");
+    
+    // Hide all content sections first
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Show the selected content and activate the button
+    document.getElementById(tabName).style.display = 'block';
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    // Special handling for Weekly Report tab
+    if (tabName === 'weeklyReportContent') {
+        console.log(`%c[Tabs] Loading regional overviews for Weekly Report tab`, "color: blue;");
+        
+        // Get the current date
+        const today = new Date();
+        const startDate = today.toISOString().split('T')[0];
+        
+        // Initialize the regional overviews
+        updateRegionalOverviews(startDate);
+        
+        // Make sure "This Week" button is active by default
+        const thisWeekBtn = document.getElementById('thisWeekBtn');
+        if (thisWeekBtn) {
+            thisWeekBtn.classList.add('active');
+            document.getElementById('nextWeekBtn')?.classList.remove('active');
+        }
+    }
+}
+
+
+// Remove or comment out any automatic calls to updateRegionalOverviews
+document.addEventListener('DOMContentLoaded', function() {
+    // Hide all content sections initially
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+
+    // Show Pick a Spot & Date tab by default
+    showTab('pickSpotContent');
+
+    // Add click handlers for tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            showTab(button.dataset.tab);
+        });
+    });
+
+    // Initialize week selector buttons (but don't trigger updateRegionalOverviews)
+    const thisWeekBtn = document.getElementById('thisWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+
+    if (thisWeekBtn && nextWeekBtn) {
+        thisWeekBtn.addEventListener('click', async () => {
+            console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
+            thisWeekBtn.classList.add('active');
+            nextWeekBtn.classList.remove('active');
+            const today = new Date();
+            await updateRegionalOverviews(today.toISOString().split('T')[0]);
+        });
+
+        nextWeekBtn.addEventListener('click', async () => {
+            console.log('%c[WeekSelector] Switching to Next Week view', 'color: purple;');
+            nextWeekBtn.classList.add('active');
+            thisWeekBtn.classList.remove('active');
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
+        });
+    }
+});
+
+
+/* End Making the buttons at the top of the page */
