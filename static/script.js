@@ -264,7 +264,7 @@ function updateWaveGraph(date, sunrise, sunset) {
             smoothing: 1.3      // Add smoothing factor
         },
         fill: 'tozeroy',
-        fillcolor: 'rgba(128, 128, 128, 0.2)',  // Default fill
+        fillcolor: '#add8e6', //'rgba(128, 128, 128, 0.2)',  // Default fill
         hovertemplate: `
             <b>%{x|%I:%M %p}</b><br>
             %{x|%a %b %d}<br>
@@ -1486,7 +1486,7 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
         // After the data is fetched and the graph is ready, hide the loading GIF and message, show the graph
         waveLoading.style.display = 'none';  // Hide the loading GIF and message
         waveHeightPlot.style.display = 'block';  // Show the wave height plot
-        updateWaveGraph(date, sunriseTime, sunsetTime);  // Update the graph
+     //   updateWaveGraph(date, sunriseTime, sunsetTime);  // Update the graph
         
         
         // Check which week is currently selected
