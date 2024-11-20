@@ -12,11 +12,17 @@ can we do this globally and then reference it so we're not getting it everytime 
 */
 
 
+// hiding the url
+window.history.replaceState({}, '', '/surf-report-la');
+
 
 
 // At the top of the file with other global variables
 let isInitialLoad = true;
 let isUpdatingBiggestDays = false;
+
+
+
 
 
 
@@ -236,6 +242,8 @@ function updateWaveGraph(date, sunrise, sunset) {
             shape: 'spline',    // Add spline shape for smoothing
             smoothing: 1.3      // Add smoothing factor
         },
+        fill: 'tozeroy',      // Keeps the fill under the line
+        fillcolor: 'rgba(0, 100, 255, 0.2)',  // Light blue fill
         hovertemplate: `
             <b>%{x|%I:%M %p}</b><br>
             %{x|%a %b %d}<br>
@@ -326,7 +334,9 @@ function updateWaveGraph(date, sunrise, sunset) {
                 tickfont: {
                     size: isMobile ? 10 : 14,
                 },
-                fixedrange: true  // Disable x-axis zoom
+                fixedrange: true,  // Disable x-axis zoom
+                showgrid: false,   // Remove vertical grid lines
+                zeroline: false    // Remove x-axis zero line
             },
             yaxis: { 
              //t)', 
@@ -336,7 +346,9 @@ function updateWaveGraph(date, sunrise, sunset) {
                 titlefont: {
                     size: isMobile ? 12 : 16
                 },
-                fixedrange: true  // Disable y-axis zoom
+                fixedrange: true,  // Disable y-axis zoom
+                showgrid: false,   // Remove vertical grid lines
+                zeroline: false    // Remove x-axis zero line
             },
             height: isMobile ? 250 : 300,
             margin: { 
@@ -976,14 +988,18 @@ const layout = {
         tickfont: {
             size: isMobile ? 10 : 12,
         },
-        fixedrange: true
+        fixedrange: true,
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
     },
     yaxis: { 
         title: '', 
         tickfont: {
             size: isMobile ? 10 : 12,
         },
-        fixedrange: true
+        fixedrange: true,
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
     },
     height: isMobile ? 200 : 240,
     margin: { l: isMobile ? 40 : 50, r: 40, t: 30, b: isMobile ? 30 : 40 },
@@ -1025,12 +1041,16 @@ const windLayout = {
         dtick: isMobile ? 3 * 3600 * 1000 : 3600 * 1000,  // Every 3 hours on mobile
         tickfont: { size: isMobile ? 8 : 12 },
         fixedrange: true,  // Disable zoom for all devices
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
     },
     yaxis: {
      //   title: isMobile ? null : 'Wind Speed (km/h)',  // Remove title on mobile
         tickfont: { size: isMobile ? 8 : 12 },
         titlefont: { size: isMobile ? 10 : 14 },
-        fixedrange: isMobile  // Disable zoom on mobile
+        fixedrange: isMobile,  // Disable zoom on mobile
+        showgrid: false,   // Remove horizontal grid lines
+        zeroline: false    // Remove y-axis zero line
     },
     height: isMobile ? 150 : 200,
     margin: {
@@ -1100,12 +1120,16 @@ Plotly.newPlot('windPlot', [...nightTraces, ...windTraces], windLayout, {
             dtick: isMobile ? 3 * 3600 * 1000 : 3600 * 1000,  // Every 3 hours on mobile
             tickfont: { size: isMobile ? 8 : 12 },
             fixedrange: true,  // Disable zoom for all devices
+            showgrid: false,   // Remove vertical grid lines
+            zeroline: false    // Remove x-axis zero line
         },
         yaxis: {
         //    title: isMobile ? null : 'Tide Height (ft)',  // Remove title on mobile
             tickfont: { size: isMobile ? 8 : 12 },
             titlefont: { size: isMobile ? 10 : 14 },
-            fixedrange: isMobile  // Disable zoom on mobile
+            fixedrange: isMobile,  // Disable zoom on mobile
+            showgrid: false,   // Remove vertical grid lines
+            zeroline: false    // Remove x-axis zero line
         },
         height: isMobile ? 150 : 200,
         margin: {
@@ -1204,9 +1228,9 @@ if (unfavorablePoints.length > 0) {
         hovertemplate: 
             '🚫 Unfavorable Time<br>' +
             '%{x|%I:%M %p}<br>' +
-            'Wind %{text[0]:.2f} km/h<br>' +
-            'Wind Direction %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
-            '🌊 %{text[4]:.2f} ft<extra></extra>',
+            'Wind Speed: %{text[0]:.2f} km/h<br>' +
+            'Wind Direction: %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
+            'Tide Height: %{text[4]:.2f} ft<extra></extra>',
         text: unfavorablePoints.map(point => {
             const index = minutePoints.findIndex(t => t.getTime() === point.getTime());
             return [
@@ -1248,9 +1272,9 @@ data.good_times.forEach(period => {
         hovertemplate: 
             '✨ Good Time<br>' +
             '%{x|%I:%M %p}<br>' +
-            'Wind %{text[0]:.2f} km/h<br>' +
-            'Wind Direction %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
-            '🌊 %{text[4]:.2f} ft<extra></extra>',
+            'Wind Speed: %{text[0]:.2f} km/h<br>' +
+            'Wind Direction: %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
+            'Tide Height: %{text[4]:.2f} ft<extra></extra>',
         text: points.map(point => {
             const index = minutePoints.findIndex(t => t.getTime() === point.getTime());
             return [
@@ -1293,9 +1317,9 @@ data.best_times.forEach(period => {
         hovertemplate: 
             '✨ Best Time<br>' +
             '%{x|%I:%M %p}<br>' +
-            'Wind %{text[0]:.2f} km/h<br>' +
-            'Wind Direction %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
-            '🌊 %{text[4]:.2f} ft<extra></extra>',
+            'Wind Speed: %{text[0]:.2f} km/h<br>' +
+            'Wind Direction: %{text[1]} %{text[2]} (%{text[3]}°)<br>' +
+            'Tide Height: %{text[4]:.2f} ft<extra></extra>',
         text: points.map(point => {
             const index = minutePoints.findIndex(t => t.getTime() === point.getTime());
             return [
@@ -1346,10 +1370,16 @@ const bestTimesNightTraces = [
 Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     ...layout,
     height: isMobile ? 100 : 120,
-    yaxis: { visible: false },
+    yaxis: { 
+        visible: false,
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
+    },
     xaxis: { 
         ...layout.xaxis,
-        fixedrange: true
+        fixedrange: true,
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
     },
     responsive: true,
     hovermode: 'closest',
@@ -1418,10 +1448,10 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     `;
     */
     document.getElementById('windLegend').innerHTML = `
+    <div class="legend-item darkgreen"><span></span> Offshore Wind</div>
     <div class="legend-item green"><span></span> Glassy</div>
     <div class="legend-item yellow"><span></span> Mild Wind</div>
     <div class="legend-item red"><span></span> Bad Wind</div>
-    <div class="legend-item darkgreen"><span></span> Offshore Wind</div>
 `;
 
     document.getElementById('tideLegend').innerHTML = `
@@ -1774,6 +1804,8 @@ async function updateTopUpcomingDays(spotName) {
     }
 }
 */
+
+
 
 async function updateTopUpcomingDays(spotName) {
     console.log(`%c[updateTopUpcomingDays] Starting... Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue; font-weight: bold;");
@@ -2354,13 +2386,17 @@ const layout = {
             new Date(dates[6] + 'T23:59:59').getTime()
         ],
         tickfont: { size: isMobile ? 10 : 12 },
-        fixedrange: true
+        fixedrange: true,
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
     },
     yaxis: {
        // title: 'Height (ft)',
         tickfont: { size: isMobile ? 10 : 12 },
         titlefont: { size: isMobile ? 12 : 14 },
-        fixedrange: true
+        fixedrange: true,
+        showgrid: false,   // Remove vertical grid lines
+        zeroline: false    // Remove x-axis zero line
     },
     height: 200,
     margin: {
