@@ -200,6 +200,14 @@ async function getSpotForecast(spotId) {
 
 //testing
 function updateWaveGraph(date, sunrise, sunset) {
+    
+    const callId = Math.random().toString(36).substr(2, 5); // Generate a unique ID for this call
+    
+    console.log(`%c[Wave Height call id ${callId}] Starting graph update for date: ${date}`, "color: blue; font-weight: bold;");    
+    console.log(`%c[Wave Height call id ${callId}] Stack trace:`, "color: blue;", new Error().stack);
+    
+    
+    
     console.log(`%c[WaveGraph] Starting updateWaveGraph for date: ${date}`, "color: purple; font-weight: bold;");    
     const waveDataForDate = cachedWaveData[date];
 
@@ -209,6 +217,19 @@ function updateWaveGraph(date, sunrise, sunset) {
     }
 
     console.log(`%c[WaveGraph] Wave data found for ${date}:`, "color: purple;", waveDataForDate);
+
+
+    // Sort the data chronologically
+    const sortedWaveData = [...waveDataForDate].sort((a, b) => a.time - b.time);
+
+    // Log all wave heights with consistent formatting
+    console.log(`%c[Wave Height] All heights for ${date}:`, "color: blue; font-weight: bold;");
+    sortedWaveData.forEach(data => {
+        const hour = data.time.getHours();
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        console.log(`[Wave Heights by hour] ${date} ${hour12}:00 ${ampm}: ${data.height.toFixed(1)} ft`);
+    });
 
 
     // Map times and heights
@@ -371,7 +392,7 @@ function updateWaveGraph(date, sunrise, sunset) {
 //working
 let dataFetched = false;  // A flag to track if data was fetched already
 async function getData(shouldGenerateButtons = false, updateUpcomingDays = false) {
-    cachedWaveData = {}
+   // cachedWaveData = {}
     console.log(`%c[getData] Starting data fetch...`, "color: navy; font-weight: bold;");
     //console.log('[getData] Function called with spot:', spot, 'date:', date);
 
@@ -420,17 +441,21 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         return;
     }
 
-
+/*
     if (!cachedWaveData || !cachedWaveData[date]) {
         console.log(`%c[getData] Fetching wave forecast for Spot ID: ${spotId}, Date: ${date}`, "color: navy;");
         await getSpotForecast(spotId); // Fetch wave data for the spot and date
     } else {
         console.log(`%c[getData] Using cached wave data for Date: ${date}`, "color: green;");
     }
+*/
 
+        // Always fetch new wave data when getData is called
+        console.log(`%c[getData] Fetching wave forecast for Spot ID: ${spotId}, Date: ${date}`, "color: navy;");
+        await getSpotForecast(spotId);
 
     // Force clear any existing cached data
-    cachedWaveData[spot] = null;
+    // cachedWaveData[spot] = null;
     const waveDataForDate = cachedWaveData[date];
     
 
@@ -477,7 +502,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const data = await response.json();
 
     // Use the updated config and clear any cached items
-    cachedWaveData[spot] = data;
+    // cachedWaveData[spot] = data;
 
     console.log(`%c[getData] Backend data received:`, "color: navy;", data);
     console.log(`%c[getData] backend Spot Config:`, "color: navy;", data.spot_config);
@@ -1538,7 +1563,7 @@ function getConditionSegments(values, condition) {
 
 // Updated generateDateButtons function
 
-
+/*
 async function generateDateButtons(spotId) {
     console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
     
@@ -1635,6 +1660,94 @@ async function generateDateButtons(spotId) {
     forecastContainer.appendChild(fragment);
     console.log(`%c[Date Buttons] All date buttons appended to the forecast container`, "color: purple; font-weight: bold;");
 }
+*/
+
+async function generateDateButtons(spotId) {
+    console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
+    
+    const forecastContainer = document.getElementById('extendedForecast');
+    forecastContainer.innerHTML = ''; // Clear any existing buttons
+    console.log(`%c[Date Buttons] Cleared existing date buttons in the forecast container`, "color: purple;");
+
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const buttonsData = [];
+
+    const date = new Date();
+    const timezoneOffset = date.getTimezoneOffset() * 60000; // Handle timezone offset
+
+    console.log(`%c[Date Buttons] Preparing buttons for the next 17 days`, "color: purple;");
+
+    // Prepare buttons data for the next 17 days
+    for (let i = 0; i < 17; i++) {
+        const currentDate = new Date(date.getTime() + i * 86400000 - timezoneOffset);
+        const localDate = currentDate.toISOString().split('T')[0];
+
+        const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : daysOfWeek[currentDate.getDay()];
+        const dateFormatted = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
+
+        buttonsData.push({ dayName, dateFormatted, localDate });
+        console.log(`%c[Date Buttons] Prepared data for: ${dayName} (${localDate})`, "color: purple;");
+    }
+
+    const fragment = document.createDocumentFragment(); // Batch DOM updates using a fragment
+
+    try {
+        // Generate buttons based on wave data
+        for (const { dayName, dateFormatted, localDate } of buttonsData) {
+            const waveDataForDate = cachedWaveData[localDate];
+            
+            if (waveDataForDate) {
+                    // Log all wave heights for this date
+                console.log(`%c[Wave Heights] ${dayName} ${dateFormatted}:`, "color: blue; font-weight: bold;");
+                console.log('Full wave data for this date:', waveDataForDate); // Log the entire wave data object
+
+                
+                // Filter wave data for times between 4 AM and 8 PM
+                const filteredWaveData = waveDataForDate.filter(item => {
+                    const hour = new Date(item.time).getHours();
+                    return hour >= 4 && hour <= 20;  // 4 AM to 8 PM
+                });
+
+                if (filteredWaveData.length > 0) {
+                    const peakWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
+                    const lowWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
+
+                    // Create button and add it to the fragment
+                    const button = document.createElement('button');
+                    button.className = 'date-button';
+                    button.innerHTML = `${dayName}<br>${dateFormatted}<br>${peakWaveHeight.toFixed(1)}-${lowWaveHeight.toFixed(1)} ft`;
+
+                    button.onclick = () => {
+                        console.log(`%c[Date Buttons] Button clicked for Date: ${localDate}`, "color: purple;");
+                        document.getElementById('dateInput').value = localDate;
+                        getData();  // Trigger data update for selected date
+                    };
+
+                    fragment.appendChild(button);
+                    console.log(`%c[Date Buttons] Created button for ${localDate} with wave range: ${peakWaveHeight.toFixed(1)}-${lowWaveHeight.toFixed(1)} ft`, "color: purple;");
+                } else {
+                    console.log(`%c[Date Buttons] No wave data found for ${localDate} between 4 AM and 8 PM`, "color: purple;");
+                }
+            } else {
+                console.log(`%c[Date Buttons] No cached wave data for ${localDate}`, "color: purple;");
+            }
+        }
+
+        // Append all generated buttons to the forecast container
+        forecastContainer.appendChild(fragment);
+        console.log(`%c[Date Buttons] All date buttons appended to the forecast container`, "color: purple; font-weight: bold;");
+    } catch (error) {
+        console.error(`%c[Date Buttons] Error generating date buttons:`, "color: red; font-weight: bold;", error);
+        forecastContainer.innerHTML = '<p>Error loading forecast dates. Please try again later.</p>';
+    }
+}
+
+
+
+
+
+
+
 
 
 
