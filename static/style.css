@@ -578,18 +578,31 @@ h2 {
 /* Update for the layout of upcoming days boxes */
 /* Container for the upcoming days */
 .upcoming-days-wrapper {
+    width: 100%;
     display: flex;
-    justify-content: space-between;
-    gap: 20px; /* Space between the two containers */
-    margin-top: 20px;
-    flex-wrap: wrap; /* Ensure the containers wrap if screen size is small */
+    gap: 20px;
+    margin: 15px 0;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.info-box.full-width {
+    width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
 }
 
 /* Style for both containers */
-
+.biggest-days-container,
+.biggest-la-days-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
 /* Style for the day boxes */
-.biggest-day, .la-day {
+.biggest-day,
+.la-day {
     background-color: #ffffff;
     padding: 15px;
     border: 2px solid #007BFF;
@@ -598,31 +611,53 @@ h2 {
     font-weight: bold;
     color: #333;
     transition: background-color 0.3s ease;
-    margin-bottom: 10px; /* Space between the day boxes */
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Hover effect */
-.biggest-day:hover, .la-day:hover {
+.biggest-day:hover,
+.la-day:hover {
     background-color: #007BFF;
     color: white;
     cursor: pointer;
 }
 
-/* Stack the individual day elements vertically */
-.biggest-days-container, .biggest-la-days-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* Space between the day boxes */
-}
-
-/* Ensure boxes fit side by side on smaller screens */
+/* Mobile adjustments */
 @media (max-width: 768px) {
     .upcoming-days-wrapper {
-        flex-direction: column; /* Stack boxes on top of each other on smaller screens */
+        flex-direction: column;
+        gap: 15px;
+        padding: 0 10px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
-    .info-box {
-        max-width: 100%; /* Ensure containers take full width on small screens */
+    .info-box.full-width {
+        width: 100%;
+        margin: 0;
+        padding: 10px;
+    }
+
+    .biggest-day,
+    .la-day {
+        font-size: 0.9em;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
+    /* Ensure the container doesn't overflow */
+    .extended-forecast-box {
+        padding: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ensure text doesn't overflow */
+    h4 {
+        font-size: 1em;
+        margin: 10px 0;
     }
 }
 
@@ -745,16 +780,18 @@ h2 {
     display: flex;
     flex-direction: column; /* Stack vertically */
     gap: 20px; /* Space between graphs */
-    padding: 10px;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .overview-graph {
     width: 100%;
     margin: 0;
-    padding: 15px;
+    padding: 20px;
     background-color: #fefefe;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
 }
 
 .overview-graph h3 {
@@ -1236,7 +1273,57 @@ div[style*="display: flex"] {
 #tidePlot,
 #bestTimesPlot {
     width: 100%;
-    margin: 15px 0;
+    margin: 10px 0; /* Consistent margin for all graphs */
+}
+
+/* Individual graph styling */
+#waveHeightPlot {
+    height: 300px;
+    margin-bottom: 10px;
+}
+
+#bestTimesPlot {
+    height: 120px;
+    margin-bottom: 10px;
+}
+
+#windPlot {
+    height: 240px;
+    margin-bottom: 10px;
+}
+
+#tidePlot {
+    height: 240px;
+    margin-bottom: 10px;
+}
+
+/* Legend styling */
+.legend {
+    text-align: center;
+    margin-top: -5px;
+    margin-bottom: 10px;
+    font-size: 1em;
+    font-weight: bold;
+    color: #2d4579;
+}
+
+/* Loading sections */
+#waveLoading,
+#windLoading,
+#tideLoading {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .graph-container,
+    #waveHeightPlot,
+    #windPlot,
+    #tidePlot,
+    #bestTimesPlot {
+        margin: 8px 0; /* Slightly reduced margins for mobile */
+    }
 }
 
 /* Update the overview graphs grid */
@@ -1245,16 +1332,18 @@ div[style*="display: flex"] {
     display: flex;
     flex-direction: column; /* Stack vertically */
     gap: 20px; /* Space between graphs */
-    padding: 10px;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .overview-graph {
     width: 100%;
     margin: 0;
-    padding: 15px;
+    padding: 20px;
     background-color: #fefefe;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
 }
 
 /* Update selection container */
@@ -1275,37 +1364,82 @@ div[style*="display: flex"] {
     display: flex;
     gap: 20px;
     margin: 15px 0;
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
 .info-box.full-width {
     width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
 }
 
-/* Media queries for mobile */
-@media (max-width: 768px) {
-    .container {
-        width: 100%;
-        padding: 10px;
-        margin: 0;
-    }
+/* Style for both containers */
+.biggest-days-container,
+.biggest-la-days-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
+/* Style for the day boxes */
+.biggest-day,
+.la-day {
+    background-color: #ffffff;
+    padding: 15px;
+    border: 2px solid #007BFF;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    transition: background-color 0.3s ease;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Hover effect */
+.biggest-day:hover,
+.la-day:hover {
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
     .upcoming-days-wrapper {
         flex-direction: column;
         gap: 15px;
+        padding: 0 10px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
-    div[style*="display: flex"] {
-        flex-direction: column !important;
-        gap: 10px !important;
+    .info-box.full-width {
+        width: 100%;
+        margin: 0;
+        padding: 10px;
     }
 
-    .section,
-    .info-box {
-        width: 100% !important;
+    .biggest-day,
+    .la-day {
+        font-size: 0.9em;
+        padding: 12px;
+        margin-bottom: 8px;
     }
 
-    .overview-graphs-grid {
-        grid-template-columns: 1fr;
+    /* Ensure the container doesn't overflow */
+    .extended-forecast-box {
+        padding: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ensure text doesn't overflow */
+    h4 {
+        font-size: 1em;
+        margin: 10px 0;
     }
 }
 
