@@ -585,25 +585,22 @@ import requests
 
 import os
 
+# ... existing code ...
+
 def get_best_surf_spots_by_intervals():
     results = {"today": [], "tomorrow": []}
-    pacific_tz = pytz.timezone("America/Los_Angeles")  # Define timezone
-    
-        # Get current time in Pacific timezone
+    pacific_tz = pytz.timezone("America/Los_Angeles")
     current_time = datetime.now(pytz.UTC).astimezone(pacific_tz)
     print(f"Current Pacific time: {current_time}")
 
-    # Try to use BASE_URL from environment, fallback to localhost if not set
     BASE_URL = os.environ.get('BASE_URL', 'http://127.0.0.1:5000')
     
-    # Rest of your function remains exactly the same
     for day_offset in [0, 1]:  # 0 for today, 1 for tomorrow
         date = (current_time + timedelta(days=day_offset)).strftime('%Y-%m-%d')
         day_name = "today" if day_offset == 0 else "tomorrow"
         
         print(f"Processing {day_name}: {date}")
         
-        # Get sunrise and sunset times for the day
         sunrise, sunset = fetch_sun_times(date)
         print(f"{day_name.capitalize()} sunrise at {sunrise}, sunset at {sunset}")
         
@@ -612,19 +609,16 @@ def get_best_surf_spots_by_intervals():
         while interval_start < sunset:
             interval_end = interval_start + timedelta(hours=2)
             if interval_end > sunset:
-                interval_end = sunset  # Ensure we don't go past sunset
+                interval_end = sunset
             print(f"Checking interval {interval_start.strftime('%H:%M')} to {interval_end.strftime('%H:%M')}")
 
-            spot_averages = []
+            spot_heights = []
             for spot_name, spot_data in surf_spots_config.items():
-                # Ensure that spot has a valid spot_id and skip entries without a spot_id
                 if "spot_id" not in spot_data:
                     print(f"Skipping '{spot_name}' due to missing 'spot_id' in config")
                     continue
                 
                 spot_id = spot_data["spot_id"]
-
-                # Update only this URL line
                 wave_data_url = f"{BASE_URL}/get_wave_forecast?spot_id={spot_id}&date={date}"
                 response = requests.get(wave_data_url)
                 
@@ -634,7 +628,6 @@ def get_best_surf_spots_by_intervals():
                 
                 wave_data = response.json()
 
-                # Filter wave data within the interval, using fallback values for missing keys
                 interval_wave_heights = []
                 for entry in wave_data:
                     try:
@@ -642,8 +635,8 @@ def get_best_surf_spots_by_intervals():
                             entry['date_local'].get('yy'),
                             entry['date_local'].get('mm'),
                             entry['date_local'].get('dd'),
-                            entry['date_local'].get('hh', 0),  # Default to 0 if 'hh' is missing
-                            entry['date_local'].get('min', 0)  # Default to 0 if 'min' is missing
+                            entry['date_local'].get('hh', 0),
+                            entry['date_local'].get('min', 0)
                         ))
                         
                         if interval_start <= entry_time < interval_end:
@@ -654,23 +647,21 @@ def get_best_surf_spots_by_intervals():
 
                 if interval_wave_heights:
                     average_height = sum(interval_wave_heights) / len(interval_wave_heights)
-                    spot_averages.append((spot_name, average_height))
+                    spot_heights.append((spot_name, average_height))
 
-            # Sort spots by average height and select the top 2
-            top_two_spots = sorted(spot_averages, key=lambda x: x[1], reverse=True)[:2]
+            # Sort all spots by wave height
+            sorted_spots = sorted(spot_heights, key=lambda x: x[1], reverse=True)
 
-            # Add to results for the day
+            # Add all spots to results for the day
             results[day_name].append({
                 "interval": f"{interval_start.strftime('%H:%M')} - {interval_end.strftime('%H:%M')}",
-                "top_spots": top_two_spots
+                "spots": sorted_spots  # Include all spots instead of just top 2
             })
 
-            # Move to the next interval
             interval_start = interval_end
 
-    print("Completed processing best surf spots by intervals")
+    print("Completed processing all surf spots by intervals")
     return results
-
 
 
 

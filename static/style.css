@@ -905,18 +905,52 @@ h2 {
 
 .spot-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 4px 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.spot-rank {
+    min-width: 30px;
+    font-weight: bold;
+    color: #666;
+}
+
+.top-spot {
+    background-color: #f8f8f8;
+}
+
+.top-spot .spot-rank {
+    color: #007bff;
 }
 
 .spot-name {
-    font-weight: 500;
-    color: #333;
+    flex-grow: 1;
+    margin: 0 10px;
 }
 
 .spot-height {
-    color: #666;
+    font-weight: bold;
+    color: #333;
+}
+
+.interval-box {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.interval-time {
+    background-color: #f5f5f5;
+    padding: 8px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+.interval-spots {
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .error, .no-data {

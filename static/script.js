@@ -3098,17 +3098,21 @@ function formatInterval(intervalStr) {
     }
 }
 
-// Function to format best spots interval
+
+
+
+// Update the formatBestSpotsInterval function
 function formatBestSpotsInterval(interval) {
-    if (!interval.top_spots || interval.top_spots.length === 0) {
-        return ''; // Skip empty intervals
+    if (!interval.spots || interval.spots.length === 0) {
+        return '';
     }
 
-    const spots = interval.top_spots
-        .map(spot => {
+    const spots = interval.spots
+        .map((spot, index) => {
             const height = typeof spot[1] === 'number' ? spot[1].toFixed(1) : '?';
             return `
-                <div class="spot-item">
+                <div class="spot-item ${index < 2 ? 'top-spot' : ''}">
+                    <span class="spot-rank">#${index + 1}</span>
                     <span class="spot-name">${spot[0]}</span>
                     <span class="spot-height">${height}ft</span>
                 </div>
@@ -3123,6 +3127,10 @@ function formatBestSpotsInterval(interval) {
         </div>
     `;
 }
+
+
+
+
 
 // Function to display best spots
 // Update the display function with better logging
