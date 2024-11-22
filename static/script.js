@@ -65,6 +65,12 @@ window.onload = async function () {
     // Single getData call that will trigger the initial update
     await getData();  
 
+    await updateTopUpcomingDays(currentSpot);
+    await updateBiggestUpcomingLADays();
+
+    
+
+    /*
     // Lazy load wave data for the next 16 days after the page has loaded
     setTimeout(async () => {
         console.log("%c[Lazy Load] Lazy loading wave data for the next 16 days...", "color: green; font-weight: bold;");
@@ -75,13 +81,14 @@ window.onload = async function () {
             }
         }
         // Update biggest upcoming days only once after all data is loaded
-        await updateTopUpcomingDays(currentSpot);
+      //  await updateTopUpcomingDays(currentSpot);
         await updateBiggestUpcomingLADays();
     }, 5000);
 
+    */
 
     //when a new spot is selected
-    
+    /*
     spotSelect.addEventListener('change', async function (e) {
         const newSpot = e.target.value;
         const currentDate = document.getElementById('dateInput').value;
@@ -90,8 +97,6 @@ window.onload = async function () {
             // Clear existing data
             cachedWaveData = {};
             
-            // Update upcoming days for the new spot
-            await updateTopUpcomingDays(newSpot);
             
             // Get spot ID and regenerate date buttons
             const spotId = await getSpotId(newSpot);
@@ -99,6 +104,32 @@ window.onload = async function () {
             
             // Get new data with the spot ID
             await getData(newSpot, currentDate);
+            
+            console.log(`%c[Spot Change] Successfully updated to ${newSpot}`, "color: green; font-weight: bold;");
+        } catch (error) {
+            console.error('[Spot Change] Error updating spot:', error);
+        }
+
+        // Update upcoming days for the new spot
+        await updateTopUpcomingDays(newSpot);
+    });
+    */
+
+    spotSelect.addEventListener('change', async function (e) {
+        const newSpot = e.target.value;
+        const currentDate = document.getElementById('dateInput').value;
+        
+        try {
+            // Clear existing data
+            cachedWaveData = {};
+            
+            // Get spot ID and regenerate date buttons
+            const spotId = await getSpotId(newSpot);
+            await getSpotForecast(spotId);
+            await generateDateButtons(spotId);
+            await getData(newSpot, currentDate);
+            await updateTopUpcomingDays(newSpot);
+            await updateBiggestUpcomingLADays();  // Add it here too
             
             console.log(`%c[Spot Change] Successfully updated to ${newSpot}`, "color: green; font-weight: bold;");
         } catch (error) {
@@ -151,7 +182,7 @@ let cachedWaveData = {}; // To store wave data keyed by date
 const selectedSpot = '';
 
 //working
-
+/*
 async function getSpotForecast(spotId) {
     try {
         const localToday = new Date();
@@ -193,9 +224,63 @@ async function getSpotForecast(spotId) {
         console.error(`%c[Forecast Error] Failed to fetch wave forecast for Spot ID: ${spotId} and Date: ${date || 'today'}`, "color: red; font-weight: bold;", error);
     }
 }
+*/
 
+async function getSpotForecast(spotId) {
+    try {
+        const localToday = new Date();
+        const formattedToday = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;
+        console.log(`%c[Forecast Fetch] Fetching wave forecast for Spot ID: ${spotId} and Date: ${formattedToday}`, "color: teal; font-weight: bold;");
 
+        const response = await fetch(`/get_wave_forecast?spot_id=${spotId}&date=${formattedToday}`);
+        const forecast = await response.json();
+        console.log(`%c[Forecast Fetch] Response received for Spot ID: ${spotId}, Date: ${formattedToday}`, "color: teal;");
 
+        // Create a temporary object to store unique hourly data
+        const uniqueHourlyData = {};
+        
+        forecast.forEach(item => {
+            const localDateObj = item.date_local;
+            const localDate = `${localDateObj.yy}-${String(localDateObj.mm).padStart(2, '0')}-${String(localDateObj.dd).padStart(2, '0')}`;
+            
+            // Create a key for each hour of each date
+            const hourKey = `${localDate}-${localDateObj.hh}`;
+            
+            // Only keep the entry if we haven't seen this hour before or if it has a higher wave height
+            if (!uniqueHourlyData[hourKey] || item.size_ft > uniqueHourlyData[hourKey].height) {
+                uniqueHourlyData[hourKey] = {
+                    date: localDate,
+                    time: new Date(localDateObj.yy, localDateObj.mm - 1, localDateObj.dd, localDateObj.hh, 0),
+                    height: parseFloat(item.size_ft.toFixed(3))
+                };
+            }
+        });
+
+        // Convert the unique hourly data back into the cached format
+        cachedWaveData = {}; // Clear existing cache
+        
+        Object.values(uniqueHourlyData).forEach(item => {
+            if (!cachedWaveData[item.date]) {
+                cachedWaveData[item.date] = [];
+            }
+            cachedWaveData[item.date].push({
+                time: item.time,
+                height: item.height
+            });
+        });
+
+        // Sort the data by time for each date
+        for (const date in cachedWaveData) {
+            cachedWaveData[date].sort((a, b) => a.time - b.time);
+        }
+        
+        console.log(`%c[Forecast Cache] Cached wave data for ${formattedToday}:`, "color: teal;", cachedWaveData[formattedToday]);
+        console.log(`%c[Forecast Cache] Full cached wave data after update:`, "color: teal;", cachedWaveData);
+
+    } catch (error) {
+        console.error(`%c[Forecast Error] Failed to fetch wave forecast for Spot ID: ${spotId}`, "color: red; font-weight: bold;", error);
+    }
+}
 
 
 //testing
@@ -218,12 +303,23 @@ function updateWaveGraph(date, sunrise, sunset) {
 
     console.log(`%c[WaveGraph] Wave data found for ${date}:`, "color: purple;", waveDataForDate);
 
+        // Filter data for 4 AM to 8 PM before any processing
+        const filteredWaveData = waveDataForDate.filter(item => {
+            const hour = item.time.getHours();
+            return hour >= 4 && hour <= 20;
+        });
+    
+        console.log(`%c[WaveGraph] Filtered wave data (4AM-8PM) for ${date}:`, "color: purple;", filteredWaveData);
+
 
     // Sort the data chronologically
     const sortedWaveData = [...waveDataForDate].sort((a, b) => a.time - b.time);
 
+
+
+
     // Log all wave heights with consistent formatting
-    console.log(`%c[Wave Height] All heights for ${date}:`, "color: blue; font-weight: bold;");
+    console.log(`%c[Wave Height] All heights for ${date} (4AM-8PM):`, "color: blue; font-weight: bold;");
     sortedWaveData.forEach(data => {
         const hour = data.time.getHours();
         const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -231,14 +327,17 @@ function updateWaveGraph(date, sunrise, sunset) {
         console.log(`[Wave Heights by hour] ${date} ${hour12}:00 ${ampm}: ${data.height.toFixed(1)} ft`);
     });
 
-
-    // Map times and heights
-    let waveTimes = waveDataForDate.map(item => item.time);
-    let waveHeights = waveDataForDate.map(item => item.height);
+    // Map times and heights from filtered data
+    let waveTimes = sortedWaveData.map(item => item.time);
+    let waveHeights = sortedWaveData.map(item => item.height);
 
     console.log(`%c[WaveGraph] Mapping wave times and heights for ${date}:`, "color: purple;");
-    console.log("%c[WaveGraph] Wave Times (Before Sorting):", "color: purple;", waveTimes);
-    console.log("%c[WaveGraph] Wave Heights (Before Sorting):", "color: purple;", waveHeights);
+    console.log("%c[WaveGraph] Wave Times (4AM-8PM):", "color: purple;", waveTimes);
+    console.log("%c[WaveGraph] Wave Heights (4AM-8PM):", "color: purple;", waveHeights);
+
+
+
+
 
 
     // Sort the times and corresponding heights to ensure proper plotting
@@ -1811,7 +1910,7 @@ function filterTimesAndHeightsForDay(waveTimes, waveHeights, startHour = 5, endH
 }
 
 
-
+/*
 async function updateTopUpcomingDays(spotName) {
     console.log(`%c[updateTopUpcomingDays] Starting... Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue; font-weight: bold;");
 
@@ -1838,9 +1937,15 @@ async function updateTopUpcomingDays(spotName) {
         const daysWithWaveData = [];
         console.log(`%c[updateTopUpcomingDays] Fetching cached wave data...`, "color: darkblue;");
     
+
+//            console.log(`%c[updateTopUpcomingDays] Wave data found for ${dateKey}:`, "color: purple;", cachedWaveData[dateKey]);
+
+
         // Fetch cached wave data and sunrise/sunset times
         for (const dateKey of Object.keys(cachedWaveData)) {
-            console.log(`%c[updateTopUpcomingDays] Processing wave data for date: ${dateKey}`, "color: darkblue;");
+            console.log(`%c[updateTopUpcomingDays] Wave data found for ${dateKey}:`, "color: purple;", cachedWaveData[dateKey]);
+
+//            console.log(`%c[updateTopUpcomingDays] Processing wave data for date: ${dateKey}`, "color: darkblue;");
             const waveDataForDate = cachedWaveData[dateKey];
     
             // Adjust the date to local time to fix the UTC issue
@@ -1867,15 +1972,19 @@ async function updateTopUpcomingDays(spotName) {
                 console.error("Error fetching sun times:", error);
                 continue;
             }
-    
+
             if (waveDataForDate && waveDataForDate.length > 0) {
-                // Filter the wave data to include only data points between sunrise and sunset
-                const filteredWaveData = waveDataForDate.filter(item => item.time >= sunriseTime && item.time <= sunsetTime);
+                // Filter wave data for times between 4 AM and 8 PM
+                const filteredWaveData = waveDataForDate.filter(item => {
+                    const hour = item.time.getHours();
+                    return hour >= 4 && hour <= 20;
+                });
+                
                 console.log(`%c[updateTopUpcomingDays] Filtered wave data length for ${dateKey}: ${filteredWaveData.length}`, "color: darkblue;");
                 if (filteredWaveData.length > 0) {
                     const maxWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
                     const minWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
-    
+            
                     daysWithWaveData.push({
                         date: correctDate,
                         waveRange: `${maxWaveHeight.toFixed(1)} - ${minWaveHeight.toFixed(1)} ft`,
@@ -1884,6 +1993,9 @@ async function updateTopUpcomingDays(spotName) {
                 }
             }
         }
+
+
+        
     
         console.log(`%c[updateTopUpcomingDays] Sorting days by wave height...`, "color: darkblue;");
         // Sort and display the biggest upcoming days
@@ -1924,7 +2036,98 @@ async function updateTopUpcomingDays(spotName) {
         console.log(`%c[updateTopUpcomingDays] Finished. Reset flags - Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue;");
     }
 }
+*/
 
+async function updateTopUpcomingDays(spotName) {
+    console.log(`%c[updateTopUpcomingDays] Starting... Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue; font-weight: bold;");
+
+    if (isUpdatingBiggestDays) {
+        console.log(`%c[updateTopUpcomingDays] Update already in progress, skipping...`, "color: darkblue;");
+        return;
+    }
+    
+    isUpdatingBiggestDays = true;
+    console.log(`%c[updateTopUpcomingDays] Setting loading state. Initial Load: ${isInitialLoad}`, "color: darkblue;");
+
+    try {
+        // Immediately update the surf spot name in the title
+        document.getElementById('surfSpotName').textContent = spotName;
+    
+        // Only show loading state if this is the first load
+        if (isInitialLoad) {
+            document.getElementById('biggestDayLeft').textContent = '..loading..';
+            document.getElementById('biggestDayCenter').textContent = '..loading..';
+            document.getElementById('biggestDayRight').textContent = '..loading..';
+        }
+    
+        const daysWithWaveData = [];
+        console.log(`%c[updateTopUpcomingDays] Processing cached wave data...`, "color: darkblue;");
+
+        // Process cached wave data
+        for (const dateKey of Object.keys(cachedWaveData)) {
+            const waveDataForDate = cachedWaveData[dateKey];
+            
+            if (waveDataForDate && waveDataForDate.length > 0) {
+                // Filter wave data for times between 4 AM and 8 PM
+                const filteredWaveData = waveDataForDate.filter(item => {
+                    const hour = item.time.getHours();
+                    return hour >= 4 && hour <= 20;
+                });
+                
+                console.log(`%c[updateTopUpcomingDays] Filtered wave data for ${dateKey}: ${filteredWaveData.length} points`, "color: darkblue;");
+                
+                if (filteredWaveData.length > 0) {
+                    const maxWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
+                    const minWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
+                    const correctDate = new Date(Date.parse(dateKey + 'T00:00:00'));
+            
+                    daysWithWaveData.push({
+                        date: correctDate,
+                        waveRange: `${maxWaveHeight.toFixed(1)}-${minWaveHeight.toFixed(1)} ft`,
+                        maxWaveHeight
+                    });
+                }
+            }
+        }
+    
+        console.log(`%c[updateTopUpcomingDays] Sorting days by wave height...`, "color: darkblue;");
+        daysWithWaveData.sort((a, b) => b.maxWaveHeight - a.maxWaveHeight);
+    
+        if (daysWithWaveData.length > 0) {
+            const topDays = daysWithWaveData.slice(0, 3);
+            console.log(`%c[updateTopUpcomingDays] Top days:`, "color: darkblue;", topDays);
+    
+            const updateDateAndGraph = (date) => {
+                const localDate = date.toISOString().split('T')[0];
+                document.getElementById('dateInput').value = localDate;
+                console.log(`%c[updateTopUpcomingDays] Updating data and graph for date: ${localDate}`, "color: darkblue;");
+                getData();
+            };
+    
+            // Update the biggest days with the top upcoming days
+            document.getElementById('biggestDayLeft').textContent = `${topDays[0].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[0].waveRange}`;
+            document.getElementById('biggestDayLeft').onclick = () => updateDateAndGraph(topDays[0].date);
+    
+            if (topDays[1]) {
+                document.getElementById('biggestDayCenter').textContent = `${topDays[1].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[1].waveRange}`;
+                document.getElementById('biggestDayCenter').onclick = () => updateDateAndGraph(topDays[1].date);
+            }
+    
+            if (topDays[2]) {
+                document.getElementById('biggestDayRight').textContent = `${topDays[2].date.toLocaleDateString([], { month: 'short', day: 'numeric' })}: ${topDays[2].waveRange}`;
+                document.getElementById('biggestDayRight').onclick = () => updateDateAndGraph(topDays[2].date);
+            }
+        } else {
+            document.getElementById('biggestDayLeft').textContent = 'No wave data available';
+            document.getElementById('biggestDayCenter').textContent = '';
+            document.getElementById('biggestDayRight').textContent = '';
+        }
+    } finally {
+        isUpdatingBiggestDays = false;
+        isInitialLoad = false;
+        console.log(`%c[updateTopUpcomingDays] Finished. Reset flags - Initial Load: ${isInitialLoad}, Is Updating: ${isUpdatingBiggestDays}`, "color: darkblue;");
+    }
+}
 
 
 
@@ -1938,7 +2141,7 @@ function adjustToLocalDate(utcDateString) {
 
 
 //working but slow
-
+/*
 async function updateBiggestUpcomingLADays() {
     console.log(`%c[updateBiggestUpcomingLADays] Starting LA-wide update for biggest upcoming days`, "color: darkgreen; font-weight: bold;");
 
@@ -2029,36 +2232,125 @@ async function updateBiggestUpcomingLADays() {
         document.getElementById('laDayRight').textContent = '';
     }
 }
+*/
 
 
+async function updateBiggestUpcomingLADays() {
+    console.log(`%c[updateBiggestUpcomingLADays] Starting LA-wide update for biggest upcoming days`, "color: darkgreen; font-weight: bold;");
 
+    // Set loading state for LA biggest days
+    document.getElementById('laDayLeft').textContent = '..loading..';
+    document.getElementById('laDayCenter').textContent = '..loading..';
+    document.getElementById('laDayRight').textContent = '..loading..';
 
+    const spots = await fetch('/get_spot_id').then(res => res.json());
+    console.log(`%c[updateBiggestUpcomingLADays] Fetched spots:`, "color: darkgreen;", spots);
 
-// Function to format the date in "Saturday, Oct 12th 2024" format using selectedDate
-function formatDate(selectedDate) {
-    // Manually parse the selectedDate string to ensure correct local date
-    const [year, month, day] = selectedDate.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // JavaScript months are zero-indexed
+    // Create today's date in local time
+    const today = new Date();
+    const todayLocal = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+    let laSpotsWaveData = [];
 
-    const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
-    
-    // Format the date to "Saturday, Oct 12 2024"
-    const formattedDate = date.toLocaleDateString('en-US', options);
+    // Clear cached wave data before fetching new data
+    cachedWaveData = {};
 
-    // Add ordinal suffix to the day
-    let suffix = 'th';
-    if (day % 10 === 1 && day !== 11) {
-        suffix = 'st';
-    } else if (day % 10 === 2 && day !== 12) {
-        suffix = 'nd';
-    } else if (day % 10 === 3 && day !== 13) {
-        suffix = 'rd';
+    for (const spot of spots) {
+        const spotId = spot.spot_id;
+        console.log(`%c[updateBiggestUpcomingLADays] Processing spot: ${spot.spot_name} (ID: ${spotId})`, "color: darkgreen;");
+
+        // Fetch forecast data for the spot
+        await getSpotForecast(spotId);
+
+        // Process each day's data
+        for (let i = 0; i < 17; i++) {
+            const dateToCheck = new Date(todayLocal.getTime() + i * 86400000);
+            const dateString = dateToCheck.toISOString().split('T')[0];
+            
+            const waveDataForDate = cachedWaveData[dateString];
+            if (waveDataForDate && waveDataForDate.length > 0) {
+                const dayHeights = waveDataForDate.map(item => item.height);
+                const maxWaveHeight = Math.max(...dayHeights);
+                const minWaveHeight = Math.min(...dayHeights);
+
+                laSpotsWaveData.push({
+                    spotName: spot.spot_name,
+                    date: dateToCheck,
+                    waveRange: `${maxWaveHeight.toFixed(1)}-${minWaveHeight.toFixed(1)}ft`,
+                    maxWaveHeight
+                });
+            }
+        }
     }
 
-    // Inject the day with the suffix into the formatted date
-    return formattedDate.replace(day, day + suffix);
+    // Sort by max wave height and get top 3
+    laSpotsWaveData.sort((a, b) => b.maxWaveHeight - a.maxWaveHeight);
+    const topDays = laSpotsWaveData.slice(0, 3);
+
+    // Update the UI with the top days
+    if (topDays.length > 0) {
+        const updateSpotAndData = async (spotName, date) => {
+            const localDate = date.toISOString().split('T')[0];
+            document.getElementById('dateInput').value = localDate;
+            document.getElementById('spotSelect').value = spotName;
+            
+            await getData(true, true);  // Regenerate buttons and update upcoming days
+        };
+
+        // Update buttons with top days
+        document.getElementById('laDayLeft').textContent = 
+            `${topDays[0].spotName}: ${topDays[0].date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${topDays[0].waveRange}`;
+        document.getElementById('laDayLeft').onclick = () => updateSpotAndData(topDays[0].spotName, topDays[0].date);
+
+        if (topDays[1]) {
+            document.getElementById('laDayCenter').textContent = 
+                `${topDays[1].spotName}: ${topDays[1].date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${topDays[1].waveRange}`;
+            document.getElementById('laDayCenter').onclick = () => updateSpotAndData(topDays[1].spotName, topDays[1].date);
+        }
+
+        if (topDays[2]) {
+            document.getElementById('laDayRight').textContent = 
+                `${topDays[2].spotName}: ${topDays[2].date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${topDays[2].waveRange}`;
+            document.getElementById('laDayRight').onclick = () => updateSpotAndData(topDays[2].spotName, topDays[2].date);
+        }
+    } else {
+        document.getElementById('laDayLeft').textContent = 'No wave data available';
+        document.getElementById('laDayCenter').textContent = '';
+        document.getElementById('laDayRight').textContent = '';
+    }
 }
 
+
+
+
+function formatDate(selectedDate) {
+    // Create date object in PST/PDT
+    const date = new Date(`${selectedDate}T00:00:00-08:00`);  // Force PST timezone
+    console.log('[formatDate] Input date:', selectedDate);
+    console.log('[formatDate] Created date object:', date);
+    
+    // Format the date with explicit timezone
+    const options = { 
+        weekday: 'long', 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        timeZone: 'America/Los_Angeles'
+    };
+    const formattedDate = date.toLocaleDateString('en-US', options);
+    console.log('[formatDate] Formatted date:', formattedDate);
+
+    // Add ordinal suffix
+    const dayNum = date.getDate();
+    let suffix = 'th';
+    if (dayNum % 10 === 1 && dayNum !== 11) suffix = 'st';
+    else if (dayNum % 10 === 2 && dayNum !== 12) suffix = 'nd';
+    else if (dayNum % 10 === 3 && dayNum !== 13) suffix = 'rd';
+
+    const finalDate = formattedDate.replace(dayNum, dayNum + suffix);
+    console.log('[formatDate] Final date with suffix:', finalDate);
+    
+    return finalDate;
+}
 
 
 // Function to update the label above the wave height graph
@@ -2088,6 +2380,13 @@ function updateSpotDateLabel(selectedSpot, selectedDate) {
 
 
 
+
+
+
+
+
+
+/* WEEKLY REPORTS */
 
 async function updateRegionalOverviews(startDate) {
     //console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, "color: purple; font-weight: bold;");
@@ -2123,23 +2422,100 @@ async function updateRegionalOverviews(startDate) {
         }
     };
 
+
+    // Define loading messages
+    const loadingMessages = [
+        "Checking the buoys...",
+        "Analyzing wave patterns...",
+        "Calculating regional averages...",
+        "Processing swell data...",
+        "Almost there..."
+    ];
+
+
+    // Store loading intervals in an object to track them
+    const loadingIntervals = {};
+
+    // Create loading animation for each region
+    for (const [regionName, region] of Object.entries(regions)) {
+        const plotDiv = document.getElementById(region.id);
+        let messageIndex = 0;
+        
+        // Start loading animation
+        loadingIntervals[region.id] = setInterval(() => {
+            Plotly.newPlot(region.id, [{
+                x: [0],
+                y: [0],
+                text: [loadingMessages[messageIndex]],
+                mode: 'text',
+                textfont: {
+                    size: 14,
+                    color: '#666'
+                }
+            }], {
+                height: 200,
+                margin: {
+                    l: isMobile ? 35 : 45,
+                    r: isMobile ? 15 : 20,
+                    t: 20,
+                    b: isMobile ? 30 : 40,
+                    pad: 0
+                },
+                xaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    showticklabels: false
+                },
+                yaxis: {
+                    showgrid: false,
+                    zeroline: false,
+                    showticklabels: false
+                }
+            }, {
+                displayModeBar: false
+            });
+            
+            messageIndex = (messageIndex + 1) % loadingMessages.length;
+        }, 800);
+    }
+
+
+
     const windowWidth = window.innerWidth;
     const isMobile = windowWidth <= 768;
 
     // Generate array of 7 consecutive dates
     const dates = [];
-    const start = new Date(startDate);
+    //const start = new Date(startDate);
+    const start = new Date(`${startDate}T00:00:00-08:00`);  // Force PST timezone
+
+
+
+
     for (let i = 0; i < 7; i++) {
         const currentDate = new Date(start);
         currentDate.setDate(start.getDate() + i);
-        dates.push(currentDate.toISOString().split('T')[0]);
+        // Use UTC methods to avoid timezone shifts
+        const year = currentDate.getUTCFullYear();
+        const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getUTCDate()).padStart(2, '0');
+        dates.push(`${year}-${month}-${day}`);
     }
+
+
     console.log(`%c[RegionalOverviews] Processing dates:`, "color: purple;", dates);
 
     for (const [regionName, region] of Object.entries(regions)) {
         console.log(`%c[RegionalOverviews] Processing ${regionName} with spots:`, "color: blue;", region.spots);
+
         
         try {
+            // Clear loading animation before any data processing
+            if (loadingIntervals[region.id]) {
+                clearInterval(loadingIntervals[region.id]);
+                delete loadingIntervals[region.id];
+            }
+
             let regionalData = new Map(); // Reset for each region
             let spotDataLog = {}; // Reset for each region's logging purposes
 
@@ -2158,17 +2534,27 @@ async function updateRegionalOverviews(startDate) {
                 for (const currentDate of dates) {
                     console.log(`%c[RegionalOverviews] Fetching data for ${spot} on ${currentDate}`, "color: blue;");
                     await getSpotForecast(spotId, currentDate);
+
+
+                    console.log(`RegionalOverviews] Wave data for ${currentDate}:`, {
+                        dataPoints: cachedWaveData[currentDate]?.length || 0,
+                        firstPoint: cachedWaveData[currentDate]?.[0]?.time.toLocaleString(),
+                        lastPoint: cachedWaveData[currentDate]?.[cachedWaveData[currentDate]?.length - 1]?.time.toLocaleString()
+                    });
                     
                     if (cachedWaveData[currentDate]) {
                         spotDataLog[spot][currentDate] = []; // Initialize array for this date
 
                         cachedWaveData[currentDate].forEach(dataPoint => {
-                            const timeKey = dataPoint.time.getTime();
-                            if (!regionalData.has(timeKey)) {
-                                regionalData.set(timeKey, []);
-                            }
-                            regionalData.get(timeKey).push(dataPoint.height);
-                            
+                            // Adjust the timeKey to PST before storing
+                        // Adjust the time to PST before using it as a key
+                        const pstTime = new Date(dataPoint.time);
+                        const timeKey = pstTime.getTime();
+                        
+                        if (!regionalData.has(timeKey)) {
+                            regionalData.set(timeKey, []);
+                        }
+                        regionalData.get(timeKey).push(dataPoint.height);
                             // Log the data point
                             spotDataLog[spot][currentDate].push({
                                 time: dataPoint.time.toLocaleString(),
@@ -2194,6 +2580,13 @@ async function updateRegionalOverviews(startDate) {
 
             // Convert Map to arrays for plotting and log averages
             const times = Array.from(regionalData.keys()).sort();
+            console.log('Data Range Debug:', {
+                firstDataPoint: new Date(times[0]).toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}),
+                lastDataPoint: new Date(times[times.length - 1]).toLocaleString('en-US', {timeZone: 'America/Los_Angeles'}),
+                totalPoints: times.length
+            });
+
+
             const heights = times.map(time => {
                 const heightsAtTime = regionalData.get(time);
                 const avg = heightsAtTime.reduce((sum, height) => sum + height, 0) / heightsAtTime.length;
@@ -2216,74 +2609,95 @@ async function updateRegionalOverviews(startDate) {
                 }
             });
 
-// Inside updateRegionalOverviews function, where we create the trace and layout
-// Inside updateRegionalOverviews function, where we create the trace and layout
-// Create shapes array for night shading and day separators
-const shapes = [];
+            // Inside updateRegionalOverviews function, where we create the trace and layout
+            // Inside updateRegionalOverviews function, where we create the trace and layout
+            // Create shapes array for night shading and day separators
+            const shapes = [];
 
-// Special case for first day - add shading from start to sunrise
-const firstDayDate = new Date(dates[0]);
-const firstDaySunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dates[0]}&formatted=0`;
-try {
-    const firstDayResponse = await fetch(firstDaySunApiUrl);
-    const firstDaySunData = await firstDayResponse.json();
-    
-    if (firstDaySunData.status === 'OK') {
-        const firstDaySunrise = new Date(firstDaySunData.results.sunrise);
-        
-        // Add shading from start of day to sunrise
-        shapes.push({
-            type: 'rect',
-            xref: 'x',
-            yref: 'paper',
-            x0: new Date(firstDayDate.setHours(0, 0, 0, 0)).getTime(),
-            x1: firstDaySunrise.getTime(),
-            y0: 0,
-            y1: 1,
-            fillcolor: '#E5E5E5',
-            opacity: 0.3,
-            line: { width: 0 }
-        });
-    }
-} catch (error) {
-    console.error(`Failed to fetch sun times for first day:`, error);
-}
+            // Special case for first day - add shading from start to sunrise
+            const firstDayDate = new Date(dates[0]);
+            const firstDaySunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dates[0]}&formatted=0`;
+            try {
+                const firstDayResponse = await fetch(firstDaySunApiUrl);
+                const firstDaySunData = await firstDayResponse.json();
+                
+                if (firstDaySunData.status === 'OK') {
+                    const firstDaySunrise = new Date(firstDaySunData.results.sunrise);
+                    
+                    // Add shading from start of day to sunrise
+                    shapes.push({
+                        type: 'rect',
+                        xref: 'x',
+                        yref: 'paper',
+                        x0: new Date(firstDayDate.setHours(0, 0, 0, 0)).getTime(),
+                        x1: firstDaySunrise.getTime(),
+                        y0: 0,
+                        y1: 1,
+                        fillcolor: '#E5E5E5',
+                        opacity: 0.3,
+                        line: { width: 0 }
+                    });
+                }
+            } catch (error) {
+                console.error(`Failed to fetch sun times for first day:`, error);
+            }
 
 
-for (let i = 0; i < 7; i++) {
-    const currentDate = new Date(dates[i]);
-    
-    // Get sunrise/sunset times for each date
-    const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dates[i]}&formatted=0`;
-    try {
-        const response = await fetch(sunApiUrl);
-        const sunData = await response.json();
-        
-        if (sunData.status === 'OK') {
-            const sunriseTime = new Date(sunData.results.sunrise);
-            const sunsetTime = new Date(sunData.results.sunset);
+            for (let i = 0; i < 7; i++) {
+                const currentDate = new Date(dates[i]);
+                
+                // Get sunrise/sunset times for each date
+                const sunApiUrl = `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${dates[i]}&formatted=0`;
+                try {
+                    const response = await fetch(sunApiUrl);
+                    const sunData = await response.json();
+                    
+                    if (sunData.status === 'OK') {
+                        const sunriseTime = new Date(sunData.results.sunrise);
+                        const sunsetTime = new Date(sunData.results.sunset);
 
-            // Night shading
-            shapes.push({
-                type: 'rect',
-                xref: 'x',
-                yref: 'paper',
-                x0: sunsetTime.getTime(),
-                x1: sunriseTime.getTime() + (24 * 60 * 60 * 1000),
-                y0: 0,
-                y1: 1,
-                fillcolor: '#E5E5E5',
-                opacity: 0.3,
-                line: { width: 0 }
-            });
+                        // Night shading
+                        shapes.push({
+                            type: 'rect',
+                            xref: 'x',
+                            yref: 'paper',
+                            x0: sunsetTime.getTime(),
+                            x1: sunriseTime.getTime() + (24 * 60 * 60 * 1000),
+                            y0: 0,
+                            y1: 1,
+                            fillcolor: '#E5E5E5',
+                            opacity: 0.3,
+                            line: { width: 0 }
+                        });
 
-            // Add vertical line for start of each day
+                        // Add vertical line for start of each day
+                        shapes.push({
+                            type: 'line',
+                            xref: 'x',
+                            yref: 'paper',
+                            x0: new Date(currentDate.setHours(0, 0, 0, 0)).getTime(),
+                            x1: new Date(currentDate.setHours(0, 0, 0, 0)).getTime(),
+                            y0: 0,
+                            y1: 1,
+                            line: {
+                                color: 'rgba(0, 0, 255, 0.3)',
+                                width: 1,
+                                dash: 'dot'
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch sun times for ${dates[i]}:`, error);
+                }
+            }
+
+            // Add one final line for the end of the last day
             shapes.push({
                 type: 'line',
                 xref: 'x',
                 yref: 'paper',
-                x0: new Date(currentDate.setHours(0, 0, 0, 0)).getTime(),
-                x1: new Date(currentDate.setHours(0, 0, 0, 0)).getTime(),
+                x0: new Date(dates[6] + 'T23:59:59').getTime(),
+                x1: new Date(dates[6] + 'T23:59:59').getTime(),
                 y0: 0,
                 y1: 1,
                 line: {
@@ -2292,152 +2706,149 @@ for (let i = 0; i < 7; i++) {
                     dash: 'dot'
                 }
             });
-        }
-    } catch (error) {
-        console.error(`Failed to fetch sun times for ${dates[i]}:`, error);
-    }
-}
 
-// Add one final line for the end of the last day
-shapes.push({
-    type: 'line',
-    xref: 'x',
-    yref: 'paper',
-    x0: new Date(dates[6] + 'T23:59:59').getTime(),
-    x1: new Date(dates[6] + 'T23:59:59').getTime(),
-    y0: 0,
-    y1: 1,
-    line: {
-        color: 'rgba(0, 0, 255, 0.3)',
-        width: 1,
-        dash: 'dot'
-    }
-});
-
-let waveData = [];
-try {
-    const response = await fetch('/wave_data');
-    if (response.ok) {
-        waveData = await response.json();
-        console.log(`%c[RegionalOverviews] Fetched wave data:`, "color: purple;", waveData);
-    } else {
-        console.error(`%c[RegionalOverviews] Failed to fetch wave data`, "color: red;");
-    }
-} catch (error) {
-    console.error(`%c[RegionalOverviews] Error fetching wave data:`, "color: red;", error);
-}
+            let waveData = [];
+            try {
+                const response = await fetch('/wave_data');
+                if (response.ok) {
+                    waveData = await response.json();
+                    console.log(`%c[RegionalOverviews] Fetched wave data:`, "color: purple;", waveData);
+                } else {
+                    console.error(`%c[RegionalOverviews] Failed to fetch wave data`, "color: red;");
+                }
+            } catch (error) {
+                console.error(`%c[RegionalOverviews] Error fetching wave data:`, "color: red;", error);
+            }
 
 
 
-// Inside updateRegionalOverviews function, modify the trace creation:
+            // Inside updateRegionalOverviews function, modify the trace creation:
 
-const trace = {
-    x: times.map(t => new Date(t)),
-    y: heights,
-    mode: 'lines',
-   // name: 'Average Wave Height',
-    line: { 
-        color: 'blue', 
-        width: 3,
-        shape: 'spline',
-        smoothing: 1.3
-    },
-    hovertemplate: `
-        <b>%{x|%I:%M %p}</b><br>
-        %{x|%a %b %d}<br>
-        Height: %{y:.1f} ft<br>
-        %{customdata}<br>
-        <extra></extra>
-    `,
-    
-    customdata: times.map(time => {
-        // Convert time to Date object if it isn't already
-        const timeDate = time instanceof Date ? time : new Date(time);
-        
-        // Find matching wave data for this timestamp
-        const matchingWaveData = waveData.find(d => {
-            // Convert wave data timestamp to Date object
-            const waveTime = new Date(d.timestamp);
-            // Compare timestamps rounded to minutes for better matching
-            return Math.abs(waveTime.getTime() - timeDate.getTime()) < 300000; // Within 5 minutes
-        });
+            const trace = {
+                x: times.map(t => new Date(t)), // Remove the 8-hour adjustment
 
-        if (matchingWaveData && matchingWaveData.swells) {
-            // Create a string for each swell
-            const swellsText = matchingWaveData.swells.map((swell, index) => 
-                `Swell ${index + 1}: ${swell.direction}° ${degreesToCardinal(swell.direction)} @ ${swell.period}s`
-            ).join('<br>');
+                y: heights,
+                mode: 'lines',
+            // name: 'Average Wave Height',
+                line: { 
+                    color: 'blue', 
+                    width: 3,
+                    shape: 'spline',
+                    smoothing: 1.3
+                },
+                hovertemplate: `
+                    <b>%{x|%I:%M %p}</b><br>
+                    %{x|%a %b %d}<br>
+                    Height: %{y:.1f} ft<br>
+                    %{customdata}<br>
+                    <extra></extra>
+                `,
+                
+                customdata: times.map(time => {
+                    // Convert time to Date object if it isn't already
+                    const timeDate = time instanceof Date ? time : new Date(time);
+                    
+                    // Find matching wave data for this timestamp
+                    const matchingWaveData = waveData.find(d => {
+                        // Convert wave data timestamp to Date object
+                        const waveTime = new Date(d.timestamp);
+                        // Compare timestamps rounded to minutes for better matching
+                        return Math.abs(waveTime.getTime() - timeDate.getTime()) < 300000; // Within 5 minutes
+                    });
+
+                    if (matchingWaveData && matchingWaveData.swells) {
+                        // Create a string for each swell
+                        const swellsText = matchingWaveData.swells.map((swell, index) => 
+                            `Swell ${index + 1}: ${swell.direction}° ${degreesToCardinal(swell.direction)} @ ${swell.period}s`
+                        ).join('<br>');
+                        
+                        return swellsText;
+                    }
+                    return 'No swell data available';
+                })
+            };
+
+
+
             
-            return swellsText;
-        }
-        return 'No swell data available';
-    })
-};
+            // Create layout with shapes included
+            const layout = {
+                xaxis: {
+                    //tickformat: '%a %m/%d',
+                    tickformat: '%a<br>%d', // Changed from '%a %m/%d'
+                    dtick: 24 * 3600 * 1000,
+                    tickmode: 'array',
+                    tickvals: dates.map(date => {
+                        return new Date(`${date}T12:00:00`).getTime(); // Remove timezone specification
+                    }),
+                    range: [
+                        new Date(`${dates[0]}T00:00:00`).getTime(),
+                        new Date(`${dates[6]}T23:59:59`).getTime()
+                    ],
+                    // Add debug logging
+                    rangeDebug: {
+                        start: new Date(`${dates[0]}T00:00:00`).toLocaleString(),
+                        end: new Date(`${dates[6]}T23:59:59`).toLocaleString()
+                    },
+                    tickfont: { size: isMobile ? 10 : 12 },
+                    fixedrange: true,
+                    showgrid: false,   // Remove vertical grid lines
+                    zeroline: false    // Remove x-axis zero line
+                },
+                yaxis: {
+                // title: 'Height (ft)',
+                    tickfont: { size: isMobile ? 10 : 12 },
+                    titlefont: { size: isMobile ? 12 : 14 },
+                    fixedrange: true,
+                    showgrid: false,   // Remove vertical grid lines
+                    zeroline: false    // Remove x-axis zero line
+                },
+                height: 200,
+                margin: {
+                    l: isMobile ? 35 : 45,  // Reduced left margin
+                    r: isMobile ? 15 : 20,  // Reduced right margin
+                    t: 20,                  // Keep top margin small
+                    b: isMobile ? 30 : 40,  // Bottom margin for x-axis labels
+                    pad: 0                  // Remove internal padding
+                },
+                shapes: shapes,
+                showlegend: false,
+                autosize: true,
+                hovermode: 'x',           // Changed from 'x unified' to 'x'
+                hoverdistance: 50,        // Adjusted for better touch response
+                dragmode: false,
+                hoverlabel: {
+                    bgcolor: 'white',
+                    bordercolor: '#c7c7c7',
+                    font: { size: 12 }
+                }
+            };
 
-// Create layout with shapes included
-const layout = {
-    xaxis: {
-        //tickformat: '%a %m/%d',
-        tickformat: '%a<br>%d', // Changed from '%a %m/%d'
-        dtick: 24 * 3600 * 1000,
-        tickmode: 'array',
-        tickvals: dates.map(date => {
-            const middayTime = new Date(date);
-            middayTime.setHours(12, 0, 0, 0);
-            return middayTime.getTime();
-        }),
-        range: [
-            new Date(dates[0] + 'T00:00:00').getTime(),
-            new Date(dates[6] + 'T23:59:59').getTime()
-        ],
-        tickfont: { size: isMobile ? 10 : 12 },
-        fixedrange: true,
-        showgrid: false,   // Remove vertical grid lines
-        zeroline: false    // Remove x-axis zero line
-    },
-    yaxis: {
-       // title: 'Height (ft)',
-        tickfont: { size: isMobile ? 10 : 12 },
-        titlefont: { size: isMobile ? 12 : 14 },
-        fixedrange: true,
-        showgrid: false,   // Remove vertical grid lines
-        zeroline: false    // Remove x-axis zero line
-    },
-    height: 200,
-    margin: {
-        l: isMobile ? 35 : 45,  // Reduced left margin
-        r: isMobile ? 15 : 20,  // Reduced right margin
-        t: 20,                  // Keep top margin small
-        b: isMobile ? 30 : 40,  // Bottom margin for x-axis labels
-        pad: 0                  // Remove internal padding
-    },
-    shapes: shapes,
-    showlegend: false,
-    autosize: true,
-    hovermode: 'x',           // Changed from 'x unified' to 'x'
-    hoverdistance: 50,        // Adjusted for better touch response
-    dragmode: false,
-    hoverlabel: {
-        bgcolor: 'white',
-        bordercolor: '#c7c7c7',
-        font: { size: 12 }
-    }
-};
 
-// Plot the graph
-Plotly.newPlot(region.id, [trace], layout, {
-    responsive: true,
-    displayModeBar: false,
-    staticPlot: false,
-    scrollZoom: false,
-    doubleClick: false,      // Disable double-click zoom
-    modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
-});
+            // Clear loading animation before plotting
+            if (document.getElementById(region.id).loadingInterval) {
+                clearInterval(document.getElementById(region.id).loadingInterval);
+            }
 
-            console.log(`%c[RegionalOverviews] ✓ Successfully plotted 7-day forecast for ${regionName}`, "color: green;");
-        } catch (error) {
-            console.error(`%c[RegionalOverviews] ❌ Error processing ${regionName}:`, "color: red;", error);
-        }
+
+            // Plot the graph
+            Plotly.newPlot(region.id, [trace], layout, {
+                responsive: true,
+                displayModeBar: false,
+                staticPlot: false,
+                scrollZoom: false,
+                doubleClick: false,      // Disable double-click zoom
+                modeBarButtonsToRemove: ['zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d', 'resetScale2d']
+            });
+
+                    console.log(`%c[RegionalOverviews] ✓ Successfully plotted 7-day forecast for ${regionName}`, "color: green;");
+                } catch (error) {
+                    // Clear loading animation if there's an error
+                    if (document.getElementById(region.id).loadingInterval) {
+                        clearInterval(document.getElementById(region.id).loadingInterval);
+                    }
+                    console.error(`%c[RegionalOverviews] ❌ Error processing ${regionName}:`, "color: red;", error);
+                }
     }
 }
 
@@ -2445,6 +2856,14 @@ Plotly.newPlot(region.id, [trace], layout, {
 
 
 
+
+
+
+
+
+
+
+/* WEEKLY REPORTS */
 
 
 
