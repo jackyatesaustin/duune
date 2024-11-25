@@ -21,9 +21,30 @@ window.history.replaceState({}, '', '/surf-report-la');
 let isInitialLoad = true;
 let isUpdatingBiggestDays = false;
 
+// Function to get current LA time
+function getLATime() {
+    const laOptions = {
+        timeZone: 'America/Los_Angeles',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    };
+    
+    const formatter = new Intl.DateTimeFormat('en-US', laOptions);
+    const dateParts = formatter.formatToParts(new Date());
+    
+    const formattedDate = `${dateParts.find(p => p.type === 'year').value}-${
+        dateParts.find(p => p.type === 'month').value}-${
+        dateParts.find(p => p.type === 'day').value}`;
+    
+    console.log(`%c[Time] Local time: ${new Date().toLocaleString()}`, "color: purple;");
+    console.log(`%c[Time] LA date: ${formattedDate}`, "color: purple;");
+    
+    return formattedDate;
+}
 
-
-
+// Initialize currentDate with LA time
+let currentDate = getLATime();
 
 
 // Updated window.onload function THAT LOADS THE BUTTONS 
@@ -38,17 +59,23 @@ window.onload = async function () {
   //  await fetchWaveData();
 
 
-
+/*
     const dateInput = document.getElementById('dateInput');
     const spotSelect = document.getElementById('spotSelect');
     const today = new Date(); 
     const todayISO = today.toISOString().split('T')[0];
     dateInput.value = todayISO;
+
+    */
+    const dateInput = document.getElementById('dateInput');
+    const spotSelect = document.getElementById('spotSelect');
+    const today = getLATime(); // Use getLATime instead of new Date()
+    dateInput.value = today;
     
     // Initial data for today's date and current spot
     let currentSpot = spotSelect.value;
     let currentSpotId = await getSpotId(currentSpot);
-    let currentDate = todayISO;
+//    let currentDate = todayISO;
 
     if (!currentSpotId) {
         console.error("%c[App Init] Error: Failed to resolve initial spot ID.", "color: red; font-weight: bold;");
@@ -68,68 +95,44 @@ window.onload = async function () {
     await updateTopUpcomingDays(currentSpot);
     await updateBiggestUpcomingLADays();
 
+};
+
+
+
     
-
-    /*
-    // Lazy load wave data for the next 16 days after the page has loaded
-    setTimeout(async () => {
-        console.log("%c[Lazy Load] Lazy loading wave data for the next 16 days...", "color: green; font-weight: bold;");
-        for (let i = 1; i < 17; i++) {
-            const futureDate = new Date(today.getTime() + i * 86400000).toISOString().split('T')[0];
-            if (!cachedWaveData[futureDate]) {
-                await getSpotForecast(currentSpotId, futureDate);
-            }
-        }
-        // Update biggest upcoming days only once after all data is loaded
-      //  await updateTopUpcomingDays(currentSpot);
-        await updateBiggestUpcomingLADays();
-    }, 5000);
-
-    */
-
-    //when a new spot is selected
-    /*
     spotSelect.addEventListener('change', async function (e) {
         const newSpot = e.target.value;
         const currentDate = document.getElementById('dateInput').value;
         
-        try {
-            // Clear existing data
-            cachedWaveData = {};
-            
-            
-            // Get spot ID and regenerate date buttons
-            const spotId = await getSpotId(newSpot);
-            await generateDateButtons(spotId);
-            
-            // Get new data with the spot ID
-            await getData(newSpot, currentDate);
-            
-            console.log(`%c[Spot Change] Successfully updated to ${newSpot}`, "color: green; font-weight: bold;");
-        } catch (error) {
-            console.error('[Spot Change] Error updating spot:', error);
+        
+        // If we're still in initial load, wait until it's complete
+        if (isInitialLoad) {
+            console.log(`%c[Spot Change] Initial load in progress, waiting to change to ${newSpot}...`, "color: orange;");
+            // Set the spot value but return early
+            spotSelect.value = newSpot;
+            return;
         }
-
-        // Update upcoming days for the new spot
-        await updateTopUpcomingDays(newSpot);
-    });
-    */
-
-    spotSelect.addEventListener('change', async function (e) {
-        const newSpot = e.target.value;
-        const currentDate = document.getElementById('dateInput').value;
         
         try {
             // Clear existing data
             cachedWaveData = {};
+
+            // Force clear any existing plots
+            Plotly.purge('windPlot');
+            Plotly.purge('tidePlot');
+            Plotly.purge('bestTimesPlot');
+            Plotly.purge('waveHeightPlot');
+            
+
+
             
             // Get spot ID and regenerate date buttons
             const spotId = await getSpotId(newSpot);
             await getSpotForecast(spotId);
             await generateDateButtons(spotId);
-            await getData(newSpot, currentDate);
+            await getData(true, true); 
             await updateTopUpcomingDays(newSpot);
-            await updateBiggestUpcomingLADays();  // Add it here too
+            await updateBiggestUpcomingLADays();
             
             console.log(`%c[Spot Change] Successfully updated to ${newSpot}`, "color: green; font-weight: bold;");
         } catch (error) {
@@ -137,20 +140,34 @@ window.onload = async function () {
         }
     });
     
+    // Then at the end of your window.onload, after all initial data is loaded:
+    isInitialLoad = false;
 
 
 
 
     // Event listener for date change
     dateInput.addEventListener('change', async function () {
+        //const newDate = dateInput.value;
         const newDate = dateInput.value;
+        const currentSpot = document.getElementById('spotSelect').value;
         console.log(`%c[Date Change] Detected date change: New date: ${newDate}, Current date: ${currentDate}`, "color: orange; font-weight: bold;");
+
+
         
 
         // Only update the data if the date changes, without reloading the buttons
         if (newDate !== currentDate) {
             console.log("%c[Date Change] Date changed! Updating data without reloading buttons...", "color: orange; font-weight: bold;");
             currentDate = newDate;
+
+            // Force clear any existing plots
+            Plotly.purge('windPlot');
+            Plotly.purge('tidePlot');
+            Plotly.purge('bestTimesPlot');
+            Plotly.purge('waveHeightPlot');
+
+
             // Check if the wave data is already cached for the new date
             if (!cachedWaveData || !cachedWaveData[newDate]) {
                 console.log(`%c[Date Change] No cached data for ${newDate}. Fetching wave data for the new date...`, "color: orange;");
@@ -167,12 +184,12 @@ window.onload = async function () {
 
 
             // Fetch and update data for the selected spot and date
-            await getData();  // This should update the graphs and information
+            await getData(false, false);  // This should update the graphs and information
         } else {
             console.log("%c[Date Change] No change in date detected. Skipping data update.", "color: orange;");
         }
     });
-};
+
 
 
 
@@ -225,6 +242,12 @@ async function getSpotForecast(spotId) {
     }
 }
 */
+
+
+
+
+
+
 
 async function getSpotForecast(spotId) {
     try {
@@ -522,6 +545,11 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     if (previousSpot !== spot) {
         console.log(`%c[getData] Spot has changed from ${previousSpot} to ${spot}`, "color: navy;");
         surfSpotNameElement.setAttribute('data-previous-spot', spot);
+
+        Plotly.purge('windPlot');
+        Plotly.purge('tidePlot');
+        Plotly.purge('bestTimesPlot');
+        Plotly.purge('waveHeightPlot');
 
         // Update the biggest day box while loading
         document.getElementById('biggestDayLeft').textContent = '..loading..';
@@ -2942,11 +2970,19 @@ document.addEventListener('DOMContentLoaded', function() {
         await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
     });
 
+        // Add handler for the best times button
+    const getBestTimesBtn = document.getElementById('getBestTimesBtn');
+    if (getBestTimesBtn) {
+        getBestTimesBtn.addEventListener('click', fetchBestTimes);
+    }
+
+
     // Initialize only if not already done
     if (!isInitialized) {
         isInitialized = true;
         thisWeekBtn.click();
     }
+
 });
 
 
@@ -3377,3 +3413,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 /* End Making the buttons at the top of the page */
+
+
+
+
+
+
+async function fetchBestTimes() {
+    const spotSelect = document.getElementById('bestTimesSpotSelect');
+    const resultsDiv = document.getElementById('bestTimesResults');
+    const selectedSpot = spotSelect.value;
+    
+    // Show loading state
+    resultsDiv.innerHTML = '<div class="loading">Loading best times...</div>';
+    
+    try {
+        const response = await fetch(`/spot_best_times?spot=${encodeURIComponent(selectedSpot)}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            displayBestTimes(data);
+        } else {
+            resultsDiv.innerHTML = `<div class="error">Error: ${data.error || 'Failed to fetch best times'}</div>`;
+        }
+    } catch (error) {
+        resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+    }
+}
+
+function displayBestTimes(data) {
+    const resultsDiv = document.getElementById('bestTimesResults');
+    
+    const html = `
+        <h3>${data.spot} - ${data.date}</h3>
+        
+        <div class="sun-times">
+            <p>🌅 Sunrise: ${data.sunrise}</p>
+            <p>🌇 Sunset: ${data.sunset}</p>
+        </div>
+
+        <div class="times-section">
+            <h4>Best Times to Surf:</h4>
+            ${data.best_times.map(time => `
+                <div class="time-block best-time">
+                    ${time}
+                </div>
+            `).join('')}
+        </div>
+
+        <div class="times-section">
+            <h4>Good Times to Surf:</h4>
+            ${data.good_times.map(time => `
+                <div class="time-block good-time">
+                    ${time}
+                </div>
+            `).join('')}
+        </div>
+
+        <div class="conditions-info">
+            <h4>Conditions Used:</h4>
+            <pre>${JSON.stringify(data.conditions, null, 2)}</pre>
+        </div>
+    `;
+    
+    resultsDiv.innerHTML = html;
+}

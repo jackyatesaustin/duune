@@ -703,6 +703,99 @@ def get_best_surf_spots():
 
 
 
+@app.route('/spot_best_times', methods=['GET'])
+def get_spot_best_times():
+    # Get spot name from query parameter, default to Hermosa Pier
+    spot = request.args.get('spot', default='Hermosa Pier')
+    date = request.args.get('date', default=datetime.now().strftime('%Y-%m-%d'))
+
+    try:
+        # Get spot configuration
+        spot_config = surf_spots_config.get(spot, surf_spots_config['default'])
+        lat = spot_config['lat']
+        lon = spot_config['lon']
+
+        # Fetch required data
+        wind_times, wind_speeds, wind_directions = fetch_wind_data(date, lat, lon)
+        tide_times, tide_heights = fetch_tide_data(date)
+        sunrise, sunset = fetch_sun_times(date)
+
+        # Create minute-by-minute points
+        start_time = datetime.strptime(date, "%Y-%m-%d").replace(
+            hour=4, minute=0, second=0, microsecond=0, 
+            tzinfo=pytz.timezone('America/Los_Angeles')
+        )
+        end_time = datetime.strptime(date, "%Y-%m-%d").replace(
+            hour=21, minute=0, second=0, microsecond=0, 
+            tzinfo=pytz.timezone('America/Los_Angeles')
+        )
+        minute_points = [start_time + timedelta(minutes=i) 
+                        for i in range((end_time - start_time).seconds // 60)]
+
+        # Interpolate data
+        interpolated_speeds = interpolate_data(wind_times, wind_speeds, minute_points)
+        interpolated_directions = interpolate_data(wind_times, wind_directions, minute_points)
+        interpolated_heights = interpolate_data(tide_times, tide_heights, minute_points)
+
+        # Get wave forecast
+        spot_id = spot_config.get('spot_id')
+        wave_response = requests.get(f"{request.url_root}get_wave_forecast?spot_id={spot_id}&date={date}")
+        wave_forecast = wave_response.json() if wave_response.ok else None
+
+        # Calculate best times
+        best_times, good_times = calculate_best_times(
+            minute_points,
+            interpolated_speeds,
+            interpolated_directions,
+            interpolated_heights,
+            spot_config
+        )
+
+        # Format times in a more readable way
+        formatted_best_times = []
+        for time_period in best_times:
+            start = datetime.fromisoformat(time_period['start']).strftime('%I:%M %p')
+            end = datetime.fromisoformat(time_period['end']).strftime('%I:%M %p')
+            formatted_best_times.append(f"{start} to {end}")
+
+        formatted_good_times = []
+        for time_period in good_times:
+            start = datetime.fromisoformat(time_period['start']).strftime('%I:%M %p')
+            end = datetime.fromisoformat(time_period['end']).strftime('%I:%M %p')
+            formatted_good_times.append(f"{start} to {end}")
+
+        return jsonify({
+            'spot': spot,
+            'date': date,
+            'best_times': formatted_best_times,
+            'good_times': formatted_good_times,
+            'sunrise': sunrise.strftime('%I:%M %p'),
+            'sunset': sunset.strftime('%I:%M %p'),
+            'conditions': {
+                'tide_range': spot_config.get('tide', {}),
+                'wind_direction': spot_config.get('offshore_wind', {}),
+                'wind_speed': spot_config.get('wind', {})
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'error': f"Error processing spot {spot}: {str(e)}"
+        }), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Guard against double execution
 if __name__ == "__main__":
     app.run(debug=True)
