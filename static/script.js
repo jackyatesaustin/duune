@@ -2451,61 +2451,7 @@ async function updateRegionalOverviews(startDate) {
     };
 
 
-    // Define loading messages
-    const loadingMessages = [
-        "Checking the buoys...",
-        "Analyzing wave patterns...",
-        "Calculating regional averages...",
-        "Processing swell data...",
-        "Almost there..."
-    ];
 
-
-    // Store loading intervals in an object to track them
-    const loadingIntervals = {};
-
-    // Create loading animation for each region
-    for (const [regionName, region] of Object.entries(regions)) {
-        const plotDiv = document.getElementById(region.id);
-        let messageIndex = 0;
-        
-        // Start loading animation
-        loadingIntervals[region.id] = setInterval(() => {
-            Plotly.newPlot(region.id, [{
-                x: [0],
-                y: [0],
-                text: [loadingMessages[messageIndex]],
-                mode: 'text',
-                textfont: {
-                    size: 14,
-                    color: '#666'
-                }
-            }], {
-                height: 200,
-                margin: {
-                    l: isMobile ? 35 : 45,
-                    r: isMobile ? 15 : 20,
-                    t: 20,
-                    b: isMobile ? 30 : 40,
-                    pad: 0
-                },
-                xaxis: {
-                    showgrid: false,
-                    zeroline: false,
-                    showticklabels: false
-                },
-                yaxis: {
-                    showgrid: false,
-                    zeroline: false,
-                    showticklabels: false
-                }
-            }, {
-                displayModeBar: false
-            });
-            
-            messageIndex = (messageIndex + 1) % loadingMessages.length;
-        }, 800);
-    }
 
 
 
@@ -2538,14 +2484,13 @@ async function updateRegionalOverviews(startDate) {
 
         
         try {
-            // Clear loading animation before any data processing
-            if (loadingIntervals[region.id]) {
-                clearInterval(loadingIntervals[region.id]);
-                delete loadingIntervals[region.id];
-            }
 
             let regionalData = new Map(); // Reset for each region
             let spotDataLog = {}; // Reset for each region's logging purposes
+
+
+
+
 
             // Fetch data for each spot in the region
             for (const spot of region.spots) {
@@ -2801,6 +2746,7 @@ async function updateRegionalOverviews(startDate) {
             
             // Create layout with shapes included
             const layout = {
+                width: document.getElementById(region.id).offsetWidth, // Set explicit width
                 xaxis: {
                     //tickformat: '%a %m/%d',
                     tickformat: '%a<br>%d', // Changed from '%a %m/%d'
@@ -2871,16 +2817,74 @@ async function updateRegionalOverviews(startDate) {
 
                     console.log(`%c[RegionalOverviews] ✓ Successfully plotted 7-day forecast for ${regionName}`, "color: green;");
                 } catch (error) {
-                    // Clear loading animation if there's an error
-                    if (document.getElementById(region.id).loadingInterval) {
-                        clearInterval(document.getElementById(region.id).loadingInterval);
-                    }
+
                     console.error(`%c[RegionalOverviews] ❌ Error processing ${regionName}:`, "color: red;", error);
                 }
     }
 }
 
 
+
+
+// Add a flag at the top of your file
+let isInitialized = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const thisWeekBtn = document.getElementById('thisWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+
+    function updateButtonStates(activeBtn) {
+        thisWeekBtn.classList.toggle('active', activeBtn === thisWeekBtn);
+        nextWeekBtn.classList.toggle('active', activeBtn === nextWeekBtn);
+    }
+
+    thisWeekBtn.addEventListener('click', async () => {
+        console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
+        updateButtonStates(thisWeekBtn);
+        
+        // Clear existing plots and show loading for all regions
+        const regions = ['southBayWaveHeightPlot', 'laWestWaveHeightPlot', 'southMalibuWaveHeightPlot', 'northMalibuWaveHeightPlot'];
+        regions.forEach(regionId => {
+            const plotDiv = document.getElementById(regionId);
+            if (plotDiv) {
+                Plotly.purge(plotDiv);
+            }
+        });
+        
+        const today = new Date();
+        await updateRegionalOverviews(today.toISOString().split('T')[0]);
+    });
+
+    nextWeekBtn.addEventListener('click', async () => {
+        console.log('%c[WeekSelector] Switching to Next Week view', 'color: purple;');
+        updateButtonStates(nextWeekBtn);
+        
+        // Clear existing plots and show loading for all regions
+        const regions = ['southBayWaveHeightPlot', 'laWestWaveHeightPlot', 'southMalibuWaveHeightPlot', 'northMalibuWaveHeightPlot'];
+        regions.forEach(regionId => {
+            const plotDiv = document.getElementById(regionId);
+            if (plotDiv) {
+                Plotly.purge(plotDiv);
+            }
+        });
+        
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
+    });
+
+    // Add handler for the best times button
+    const getBestTimesBtn = document.getElementById('getBestTimesBtn');
+    if (getBestTimesBtn) {
+        getBestTimesBtn.addEventListener('click', fetchBestTimes);
+    }
+
+    // Initialize only if not already done
+    if (!isInitialized) {
+        isInitialized = true;
+        thisWeekBtn.click();
+    }
+});
 
 
 
@@ -2892,103 +2896,6 @@ async function updateRegionalOverviews(startDate) {
 
 
 /* WEEKLY REPORTS */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// Add this after your updateRegionalOverviews function
-document.addEventListener('DOMContentLoaded', function() {
-    const thisWeekBtn = document.getElementById('thisWeekBtn');
-    const nextWeekBtn = document.getElementById('nextWeekBtn');
-
-    function updateButtonStates(activeBtn) {
-        thisWeekBtn.classList.toggle('active', activeBtn === thisWeekBtn);
-        nextWeekBtn.classList.toggle('active', activeBtn === nextWeekBtn);
-    }
-
-    thisWeekBtn.addEventListener('click', async () => {
-        console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
-        updateButtonStates(thisWeekBtn);
-        const today = new Date();
-        await updateRegionalOverviews(today.toISOString().split('T')[0]);
-    });
-
-    nextWeekBtn.addEventListener('click', async () => {
-        console.log('%c[WeekSelector] Switching to Next Week view', 'color: purple;');
-        updateButtonStates(nextWeekBtn);
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7); // Add 7 days to get to next week
-        await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
-    });
-
-    // Initialize with this week's data
-    thisWeekBtn.click();
-});
-
-*/
-
-
-
-// Add a flag at the top of your file
-let isInitialized = false;
-
-// Modify the DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', function() {
-    const thisWeekBtn = document.getElementById('thisWeekBtn');
-    const nextWeekBtn = document.getElementById('nextWeekBtn');
-
-    function updateButtonStates(activeBtn) {
-        thisWeekBtn.classList.toggle('active', activeBtn === thisWeekBtn);
-        nextWeekBtn.classList.toggle('active', activeBtn === nextWeekBtn);
-    }
-
-    thisWeekBtn.addEventListener('click', async () => {
-        console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
-        updateButtonStates(thisWeekBtn);
-        const today = new Date();
-        await updateRegionalOverviews(today.toISOString().split('T')[0]);
-    });
-
-    nextWeekBtn.addEventListener('click', async () => {
-        console.log('%c[WeekSelector] Switching to Next Week view', 'color: purple;');
-        updateButtonStates(nextWeekBtn);
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
-    });
-
-        // Add handler for the best times button
-    const getBestTimesBtn = document.getElementById('getBestTimesBtn');
-    if (getBestTimesBtn) {
-        getBestTimesBtn.addEventListener('click', fetchBestTimes);
-    }
-
-
-    // Initialize only if not already done
-    if (!isInitialized) {
-        isInitialized = true;
-        thisWeekBtn.click();
-    }
-
-});
-
-
-
-
-
 
 
 
@@ -3037,6 +2944,18 @@ async function checkServerConnection() {
         return false;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
