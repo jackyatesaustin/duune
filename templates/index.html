@@ -26,10 +26,10 @@
 
         <!-- Add this right after the title/logo section -->
         <div class="tab-buttons">
-            <button class="tab-button active" data-tab="pickSpotContent">Pick a Spot & Date</button>
+          <!--  <button class="tab-button active" data-tab="pickSpotContent">Pick a Spot & Date</button> -->
            <!-- <button class="tab-button" data-tab="bestSpotsTimesContent">Biggest Waves</button> -->
             <!-- <button class="tab-button" data-tab="biggestDaysContent">Biggest Days</button> --> 
-            <button class="tab-button" data-tab="weeklyReportContent">Weekly Report</button>
+          <!--  <button class="tab-button" data-tab="weeklyReportContent">Weekly Report</button> -->
            <!--- <button class="tab-button" data-tab="bestTimesContent">Best Times</button> -->
         </div>
 
@@ -86,38 +86,10 @@
 
 
         <!-- Weekly Report Content -->
-        <!-- Weekly Report Content -->
         <div id="weeklyReportContent" class="tab-content" style="display: none;">
-            <div class="spotcontentandgraphs">
-                <div class="la-overview-graphs-container">
-                    <h2 style="font-size: 28px;">Overview</h2>
-                    <div class="overview-week-selector">
-                        <button id="thisWeekBtn" class="week-selector-btn active">This Week</button>
-                        <button id="nextWeekBtn" class="week-selector-btn">Next Week</button>
-                    </div>
-                    <div class="overview-graphs-grid">
-                        <div class="overview-graph" id="southBayOverview">
-                            <h3>South Bay</h3>
-                            <p class="region-spots">Hermosa to Dockweiler</p>
-                            <div id="southBayWaveHeightPlot" style="height: 200px;"></div>
-                        </div>
-                        <div class="overview-graph" id="laWestOverview">
-                            <h3>The Westside</h3>
-                            <p class="region-spots">Venice & Santa Monica</p>
-                            <div id="laWestWaveHeightPlot" style="height: 200px;"></div>
-                        </div>
-                        <div class="overview-graph" id="southMalibuOverview">
-                            <h3>South Malibu</h3>
-                            <p class="region-spots">Sunset to Malibu Pier</p>
-                            <div id="southMalibuWaveHeightPlot" style="height: 200px;"></div>
-                        </div>
-                        <div class="overview-graph" id="northMalibuOverview">
-                            <h3>North Malibu</h3>
-                            <p class="region-spots">North of Point Dume</p>
-                            <div id="northMalibuWaveHeightPlot" style="height: 200px;"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="weekly-report-container">
+                <h2>Weekly Wave Report</h2>
+                <div id="weeklyReportPlot" style="width: 100%; height: 300px;"></div>
             </div>
         </div>
 

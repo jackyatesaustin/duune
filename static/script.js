@@ -13,7 +13,7 @@ can we do this globally and then reference it so we're not getting it everytime 
 
 
 // hiding the url
-window.history.replaceState({}, '', '/surf-report-la');
+//window.history.replaceState({}, '', '/surf-report-la');
 
 
 
@@ -21,56 +21,26 @@ window.history.replaceState({}, '', '/surf-report-la');
 let isInitialLoad = true;
 let isUpdatingBiggestDays = false;
 
-// Function to get current LA time
-function getLATime() {
-    const laOptions = {
-        timeZone: 'America/Los_Angeles',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    };
-    
-    const formatter = new Intl.DateTimeFormat('en-US', laOptions);
-    const dateParts = formatter.formatToParts(new Date());
-    
-    const formattedDate = `${dateParts.find(p => p.type === 'year').value}-${
-        dateParts.find(p => p.type === 'month').value}-${
-        dateParts.find(p => p.type === 'day').value}`;
-    
-    console.log(`%c[Time] Local time: ${new Date().toLocaleString()}`, "color: purple;");
-    console.log(`%c[Time] LA date: ${formattedDate}`, "color: purple;");
-    
-    return formattedDate;
+// Utility function to get date with timezone offset (at top of file)
+function getFormattedDate(daysOffset = 0) {
+    const date = new Date();
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+    const currentDate = new Date(date.getTime() + (daysOffset * 86400000) - timezoneOffset);
+    return currentDate.toISOString().split('T')[0];
 }
-
-// Initialize currentDate with LA time
-let currentDate = getLATime();
 
 
 // Updated window.onload function THAT LOADS THE BUTTONS 
 window.onload = async function () {
     console.log("%c[App Init] Page loaded. Initializing application...", "color: blue; font-weight: bold;");
 
-  //  await updateRegionalOverviews(new Date().toISOString().split('T')[0]);
-    
-
-
-    // Fetch wave forecast data from the API
-  //  await fetchWaveData();
-
-
-/*
     const dateInput = document.getElementById('dateInput');
     const spotSelect = document.getElementById('spotSelect');
-    const today = new Date(); 
-    const todayISO = today.toISOString().split('T')[0];
-    dateInput.value = todayISO;
 
-    */
-    const dateInput = document.getElementById('dateInput');
-    const spotSelect = document.getElementById('spotSelect');
-    const today = getLATime(); // Use getLATime instead of new Date()
-    dateInput.value = today;
+
+    // Initialize with timezone-adjusted date
+    const currentDate = getFormattedDate(); // No offset for today
+    dateInput.value = currentDate;
     
     // Initial data for today's date and current spot
     let currentSpot = spotSelect.value;
@@ -196,56 +166,10 @@ window.onload = async function () {
 
 
 let cachedWaveData = {}; // To store wave data keyed by date
+let cachedRegionalData = {};
+
 const selectedSpot = '';
 
-//working
-/*
-async function getSpotForecast(spotId) {
-    try {
-        const localToday = new Date();
-        const formattedToday = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;
-        console.log(`%c[Forecast Fetch] Fetching wave forecast for Spot ID: ${spotId} and Date: ${formattedToday}`, "color: teal; font-weight: bold;");
-
-        const response = await fetch(`/get_wave_forecast?spot_id=${spotId}&date=${formattedToday}`);
-        const forecast = await response.json();
-        console.log(`%c[Forecast Fetch] Response received for Spot ID: ${spotId}, Date: ${formattedToday}`, "color: teal;");
-
-
-        cachedWaveData[formattedToday] = [];  // Initialize cache for today's date
-        console.log(`%c[Forecast Cache] Initializing cache for Date: ${formattedToday}`, "color: teal;");
-
-        
-        forecast.forEach(item => {
-            const localDateObj = item.date_local;
-            const localDate = `${localDateObj.yy}-${String(localDateObj.mm).padStart(2, '0')}-${String(localDateObj.dd).padStart(2, '0')}`;
-        
-            // Ensure correct 24-hour format for time without mixing hours and minutes
-            const waveTime = new Date(localDateObj.yy, localDateObj.mm - 1, localDateObj.dd, localDateObj.hh, 0); // Keep minutes as 0
-        
-            if (!cachedWaveData[localDate]) {
-                console.log(`%c[Forecast Cache] Creating new cache for Date: ${localDate}`, "color: teal;");
-                cachedWaveData[localDate] = [];
-            }
-        
-            cachedWaveData[localDate].push({
-                time: waveTime,
-                height: parseFloat(item.size_ft.toFixed(3))  // Ensure correct height precision
-            });
-        });
-        
-        // Log the cached wave data after parsing the forecast
-        console.log(`%c[Forecast Cache] Cached wave data for ${formattedToday}:`, "color: teal;", cachedWaveData[formattedToday]);
-        console.log(`%c[Forecast Cache] Full cached wave data after update:`, "color: teal;", cachedWaveData);
-
-    } catch (error) {
-        console.error(`%c[Forecast Error] Failed to fetch wave forecast for Spot ID: ${spotId} and Date: ${date || 'today'}`, "color: red; font-weight: bold;", error);
-    }
-}
-*/
-
-
-
-
 
 
 
@@ -258,6 +182,9 @@ async function getSpotForecast(spotId) {
         const response = await fetch(`/get_wave_forecast?spot_id=${spotId}&date=${formattedToday}`);
         const forecast = await response.json();
         console.log(`%c[Forecast Fetch] Response received for Spot ID: ${spotId}, Date: ${formattedToday}`, "color: teal;");
+
+                // Log the raw forecast data
+                console.log(`%c[Forecast Fetch] Raw forecast data:`, "color: teal;", forecast);
 
         // Create a temporary object to store unique hourly data
         const uniqueHourlyData = {};
@@ -304,6 +231,11 @@ async function getSpotForecast(spotId) {
         console.error(`%c[Forecast Error] Failed to fetch wave forecast for Spot ID: ${spotId}`, "color: red; font-weight: bold;", error);
     }
 }
+
+
+
+
+
 
 
 //testing
@@ -511,6 +443,19 @@ function updateWaveGraph(date, sunrise, sunset) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 //working
 let dataFetched = false;  // A flag to track if data was fetched already
 async function getData(shouldGenerateButtons = false, updateUpcomingDays = false) {
@@ -518,6 +463,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     console.log(`%c[getData] Starting data fetch...`, "color: navy; font-weight: bold;");
     //console.log('[getData] Function called with spot:', spot, 'date:', date);
 
+    
 
     dataFetched = false;
 
@@ -525,6 +471,9 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0]; // Default to today if no date input
     const spot = document.getElementById('spotSelect').value;
     const surfSpotNameElement = document.getElementById('surfSpotName');
+
+
+
 
     console.log('[getData] Function called with spot:', spot, 'date:', date);
 
@@ -568,14 +517,6 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
         return;
     }
 
-/*
-    if (!cachedWaveData || !cachedWaveData[date]) {
-        console.log(`%c[getData] Fetching wave forecast for Spot ID: ${spotId}, Date: ${date}`, "color: navy;");
-        await getSpotForecast(spotId); // Fetch wave data for the spot and date
-    } else {
-        console.log(`%c[getData] Using cached wave data for Date: ${date}`, "color: green;");
-    }
-*/
 
         // Always fetch new wave data when getData is called
         console.log(`%c[getData] Fetching wave forecast for Spot ID: ${spotId}, Date: ${date}`, "color: navy;");
@@ -612,6 +553,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     }
 
     const selectedDate = document.getElementById('dateInput').value;
+
     updateWaveGraph(selectedDate, sunriseTime, sunsetTime);  // Update graph based on selected date, sunrise, and sunset times
 
 
@@ -1688,106 +1630,10 @@ function getConditionSegments(values, condition) {
     return segments;
 }
 
-// Updated generateDateButtons function
 
-/*
-async function generateDateButtons(spotId) {
-    console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
-    
-    const forecastContainer = document.getElementById('extendedForecast');
-    forecastContainer.innerHTML = ''; // Clear any existing buttons
-    console.log(`%c[Date Buttons] Cleared existing date buttons in the forecast container`, "color: purple;");
 
-    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const sunTimesCache = {};
-    const buttonsData = [];
-    const sunApiUrls = [];
 
-    const date = new Date();
-    const timezoneOffset = date.getTimezoneOffset() * 60000; // Handle timezone offset
 
-    console.log(`%c[Date Buttons] Preparing buttons for the next 17 days`, "color: purple;");
-
-    // Prepare buttons data and sunrise/sunset API calls for the next 17 days
-    for (let i = 0; i < 17; i++) {
-        const currentDate = new Date(date.getTime() + i * 86400000 - timezoneOffset);
-        const localDate = currentDate.toISOString().split('T')[0];
-
-        const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : daysOfWeek[currentDate.getDay()];
-        const dateFormatted = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
-
-        buttonsData.push({ dayName, dateFormatted, localDate });
-        sunApiUrls.push({
-            //note hardcoded lat and lon for LA
-            url: `https://api.sunrise-sunset.org/json?lat=34.0522&lng=-118.2437&date=${localDate}&formatted=0`,
-            localDate
-        });
-
-        console.log(`%c[Date Buttons] Prepared data for: ${dayName} (${localDate})`, "color: purple;");
-    }
-
-    // Fetch all sunrise/sunset times in parallel
-    console.log(`%c[Date Buttons] Fetching sunrise/sunset data for all 17 days...`, "color: purple;");
-    const sunResponses = await Promise.all(sunApiUrls.map(api => fetch(api.url).then(res => res.json())));
-
-    // Cache the fetched sunrise/sunset times
-    sunResponses.forEach((sunData, index) => {
-        const { localDate } = sunApiUrls[index];
-        if (sunData.status === "OK") {
-            sunTimesCache[localDate] = {
-                sunrise: new Date(sunData.results.sunrise),
-                sunset: new Date(sunData.results.sunset),
-            };
-            console.log(`%c[Date Buttons] Cached sunrise/sunset data for ${localDate}`, "color: purple;");
-        } else {
-            console.error(`%c[Date Buttons] Error fetching sunrise/sunset data for ${localDate}`, "color: red; font-weight: bold;");
-        }
-    });
-
-    const fragment = document.createDocumentFragment(); // Batch DOM updates using a fragment
-
-    // Generate buttons based on wave data and sunrise/sunset times
-    for (const { dayName, dateFormatted, localDate } of buttonsData) {
-        const { sunrise, sunset } = sunTimesCache[localDate] || {};
-
-        if (!sunrise || !sunset) {
-            console.log(`%c[Date Buttons] Skipping button creation for ${localDate} (No sunrise/sunset data)`, "color: purple;");
-            continue;
-        }
-
-        const waveDataForDate = cachedWaveData[localDate];
-        if (waveDataForDate) {
-            const filteredWaveData = waveDataForDate.filter(item => item.time >= sunrise && item.time <= sunset);
-            if (filteredWaveData.length > 0) {
-                const peakWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
-                const lowWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
-
-                // Create button and add it to the fragment
-                const button = document.createElement('button');
-                button.className = 'date-button';
-                button.innerHTML = `${dayName}<br>${dateFormatted}<br>${peakWaveHeight.toFixed(1)}-${lowWaveHeight.toFixed(1)} ft`;
-
-                button.onclick = () => {
-                    console.log(`%c[Date Buttons] Button clicked for Date: ${localDate}`, "color: purple;");
-                    document.getElementById('dateInput').value = localDate;
-                    getData();  // Trigger data update for selected date
-                };
-
-                fragment.appendChild(button);
-                console.log(`%c[Date Buttons] Created button for ${localDate} with wave range: ${peakWaveHeight.toFixed(1)}-${lowWaveHeight.toFixed(1)} ft`, "color: purple;");
-            } else {
-                console.log(`%c[Date Buttons] No wave data found for ${localDate}`, "color: purple;");
-            }
-        } else {
-            console.log(`%c[Date Buttons] No cached wave data for ${localDate}`, "color: purple;");
-        }
-    }
-
-    // Append all generated buttons to the forecast container
-    forecastContainer.appendChild(fragment);
-    console.log(`%c[Date Buttons] All date buttons appended to the forecast container`, "color: purple; font-weight: bold;");
-}
-*/
 
 async function generateDateButtons(spotId) {
     console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
@@ -1821,12 +1667,13 @@ async function generateDateButtons(spotId) {
     try {
         // Generate buttons based on wave data
         for (const { dayName, dateFormatted, localDate } of buttonsData) {
+
             const waveDataForDate = cachedWaveData[localDate];
             
             if (waveDataForDate) {
                     // Log all wave heights for this date
-                console.log(`%c[Wave Heights] ${dayName} ${dateFormatted}:`, "color: blue; font-weight: bold;");
-                console.log('Full wave data for this date:', waveDataForDate); // Log the entire wave data object
+                console.log(`%c[Date Buttons Wave Heights] ${dayName} ${dateFormatted}:`, "color: blue; font-weight: bold;");
+                console.log('Date Buttons  Full wave data for this date:', waveDataForDate); // Log the entire wave data object
 
                 
                 // Filter wave data for times between 4 AM and 8 PM
@@ -1846,8 +1693,12 @@ async function generateDateButtons(spotId) {
 
                     button.onclick = () => {
                         console.log(`%c[Date Buttons] Button clicked for Date: ${localDate}`, "color: purple;");
-                        document.getElementById('dateInput').value = localDate;
-                        getData();  // Trigger data update for selected date
+                        try {
+                            document.getElementById('dateInput').value = localDate;
+                            getData(false, false);  // Don't regenerate buttons or update upcoming days
+                        } catch (error) {
+                            console.error(`%c[Date Buttons] Error handling button click:`, "color: red;", error);
+                        }
                     };
 
                     fragment.appendChild(button);
@@ -2416,6 +2267,8 @@ function updateSpotDateLabel(selectedSpot, selectedDate) {
 
 /* WEEKLY REPORTS */
 
+
+/*
 async function updateRegionalOverviews(startDate) {
     //console.log(`%c[RegionalOverviews] Starting regional overview updates for 7 days from ${startDate}`, "color: purple; font-weight: bold;");
     console.log('%c[RegionalOverviews] Call stack:', 'color: purple; font-weight: bold;', 
@@ -2886,7 +2739,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-
+*/
 
 
 
@@ -2896,6 +2749,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 /* WEEKLY REPORTS */
+
+
+
+
+
+
+
+
+
 
 
 
