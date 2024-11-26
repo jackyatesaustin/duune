@@ -1556,13 +1556,7 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
         waveLoading.style.display = 'none';  // Hide the loading GIF and message
         waveHeightPlot.style.display = 'block';  // Show the wave height plot
      //   updateWaveGraph(date, sunriseTime, sunsetTime);  // Update the graph
-        
-        
-        // Check which week is currently selected
-        const nextWeekBtn = document.getElementById('nextWeekBtn');
-        const startDate = nextWeekBtn.classList.contains('active') 
-            ? new Date(new Date().setDate(new Date().getDate() + 7))
-            : new Date();
+
         
     //    await updateRegionalOverviews(startDate.toISOString().split('T')[0]);
 
@@ -2759,27 +2753,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
-
-/*
-// Function to fetch wave data from Flask API
-async function fetchWaveData() {
-    try {
-        const response = await fetch('http://127.0.0.1:5000/wave_data');
-        if (!response.ok) throw new Error("Network response was not ok");
-
-        const waveData = await response.json();
-        console.log("%c[fetch wave data] Wave Data:", "color: blue; font-weight: bold;", waveData);
-
-    } catch (error) {
-        console.error("%c[fetch wave data] Error fetching wave data:", "color: red; font-weight: bold;", error);
-    }
-}
-*/
-
-
-
-
 window.addEventListener('resize', function() {
     Plotly.Plots.resize(document.getElementById('waveHeightPlot'));
     Plotly.Plots.resize(document.getElementById('bestTimesPlot'));
@@ -3130,6 +3103,8 @@ function showTab(tabName) {
     document.getElementById(tabName).style.display = 'block';
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
+
+    /*
     // Special handling for Weekly Report tab
     if (tabName === 'weeklyReportContent') {
         console.log(`%c[Tabs] Loading regional overviews for Weekly Report tab`, "color: blue;");
@@ -3147,7 +3122,7 @@ function showTab(tabName) {
             thisWeekBtn.classList.add('active');
             document.getElementById('nextWeekBtn')?.classList.remove('active');
         }
-    }
+    }*/
 }
 
 
@@ -3168,10 +3143,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    /*
     // Initialize week selector buttons (but don't trigger updateRegionalOverviews)
     const thisWeekBtn = document.getElementById('thisWeekBtn');
     const nextWeekBtn = document.getElementById('nextWeekBtn');
+    */
 
+    /*
     if (thisWeekBtn && nextWeekBtn) {
         thisWeekBtn.addEventListener('click', async () => {
             console.log('%c[WeekSelector] Switching to This Week view', 'color: purple;');
@@ -3190,6 +3168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await updateRegionalOverviews(nextWeek.toISOString().split('T')[0]);
         });
     }
+    */
 });
 
 
