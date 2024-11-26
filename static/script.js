@@ -115,6 +115,7 @@ window.onload = async function () {
 
 
 
+    let currentDate = new Date().toISOString().split('T')[0];  // Initialize with today's date
 
     // Event listener for date change
     dateInput.addEventListener('change', async function () {
@@ -136,6 +137,8 @@ window.onload = async function () {
             Plotly.purge('tidePlot');
             Plotly.purge('bestTimesPlot');
             Plotly.purge('waveHeightPlot');
+
+            
 
 
             // Check if the wave data is already cached for the new date
