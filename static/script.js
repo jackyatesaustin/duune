@@ -734,153 +734,288 @@ data.good_times.forEach(period => {
     
 
 // Glassy segments
+// Glassy segments
 glassySegments.forEach(segment => {
-    /*
-    const isOffshore = data.spot_config.offshore_wind ? (
-        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
-    ) : false;
-    */
-
-    const isOffshore = data.spot_config.offshore_wind ? (
-        segment.some(index => 
-            interpolatedDirections[index] >= data.spot_config.offshore_wind.min && 
-            interpolatedDirections[index] <= data.spot_config.offshore_wind.max
-        )
-    ) : false;
-
-    const trace = {
-        x: segment.map(i => minutePoints[i]),
-        y: segment.map(i => interpolatedSpeeds[i]),
-        mode: 'lines',
-        name: ``,
-        line: { 
-            color: isOffshore ? 'darkgreen' : 'limegreen',
-            width: 3,
-            simplify: false
-        },
-        fill: 'tozeroy',
-        fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(0, 255, 0, 0.2)',
-        showlegend: showLegendGlassy,
-        text: segment.map(i => [
-            degreesToArrow(interpolatedDirections[i] % 360),
-            degreesToCardinal(interpolatedDirections[i] % 360),
-            Math.round(interpolatedDirections[i] % 360)
-        ]),
-        hovertemplate: 
-            (isOffshore ? 'Offshore<br>' : 'Glassy<br>') +
-            '💨 %{y:.1f} km/h<br>' + 
-            '🕒 %{x|%I:%M %p}<br>' + 
-            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
-        hoverlabel: { 
-            bgcolor: 'white', 
-            namelength: 0,
-            font: { size: 14, family: 'Arial, sans-serif' }
+    // Create arrays for offshore and non-offshore points within this segment
+    const offshorePoints = { x: [], y: [] };
+    const nonOffshorePoints = { x: [], y: [] };
+    
+    // Sort each point in the segment
+    segment.forEach(i => {
+        const direction = interpolatedDirections[i] % 360;
+        const min = data.spot_config.offshore_wind.min;
+        const max = data.spot_config.offshore_wind.max;
+        const isOffshore = min < max ? 
+            (direction >= min && direction <= max) :
+            (direction >= min || direction <= max);
+            
+        if (isOffshore) {
+            offshorePoints.x.push(minutePoints[i]);
+            offshorePoints.y.push(interpolatedSpeeds[i]);
+        } else {
+            nonOffshorePoints.x.push(minutePoints[i]);
+            nonOffshorePoints.y.push(interpolatedSpeeds[i]);
         }
-    };
-    windTraces.push(trace);
+    });
+
+    // Create offshore trace if we have offshore points
+    if (offshorePoints.x.length > 0) {
+        const offshoreTrace = {
+            x: offshorePoints.x,
+            y: offshorePoints.y,
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: 'darkgreen',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 100, 0, 0.3)',
+            showlegend: showLegendGlassy,
+            text: offshorePoints.x.map((_, idx) => [
+                degreesToArrow(interpolatedDirections[segment[idx]] % 360),
+                degreesToCardinal(interpolatedDirections[segment[idx]] % 360),
+                Math.round(interpolatedDirections[segment[idx]] % 360)
+            ]),
+            hovertemplate: 
+                'Offshore<br>' +
+                '💨 %{y:.1f} km/h<br>' + 
+                '🕒 %{x|%I:%M %p}<br>' + 
+                '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(offshoreTrace);
+    }
+
+    // Create non-offshore trace if we have non-offshore points
+    if (nonOffshorePoints.x.length > 0) {
+        const nonOffshoreTrace = {
+            x: nonOffshorePoints.x,
+            y: nonOffshorePoints.y,
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: 'limegreen',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 255, 0, 0.2)',
+            showlegend: showLegendGlassy,
+            text: nonOffshorePoints.x.map((_, idx) => [
+                degreesToArrow(interpolatedDirections[segment[idx]] % 360),
+                degreesToCardinal(interpolatedDirections[segment[idx]] % 360),
+                Math.round(interpolatedDirections[segment[idx]] % 360)
+            ]),
+            hovertemplate: 
+                'Glassy<br>' +
+                '💨 %{y:.1f} km/h<br>' + 
+                '🕒 %{x|%I:%M %p}<br>' + 
+                '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(nonOffshoreTrace);
+    }
+    
     showLegendGlassy = false;
 });
 
+
+
 // Mild segments
 mildWindSegments.forEach(segment => {
-    /*
-    const isOffshore = data.spot_config.offshore_wind ? (
-        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
-    ) : false;
-    */
-
-    const isOffshore = data.spot_config.offshore_wind ? (
-        segment.some(index => 
-            interpolatedDirections[index] >= data.spot_config.offshore_wind.min && 
-            interpolatedDirections[index] <= data.spot_config.offshore_wind.max
-        )
-    ) : false;
-
-    const trace = {
-        x: segment.map(i => minutePoints[i]),
-        y: segment.map(i => interpolatedSpeeds[i]),
-        mode: 'lines',
-        name: ``,
-        line: { 
-            color: isOffshore ? 'darkgreen' : 'yellow',
-            width: 3,
-            simplify: false
-        },
-        fill: 'tozeroy',
-        fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 255, 0, 0.2)',
-        showlegend: showLegendMild,
-        text: segment.map(i => [
-            degreesToArrow(interpolatedDirections[i] % 360),
-            degreesToCardinal(interpolatedDirections[i] % 360),
-            Math.round(interpolatedDirections[i] % 360)
-        ]),
-        hovertemplate: 
-            (isOffshore ? 'Offshore<br>' : 'Mild<br>') +
-            '💨 %{y:.1f} km/h<br>' + 
-            '🕒 %{x|%I:%M %p}<br>' + 
-            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
-        hoverlabel: { 
-            bgcolor: 'white', 
-            namelength: 0,
-            font: { size: 14, family: 'Arial, sans-serif' }
+    const offshorePoints = { x: [], y: [] };
+    const nonOffshorePoints = { x: [], y: [] };
+    
+    segment.forEach(i => {
+        const direction = interpolatedDirections[i] % 360;
+        const min = data.spot_config.offshore_wind.min;
+        const max = data.spot_config.offshore_wind.max;
+        const isOffshore = min < max ? 
+            (direction >= min && direction <= max) :
+            (direction >= min || direction <= max);
+            
+        if (isOffshore) {
+            offshorePoints.x.push(minutePoints[i]);
+            offshorePoints.y.push(interpolatedSpeeds[i]);
+        } else {
+            nonOffshorePoints.x.push(minutePoints[i]);
+            nonOffshorePoints.y.push(interpolatedSpeeds[i]);
         }
-    };
-    windTraces.push(trace);
+    });
+
+    // Create offshore trace if we have offshore points
+    if (offshorePoints.x.length > 0) {
+        const offshoreTrace = {
+            x: offshorePoints.x,
+            y: offshorePoints.y,
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: 'darkgreen',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 100, 0, 0.3)',
+            showlegend: showLegendMild,
+            text: offshorePoints.x.map((_, idx) => [
+                degreesToArrow(interpolatedDirections[segment[idx]] % 360),
+                degreesToCardinal(interpolatedDirections[segment[idx]] % 360),
+                Math.round(interpolatedDirections[segment[idx]] % 360)
+            ]),
+            hovertemplate: 
+                'Offshore<br>' +
+                '💨 %{y:.1f} km/h<br>' + 
+                '🕒 %{x|%I:%M %p}<br>' + 
+                '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(offshoreTrace);
+    }
+
+    // Create non-offshore trace if we have non-offshore points
+    if (nonOffshorePoints.x.length > 0) {
+        const nonOffshoreTrace = {
+            x: nonOffshorePoints.x,
+            y: nonOffshorePoints.y,
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: 'yellow',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 255, 0, 0.2)',
+            showlegend: showLegendMild,
+            text: nonOffshorePoints.x.map((_, idx) => [
+                degreesToArrow(interpolatedDirections[segment[idx]] % 360),
+                degreesToCardinal(interpolatedDirections[segment[idx]] % 360),
+                Math.round(interpolatedDirections[segment[idx]] % 360)
+            ]),
+            hovertemplate: 
+                'Mild<br>' +
+                '💨 %{y:.1f} km/h<br>' + 
+                '🕒 %{x|%I:%M %p}<br>' + 
+                '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(nonOffshoreTrace);
+    }
+    
     showLegendMild = false;
 });
 
 // Bad segments
 badWindSegments.forEach(segment => {
-    /*
-    const isOffshore = data.spot_config.offshore_wind ? (
-        interpolatedDirections[segment[0]] >= data.spot_config.offshore_wind.min && 
-        interpolatedDirections[segment[0]] <= data.spot_config.offshore_wind.max
-    ) : false;
-    */
-
-    const isOffshore = data.spot_config.offshore_wind ? (
-        segment.some(index => 
-            interpolatedDirections[index] >= data.spot_config.offshore_wind.min && 
-            interpolatedDirections[index] <= data.spot_config.offshore_wind.max
-        )
-    ) : false;
-
-
-    const trace = {
-        x: segment.map(i => minutePoints[i]),
-        y: segment.map(i => interpolatedSpeeds[i]),
-        mode: 'lines',
-        name: ``,
-        line: { 
-            color: isOffshore ? 'darkgreen' : 'red',
-            width: 3,
-            simplify: false
-        },
-        fill: 'tozeroy',
-        fillcolor: isOffshore ? 'rgba(0, 100, 0, 0.3)' : 'rgba(255, 0, 0, 0.2)',
-        showlegend: showLegendBad,
-        text: segment.map(i => [
-            degreesToArrow(interpolatedDirections[i] % 360),
-            degreesToCardinal(interpolatedDirections[i] % 360),
-            Math.round(interpolatedDirections[i] % 360)
-        ]),
-        hovertemplate: 
-            (isOffshore ? 'Offshore<br>' : 'Bad<br>') +
-            '💨 %{y:.1f} km/h<br>' + 
-            '🕒 %{x|%I:%M %p}<br>' + 
-            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
-        hoverlabel: { 
-            bgcolor: 'white', 
-            namelength: 0,
-            font: { size: 14, family: 'Arial, sans-serif' }
+    const offshorePoints = { x: [], y: [] };
+    const nonOffshorePoints = { x: [], y: [] };
+    
+    segment.forEach(i => {
+        const direction = interpolatedDirections[i] % 360;
+        const min = data.spot_config.offshore_wind.min;
+        const max = data.spot_config.offshore_wind.max;
+        const isOffshore = min < max ? 
+            (direction >= min && direction <= max) :
+            (direction >= min || direction <= max);
+            
+        if (isOffshore) {
+            offshorePoints.x.push(minutePoints[i]);
+            offshorePoints.y.push(interpolatedSpeeds[i]);
+        } else {
+            nonOffshorePoints.x.push(minutePoints[i]);
+            nonOffshorePoints.y.push(interpolatedSpeeds[i]);
         }
-    };
-    windTraces.push(trace);
+    });
+
+    // Create offshore trace if we have offshore points
+    if (offshorePoints.x.length > 0) {
+        const offshoreTrace = {
+            x: offshorePoints.x,
+            y: offshorePoints.y,
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: 'darkgreen',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 100, 0, 0.3)',
+            showlegend: showLegendBad,
+            text: offshorePoints.x.map((_, idx) => [
+                degreesToArrow(interpolatedDirections[segment[idx]] % 360),
+                degreesToCardinal(interpolatedDirections[segment[idx]] % 360),
+                Math.round(interpolatedDirections[segment[idx]] % 360)
+            ]),
+            hovertemplate: 
+                'Offshore<br>' +
+                '💨 %{y:.1f} km/h<br>' + 
+                '🕒 %{x|%I:%M %p}<br>' + 
+                '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(offshoreTrace);
+    }
+
+    // Create non-offshore trace if we have non-offshore points
+    if (nonOffshorePoints.x.length > 0) {
+        const nonOffshoreTrace = {
+            x: nonOffshorePoints.x,
+            y: nonOffshorePoints.y,
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: 'red',
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(255, 0, 0, 0.2)',
+            showlegend: showLegendBad,
+            text: nonOffshorePoints.x.map((_, idx) => [
+                degreesToArrow(interpolatedDirections[segment[idx]] % 360),
+                degreesToCardinal(interpolatedDirections[segment[idx]] % 360),
+                Math.round(interpolatedDirections[segment[idx]] % 360)
+            ]),
+            hovertemplate: 
+                'Bad<br>' +
+                '💨 %{y:.1f} km/h<br>' + 
+                '🕒 %{x|%I:%M %p}<br>' + 
+                '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(nonOffshoreTrace);
+    }
+    
     showLegendBad = false;
 });
-
 
 
 
@@ -1578,6 +1713,30 @@ Plotly.newPlot('bestTimesPlot', [...bestTimesNightTraces, ...bestTimesTraces], {
     }, 2000);  // Simulate a delay or adjust based on the actual graph load time
 
 }
+
+
+
+
+
+function checkOffshoreWind(direction, config) {
+    if (!config || !config.offshore_wind) return false;
+    
+    const normalizedDirection = direction % 360;  // First normalize to 0-360
+    const min = config.offshore_wind.min;
+    const max = config.offshore_wind.max;
+    
+    // If min is less than max, simple range check
+    if (min < max) {
+        return normalizedDirection >= min && normalizedDirection <= max;
+    }
+    
+    // If min is greater than max, we need to check if the direction is either:
+    // 1. Greater than or equal to min (e.g., >= 350) OR
+    // 2. Less than or equal to max (e.g., <= 30)
+    return normalizedDirection >= min || normalizedDirection <= max;
+}
+
+
 
 
 
