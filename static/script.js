@@ -644,6 +644,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     // Only regenerate date buttons if explicitly requested (i.e., when the surf spot changes)
     if (shouldGenerateButtons) {
         console.log(`%c[getData] Generating date buttons...`, "color: navy;");
+        
         await generateDateButtons();
     }
 
@@ -1793,6 +1794,13 @@ function getConditionSegments(values, condition) {
 
 async function generateDateButtons(spotId) {
     console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
+    //console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData);
+    console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData); // Debug cache
+    console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
+    console.log(`%c[Date Buttons] Current spot:`, "color: purple;", document.getElementById('spotSelect').value);
+    console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData);
+
+    
     
     const forecastContainer = document.getElementById('extendedForecast');
     forecastContainer.innerHTML = ''; // Clear any existing buttons

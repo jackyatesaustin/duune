@@ -209,7 +209,7 @@ def get_spot_id():
         {"spot_name": "Malibu Third Point", "spot_id": 387},
         {"spot_name": "Zuma", "spot_id": 206},
         {"spot_name": "Leo Carrillo", "spot_id": 638},
-        {"spot_name": "County Line", "spot_id": 593}
+        {"spot_name": "County Line", "spot_id": 207}
     ]
     return jsonify(spots)
 

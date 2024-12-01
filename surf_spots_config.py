@@ -522,7 +522,7 @@ surf_spots_config = {
             "mild": 6,
             "bad": 8
         },
-        "spot_id": 593
+        "spot_id": 207
     },
     "default": {
         "lat": 34.0522,
