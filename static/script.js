@@ -271,7 +271,8 @@ function updateWaveGraph(date, sunrise, sunset) {
 
 
     // Sort the data chronologically
-    const sortedWaveData = [...waveDataForDate].sort((a, b) => a.time - b.time);
+    //const sortedWaveData = [...waveDataForDate].sort((a, b) => a.time - b.time);
+    const sortedWaveData = [...filteredWaveData].sort((a, b) => a.time - b.time);
 
 
 
@@ -645,7 +646,7 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
     if (shouldGenerateButtons) {
         console.log(`%c[getData] Generating date buttons...`, "color: navy;");
         
-        await generateDateButtons();
+        await generateDateButtons(spotId);
     }
 
 
@@ -750,6 +751,7 @@ glassySegments.forEach(segment => {
             (direction >= min && direction <= max) :
             (direction >= min || direction <= max);
             
+        // Only add points to one array or the other, not both
         if (isOffshore) {
             offshorePoints.x.push(minutePoints[i]);
             offshorePoints.y.push(interpolatedSpeeds[i]);
@@ -845,6 +847,7 @@ mildWindSegments.forEach(segment => {
             (direction >= min && direction <= max) :
             (direction >= min || direction <= max);
             
+        // Only add points to one array or the other, not both
         if (isOffshore) {
             offshorePoints.x.push(minutePoints[i]);
             offshorePoints.y.push(interpolatedSpeeds[i]);
@@ -925,7 +928,10 @@ mildWindSegments.forEach(segment => {
     showLegendMild = false;
 });
 
+
+
 // Bad segments
+
 badWindSegments.forEach(segment => {
     const offshorePoints = { x: [], y: [] };
     const nonOffshorePoints = { x: [], y: [] };
@@ -938,6 +944,7 @@ badWindSegments.forEach(segment => {
             (direction >= min && direction <= max) :
             (direction >= min || direction <= max);
             
+        // Only add points to one array or the other, not both
         if (isOffshore) {
             offshorePoints.x.push(minutePoints[i]);
             offshorePoints.y.push(interpolatedSpeeds[i]);
@@ -1017,6 +1024,12 @@ badWindSegments.forEach(segment => {
     
     showLegendBad = false;
 });
+
+
+
+
+
+
 
 
 
@@ -1792,16 +1805,26 @@ function getConditionSegments(values, condition) {
 
 
 
+let isGeneratingButtons = false;
+
 async function generateDateButtons(spotId) {
     console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
-    //console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData);
-    console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData); // Debug cache
-    console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
-    console.log(`%c[Date Buttons] Current spot:`, "color: purple;", document.getElementById('spotSelect').value);
     console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData);
 
-    
-    
+    // Guard against undefined spotId
+    if (!spotId) {
+        console.error("[Date Buttons] Cannot generate buttons - undefined spot ID");
+        return;
+    }
+
+    // Prevent multiple simultaneous calls
+    if (isGeneratingButtons) {
+        console.log("[Date Buttons] Already generating buttons, skipping...");
+        return;
+    }
+
+    isGeneratingButtons = true;
+
     const forecastContainer = document.getElementById('extendedForecast');
     forecastContainer.innerHTML = ''; // Clear any existing buttons
     console.log(`%c[Date Buttons] Cleared existing date buttons in the forecast container`, "color: purple;");
@@ -1810,7 +1833,7 @@ async function generateDateButtons(spotId) {
     const buttonsData = [];
 
     const date = new Date();
-    const timezoneOffset = date.getTimezoneOffset() * 60000; // Handle timezone offset
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
 
     console.log(`%c[Date Buttons] Preparing buttons for the next 17 days`, "color: purple;");
 
@@ -1826,31 +1849,27 @@ async function generateDateButtons(spotId) {
         console.log(`%c[Date Buttons] Prepared data for: ${dayName} (${localDate})`, "color: purple;");
     }
 
-    const fragment = document.createDocumentFragment(); // Batch DOM updates using a fragment
+    const fragment = document.createDocumentFragment();
 
     try {
         // Generate buttons based on wave data
         for (const { dayName, dateFormatted, localDate } of buttonsData) {
-
             const waveDataForDate = cachedWaveData[localDate];
             
             if (waveDataForDate) {
-                    // Log all wave heights for this date
                 console.log(`%c[Date Buttons Wave Heights] ${dayName} ${dateFormatted}:`, "color: blue; font-weight: bold;");
-                console.log('Date Buttons  Full wave data for this date:', waveDataForDate); // Log the entire wave data object
+                console.log('Date Buttons Full wave data for this date:', waveDataForDate);
 
-                
                 // Filter wave data for times between 4 AM and 8 PM
                 const filteredWaveData = waveDataForDate.filter(item => {
                     const hour = new Date(item.time).getHours();
-                    return hour >= 4 && hour <= 20;  // 4 AM to 8 PM
+                    return hour >= 4 && hour <= 20;
                 });
 
                 if (filteredWaveData.length > 0) {
                     const peakWaveHeight = Math.max(...filteredWaveData.map(item => item.height));
                     const lowWaveHeight = Math.min(...filteredWaveData.map(item => item.height));
 
-                    // Create button and add it to the fragment
                     const button = document.createElement('button');
                     button.className = 'date-button';
                     button.innerHTML = `${dayName}<br>${dateFormatted}<br>${peakWaveHeight.toFixed(1)}-${lowWaveHeight.toFixed(1)} ft`;
@@ -1859,7 +1878,7 @@ async function generateDateButtons(spotId) {
                         console.log(`%c[Date Buttons] Button clicked for Date: ${localDate}`, "color: purple;");
                         try {
                             document.getElementById('dateInput').value = localDate;
-                            getData(false, false);  // Don't regenerate buttons or update upcoming days
+                            getData(false, false);
                         } catch (error) {
                             console.error(`%c[Date Buttons] Error handling button click:`, "color: red;", error);
                         }
@@ -1875,19 +1894,15 @@ async function generateDateButtons(spotId) {
             }
         }
 
-        // Append all generated buttons to the forecast container
         forecastContainer.appendChild(fragment);
         console.log(`%c[Date Buttons] All date buttons appended to the forecast container`, "color: purple; font-weight: bold;");
     } catch (error) {
         console.error(`%c[Date Buttons] Error generating date buttons:`, "color: red; font-weight: bold;", error);
         forecastContainer.innerHTML = '<p>Error loading forecast dates. Please try again later.</p>';
+    } finally {
+        isGeneratingButtons = false;
     }
 }
-
-
-
-
-
 
 
 
