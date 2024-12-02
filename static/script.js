@@ -931,7 +931,6 @@ mildWindSegments.forEach(segment => {
 
 
 // Bad segments
-
 badWindSegments.forEach(segment => {
     const offshorePoints = { x: [], y: [] };
     const nonOffshorePoints = { x: [], y: [] };
@@ -1024,8 +1023,6 @@ badWindSegments.forEach(segment => {
     
     showLegendBad = false;
 });
-
-
 
 
 
