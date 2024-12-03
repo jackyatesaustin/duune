@@ -30,12 +30,42 @@ function getFormattedDate(daysOffset = 0) {
 }
 
 
+
+// Add this function near your other date-related functions
+function setupDateLimits() {
+    const dateInput = document.getElementById('dateInput');
+    
+    // Get today's date in Pacific time
+    const today = new Date();
+    const pacific = new Date(today.toLocaleString("en-US", {timeZone: "America/Los_Angeles"}));
+    
+    // Format today's date for min attribute
+    const minDate = pacific.toISOString().split('T')[0];
+    
+    // Calculate max date (today + 13 days)
+    const maxDate = new Date(pacific);
+    maxDate.setDate(pacific.getDate() + 14);
+    const maxDateStr = maxDate.toISOString().split('T')[0];
+    
+    // Set the min and max attributes
+    dateInput.setAttribute('min', minDate);
+    dateInput.setAttribute('max', maxDateStr);
+    
+    console.log(`[Date Limits] Set min: ${minDate}, max: ${maxDateStr}`);
+}
+
+
+
+
 // Updated window.onload function THAT LOADS THE BUTTONS 
 window.onload = async function () {
     console.log("%c[App Init] Page loaded. Initializing application...", "color: blue; font-weight: bold;");
 
     const dateInput = document.getElementById('dateInput');
     const spotSelect = document.getElementById('spotSelect');
+
+        // Set up date input limits before setting initial value
+        setupDateLimits();
 
 
     // Initialize with timezone-adjusted date
