@@ -177,6 +177,12 @@ const selectedSpot = '';
 
 
 async function getSpotForecast(spotId) {
+    if (currentSpotId !== spotId) {
+        console.log(`[Forecast Cache] Clearing cache for spot switch from ${currentSpotId} to ${spotId}`);
+        cachedWaveData = {};
+        currentSpotId = spotId;
+    }
+
     try {
         const localToday = new Date();
         const formattedToday = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;
@@ -1935,12 +1941,17 @@ function getConditionSegments(values, condition) {
 
 
 
-
+let currentSpotId = null;
 let isGeneratingButtons = false;
 
 async function generateDateButtons(spotId) {
     console.log(`%c[Date Buttons] Starting to generate date buttons for Spot ID: ${spotId}`, "color: purple; font-weight: bold;");
     console.log(`%c[Date Buttons] Current cache state:`, "color: purple;", cachedWaveData);
+
+        // Ensure we have fresh data for this spot
+        if (currentSpotId !== spotId) {
+            await getSpotForecast(spotId);
+        }
 
     // Guard against undefined spotId
     if (!spotId) {
