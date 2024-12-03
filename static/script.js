@@ -708,11 +708,6 @@ data.good_times.forEach(period => {
     // Wind graph calculations using the config
     
     /*
-    const glassySegments = getConditionSegments(interpolatedSpeeds, speed => speed <= config.wind.glassy);
-    const mildWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.glassy && speed <= config.wind.mild);
-    const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > config.wind.mild);
-    */
-
 
 
     // Get segments by wind speed only - make them mutually exclusive
@@ -720,6 +715,8 @@ data.good_times.forEach(period => {
     const mildWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > windConfig.glassy && speed <= windConfig.mild);
     const badWindSegments = getConditionSegments(interpolatedSpeeds, speed => speed > windConfig.mild);
 
+
+    
     const windTraces = [];
     let showLegendGlassy = true, showLegendMild = true, showLegendBad = true;
 
@@ -1028,6 +1025,143 @@ badWindSegments.forEach(segment => {
 
 
 
+
+*/
+
+// Create arrays to hold indices for each condition
+const glassySegments = [];
+const mildWindSegments = [];
+const badWindSegments = [];
+let currentSegment = [];
+
+// Group consecutive points with the same wind speed condition
+for (let i = 0; i < interpolatedSpeeds.length; i++) {
+    const speed = interpolatedSpeeds[i];
+    
+    // Determine speed-based condition (ignoring offshore for this grouping)
+    let condition;
+    if (speed <= windConfig.glassy) {
+        condition = 'glassy';
+    } else if (speed <= windConfig.mild) {
+        condition = 'mild';
+    } else {
+        condition = 'bad';
+    }
+    
+    // If starting a new segment or continuing current one
+    if (currentSegment.length === 0) {
+        currentSegment.push(i);
+    } else {
+        const currentSpeed = interpolatedSpeeds[currentSegment[0]];
+        const currentCondition = currentSpeed <= windConfig.glassy ? 'glassy' :
+                               currentSpeed <= windConfig.mild ? 'mild' : 'bad';
+        
+        if (condition === currentCondition) {
+            currentSegment.push(i);
+        } else {
+            // Add completed segment to appropriate array
+            if (currentCondition === 'glassy') {
+                glassySegments.push([...currentSegment]);
+            } else if (currentCondition === 'mild') {
+                mildWindSegments.push([...currentSegment]);
+            } else {
+                badWindSegments.push([...currentSegment]);
+            }
+            currentSegment = [i];
+        }
+    }
+}
+
+// Don't forget to add the last segment
+if (currentSegment.length > 0) {
+    const currentSpeed = interpolatedSpeeds[currentSegment[0]];
+    if (currentSpeed <= windConfig.glassy) {
+        glassySegments.push(currentSegment);
+    } else if (currentSpeed <= windConfig.mild) {
+        mildWindSegments.push(currentSegment);
+    } else {
+        badWindSegments.push(currentSegment);
+    }
+}
+
+
+// Replace the existing wind segments code with this simpler approach
+const windTraces = [];
+let showLegendGlassy = true, showLegendMild = true, showLegendBad = true, showLegendOffshore = true;
+
+// Process each point individually
+for (let i = 0; i < minutePoints.length; i++) {
+    const speed = interpolatedSpeeds[i];
+    const direction = interpolatedDirections[i] % 360;
+    const min = data.spot_config.offshore_wind.min;
+    const max = data.spot_config.offshore_wind.max;
+    const isOffshore = min < max ? 
+        (direction >= min && direction <= max) :
+        (direction >= min || direction <= max);
+
+    // Create a trace for each point to the next point
+    if (i < minutePoints.length - 1) {
+        let color, fillcolor, condition;
+        
+        if (isOffshore) {
+            color = 'darkgreen';
+            fillcolor = 'rgba(0, 100, 0, 0.3)';
+            condition = 'Offshore';
+        } else if (speed <= windConfig.glassy) {
+            color = 'limegreen';
+            fillcolor = 'rgba(0, 255, 0, 0.2)';
+            condition = 'Glassy';
+        } else if (speed <= windConfig.mild) {
+            color = 'yellow';
+            fillcolor = 'rgba(255, 255, 0, 0.2)';
+            condition = 'Mild';
+        } else {
+            color = 'red';
+            fillcolor = 'rgba(255, 0, 0, 0.2)';
+            condition = 'Bad';
+        }
+
+        const trace = {
+            x: [minutePoints[i], minutePoints[i + 1]],
+            y: [interpolatedSpeeds[i], interpolatedSpeeds[i + 1]],
+            mode: 'lines',
+            name: '',
+            line: { 
+                color: color,
+                width: 3,
+                simplify: false
+            },
+            fill: 'tozeroy',
+            fillcolor: fillcolor,
+            showlegend: (isOffshore && showLegendOffshore) ||
+                       (!isOffshore && speed <= windConfig.glassy && showLegendGlassy) ||
+                       (!isOffshore && speed > windConfig.glassy && speed <= windConfig.mild && showLegendMild) ||
+                       (!isOffshore && speed > windConfig.mild && showLegendBad),
+            text: [[
+                degreesToArrow(direction),
+                degreesToCardinal(direction),
+                Math.round(direction)
+            ]],
+            hovertemplate: 
+            `${isOffshore ? 'Offshore' : condition}<br>` +
+            '💨 %{y:.1f} km/h<br>' + 
+            '🕒 %{x|%I:%M %p}<br>' + 
+            '🧭 %{text[0]} %{text[1]} (%{text[2]}°)<extra></extra>',
+            hoverlabel: { 
+                bgcolor: 'white', 
+                namelength: 0,
+                font: { size: 14, family: 'Arial, sans-serif' }
+            }
+        };
+        windTraces.push(trace);
+
+        // Update legend flags after adding trace
+        if (isOffshore) showLegendOffshore = false;
+        else if (speed <= windConfig.glassy) showLegendGlassy = false;
+        else if (speed <= windConfig.mild) showLegendMild = false;
+        else showLegendBad = false;
+    }
+}
 
 
 

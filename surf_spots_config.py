@@ -482,9 +482,9 @@ surf_spots_config = {
          #"spotType": "shortPeriod",
         "spotType": "longPeriod",
         "tide": {
-            "low": 1.5,
-            "moderate": 4.5,
-            "high": 5.5,
+            "low": 3.3,
+            "moderate": 5.8,
+            "high": 6.3,
             "veryHigh": 6.5
         },
         "wave_angle": 190,
