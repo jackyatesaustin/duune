@@ -494,6 +494,7 @@ function updateWaveGraph(date, sunrise, sunset) {
 
 
 
+import { updateSwellDirections } from './swelldirections.js';
 
 
 //working
@@ -520,6 +521,9 @@ async function getData(shouldGenerateButtons = false, updateUpcomingDays = false
 
     //update label above waveheight graph      
     updateSpotDateLabel(spot, date);
+    // Update swell directions
+
+    await updateSwellDirections(date);
 
     console.log(`%c[getData] Selected Spot: ${spot}, Date: ${date}`, "color: navy;");
 

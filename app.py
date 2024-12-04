@@ -224,21 +224,57 @@ def get_wave_forecast():
         return jsonify({'error': 'Missing spot ID or date'}), 400
 
     try:
-        date = datetime.strptime(date_str, '%Y-%m-%d')  # Ensure correct date format
-        year, month, day = date.year, date.month, date.day
+        # Log the requested date
+        print(f"[get_wave_forecast] Requested forecast date: {date_str}")
+        
+        # Log current date
+        current_date = datetime.now()
+        print(f"[get_wave_forecast] Current date: {current_date.strftime('%Y-%m-%d')}")
+
+        # Use requested date for forecast
+        forecast_date = datetime.strptime(date_str, '%Y-%m-%d')
+        year, month, day = forecast_date.year, forecast_date.month, forecast_date.day
 
         # Fetch the forecast from Spitcast
         url = f"https://api.spitcast.com/api/spot_forecast/{spot_id}/{year}/{month}/{day}"
-      #  print(f"Spitcast API URL: {url}")
+        print(f"[get_wave_forecast] Fetching forecast from: {url}")
         response = requests.get(url)
 
         if response.status_code != 200:
+            print(f"[get_wave_forecast] API Error: {response.status_code}")
             return jsonify({'error': 'Failed to fetch forecast'}), 500
 
         forecast = response.json()
+        print(f"[get_wave_forecast] Successfully fetched forecast for {date_str}")
+        
+        # Check if this is El Porto (spot_id 402)
+        if spot_id == '402':  # El Porto's spot ID
+            print(f"[get_wave_forecast] Processing El Porto (spot_id: {spot_id})")
+            # Get TODAY'S wave data to check dominant swell direction
+            wave_data = fetch_wave_data()
+            
+            if wave_data:
+                print(f"[get_wave_forecast] Wave data entries found: {len(wave_data)}")
+                # Check if dominant swell direction is in range (279-288)
+                for wave in wave_data:
+                    dom_direction = wave['dominant']['direction']
+                    if dom_direction:
+                        print(f"[get_wave_forecast] Found dominant direction: {dom_direction}°")
+                        if 279 <= dom_direction <= 288:
+                            print(f"[get_wave_forecast] Direction {dom_direction}° is in range (279-288)")
+                            # Increase all wave heights by 40% for El Porto
+                            for entry in forecast:
+                                entry['size_ft'] = entry['size_ft'] * 1.4
+                            print(f"[get_wave_forecast] Increased El Porto wave heights by 40%")
+                            break
+                        else:
+                            print(f"[get_wave_forecast] Direction {dom_direction}° not in range (279-288)")
+            else:
+                print("[get_wave_forecast] No wave data available for swell direction check")
+
         return jsonify(forecast)
     except Exception as e:
-     #   print(f"Error in get_wave_forecast: {e}")
+        print(f"[get_wave_forecast] Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
