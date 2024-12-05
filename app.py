@@ -250,22 +250,22 @@ def get_wave_forecast():
         # Check if this is El Porto (spot_id 402)
         if spot_id == '402':  # El Porto's spot ID
             print(f"[get_wave_forecast] Processing El Porto (spot_id: {spot_id})")
-            # Get TODAY'S wave data to check dominant swell direction
             wave_data = fetch_wave_data()
             
             if wave_data:
                 print(f"[get_wave_forecast] Wave data entries found: {len(wave_data)}")
-                # Check if dominant swell direction is in range (279-288)
                 for wave in wave_data:
                     dom_direction = wave['dominant']['direction']
                     if dom_direction:
                         print(f"[get_wave_forecast] Found dominant direction: {dom_direction}°")
                         if 279 <= dom_direction <= 288:
                             print(f"[get_wave_forecast] Direction {dom_direction}° is in range (279-288)")
-                            # Increase all wave heights by 40% for El Porto
+                            # Only increase heights between 2.5 and 4 feet
                             for entry in forecast:
-                                entry['size_ft'] = entry['size_ft'] * 1.4
-                            print(f"[get_wave_forecast] Increased El Porto wave heights by 40%")
+                                if 1 <= entry['size_ft'] <= 3.2:
+                                    entry['size_ft'] = entry['size_ft'] * 1.33
+                                    print(f"[get_wave_forecast] Increased height from {entry['size_ft']/1.4:.1f}ft to {entry['size_ft']:.1f}ft")
+                            print(f"[get_wave_forecast] Finished processing wave heights")
                             break
                         else:
                             print(f"[get_wave_forecast] Direction {dom_direction}° not in range (279-288)")
